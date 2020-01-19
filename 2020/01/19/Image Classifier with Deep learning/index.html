@@ -6,15 +6,26 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>Jingde&#39;s Blog</title>
+  <title>Image Classifier with Deep learning | Jingde&#39;s Blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="Jingde&#39;s Blog">
-<meta property="og:url" content="http://yoursite.com/index.html">
+  <meta name="description" content="Image Classifier with Deep learningGoing forward, AI algorithms will be incorporated into more and more everyday applications. For example, you might want to include an image classifier in a smart pho">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Image Classifier with Deep learning">
+<meta property="og:url" content="http://yoursite.com/2020/01/19/Image%20Classifier%20with%20Deep%20learning/index.html">
 <meta property="og:site_name" content="Jingde&#39;s Blog">
+<meta property="og:description" content="Image Classifier with Deep learningGoing forward, AI algorithms will be incorporated into more and more everyday applications. For example, you might want to include an image classifier in a smart pho">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://yoursite.com/2020/01/19/Image%20Classifier%20with%20Deep%20learning/Classifier%20with%20Deep%20learning/Flowers.png">
+<meta property="og:image" content="http://yoursite.com/2020/01/19/Image%20Classifier%20with%20Deep%20learning/output_24_0.png">
+<meta property="og:image" content="http://yoursite.com/2020/01/19/Image%20Classifier%20with%20Deep%20learning/output_25_1.png">
+<meta property="og:image" content="http://yoursite.com/2020/01/19/Image%20Classifier%20with%20Deep%20learning/assets/inference_example.png">
+<meta property="og:image" content="http://yoursite.com/2020/01/19/Image%20Classifier%20with%20Deep%20learning/output_31_0.png">
+<meta property="og:image" content="http://yoursite.com/2020/01/19/Image%20Classifier%20with%20Deep%20learning/output_32_0.png">
+<meta property="article:published_time" content="2020-01-19T17:20:12.805Z">
+<meta property="article:modified_time" content="2020-01-19T19:11:06.271Z">
 <meta property="article:author" content="Jason">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://yoursite.com/2020/01/19/Image%20Classifier%20with%20Deep%20learning/Classifier%20with%20Deep%20learning/Flowers.png">
   
     <link rel="alternative" href="/atom.xml" title="Jingde&#39;s Blog" type="application/atom+xml">
   
@@ -160,16 +171,14 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-    <article id="post-Image Classifier with Deep learning" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+            <article id="post-Image Classifier with Deep learning" class="article article-type-post " itemscope itemprop="blogPost">
   <div class="article-inner">
     
       <header class="article-header">
         
   
-    <h1 itemprop="name">
-      <a class="article-title" href="/2020/01/19/Image%20Classifier%20with%20Deep%20learning/">Image Classifier with Deep learning</a>
+    <h1 class="article-title" itemprop="name">
+      Image Classifier with Deep learning
     </h1>
   
 
@@ -183,9 +192,267 @@
     <div class="article-entry" itemprop="articleBody">
       
         <h1 id="Image-Classifier-with-Deep-learning"><a href="#Image-Classifier-with-Deep-learning" class="headerlink" title="Image Classifier with Deep learning"></a>Image Classifier with Deep learning</h1><p>Going forward, AI algorithms will be incorporated into more and more everyday applications. For example, you might want to include an image classifier in a smart phone app. To do this, you’d use a deep learning model trained on hundreds of thousands of images as part of the overall application architecture. A large part of software development in the future will be using these types of models as common parts of applications. </p>
-        
+<a id="more"></a>
+
+<p>In this project, you’ll train an image classifier to recognize different species of flowers. You can imagine using something like this in a phone app that tells you the name of the flower your camera is looking at. In practice you’d train this classifier, then export it for use in your application. We’ll be using <a href="http://www.robots.ox.ac.uk/~vgg/data/flowers/102/index.html" target="_blank" rel="noopener">this dataset</a> of 102 flower categories, you can see a few examples below. </p>
+<img src='Classifier with Deep learning/Flowers.png' width=500px>
+![png](Classifier with Deep learning/Flowers.png)
+
+<p>The project is broken down into multiple steps:</p>
+<ul>
+<li>Load and preprocess the image dataset</li>
+<li>Train the image classifier on your dataset</li>
+<li>Use the trained classifier to predict image content</li>
+</ul>
+<p>We’ll lead you through each part which you’ll implement in Python.</p>
+<p>When you’ve completed this project, you’ll have an application that can be trained on any set of labeled images. Here your network will be learning about flowers and end up as a command line application. But, what you do with your new skills depends on your imagination and effort in building a dataset. For example, imagine an app where you take a picture of a car, it tells you what the make and model is, then looks up information about it. Go build your own dataset and make something new.</p>
+<p>First up is importing the packages you’ll need. It’s good practice to keep all the imports at the beginning of your code. As you work through this notebook and find you need to import a package, make sure to add the import up here.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Imports here</span></span><br><span class="line"><span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt</span><br><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"><span class="keyword">from</span> torchvision <span class="keyword">import</span> datasets, transforms, models</span><br><span class="line"><span class="keyword">import</span> helper</span><br><span class="line"><span class="keyword">from</span> collections <span class="keyword">import</span> OrderedDict</span><br><span class="line"><span class="keyword">import</span> json</span><br><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line"><span class="keyword">from</span> torch <span class="keyword">import</span> nn</span><br><span class="line"><span class="keyword">from</span> torch <span class="keyword">import</span> optim</span><br><span class="line"><span class="keyword">import</span> seaborn <span class="keyword">as</span> sns</span><br><span class="line"><span class="keyword">from</span> PIL <span class="keyword">import</span> Image</span><br></pre></td></tr></table></figure>
+
+<h2 id="Load-the-data"><a href="#Load-the-data" class="headerlink" title="Load the data"></a>Load the data</h2><p>Here you’ll use <code>torchvision</code> to load the data (<a href="http://pytorch.org/docs/0.3.0/torchvision/index.html" target="_blank" rel="noopener">documentation</a>). The data should be included alongside this notebook, otherwise you can <a href="https://s3.amazonaws.com/content.udacity-data.com/nd089/flower_data.tar.gz" target="_blank" rel="noopener">download it here</a>. The dataset is split into three parts, training, validation, and testing. For the training, you’ll want to apply transformations such as random scaling, cropping, and flipping. This will help the network generalize leading to better performance. You’ll also need to make sure the input data is resized to 224x224 pixels as required by the pre-trained networks.</p>
+<p>The validation and testing sets are used to measure the model’s performance on data it hasn’t seen yet. For this you don’t want any scaling or rotation transformations, but you’ll need to resize then crop the images to the appropriate size.</p>
+<p>The pre-trained networks you’ll use were trained on the ImageNet dataset where each color channel was normalized separately. For all three sets you’ll need to normalize the means and standard deviations of the images to what the network expects. For the means, it’s <code>[0.485, 0.456, 0.406]</code> and for the standard deviations <code>[0.229, 0.224, 0.225]</code>, calculated from the ImageNet images.  These values will shift each color channel to be centered at 0 and range from -1 to 1.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">data_dir = <span class="string">'flowers'</span></span><br><span class="line">train_dir = data_dir + <span class="string">'/train'</span></span><br><span class="line">valid_dir = data_dir + <span class="string">'/valid'</span></span><br><span class="line">test_dir = data_dir + <span class="string">'/test'</span></span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># <span class="doctag">TODO:</span> Define your transforms for the training, validation, and testing sets</span></span><br><span class="line">train_transforms = transforms.Compose([transforms.RandomRotation(<span class="number">30</span>),</span><br><span class="line">                                       transforms.RandomResizedCrop(<span class="number">224</span>),</span><br><span class="line">                                       transforms.RandomHorizontalFlip(),</span><br><span class="line">                                       transforms.ToTensor(),</span><br><span class="line">                                       transforms.Normalize([<span class="number">0.485</span>, <span class="number">0.456</span>, <span class="number">0.406</span>], </span><br><span class="line">                                                            [<span class="number">0.229</span>, <span class="number">0.224</span>, <span class="number">0.225</span>])]) </span><br><span class="line">valid_transforms = transforms.Compose([transforms.Resize(<span class="number">255</span>),</span><br><span class="line">                                      transforms.CenterCrop(<span class="number">224</span>),</span><br><span class="line">                                      transforms.ToTensor(),</span><br><span class="line">                                      transforms.Normalize([<span class="number">0.485</span>, <span class="number">0.456</span>, <span class="number">0.406</span>], </span><br><span class="line">                                                            [<span class="number">0.229</span>, <span class="number">0.224</span>, <span class="number">0.225</span>])])</span><br><span class="line"></span><br><span class="line">test_transforms = transforms.Compose([transforms.Resize(<span class="number">255</span>),</span><br><span class="line">                                      transforms.CenterCrop(<span class="number">224</span>),</span><br><span class="line">                                      transforms.ToTensor(),</span><br><span class="line">                                      transforms.Normalize([<span class="number">0.485</span>, <span class="number">0.456</span>, <span class="number">0.406</span>], </span><br><span class="line">                                                            [<span class="number">0.229</span>, <span class="number">0.224</span>, <span class="number">0.225</span>])])</span><br><span class="line"></span><br><span class="line"><span class="comment"># <span class="doctag">TODO:</span> Load the datasets with ImageFolder</span></span><br><span class="line">train_data = datasets.ImageFolder(train_dir, transform=train_transforms)</span><br><span class="line">valid_data = datasets.ImageFolder(valid_dir, transform=valid_transforms)</span><br><span class="line">test_data = datasets.ImageFolder(test_dir, transform=test_transforms)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># <span class="doctag">TODO:</span> Using the image datasets and the trainforms, define the dataloaders</span></span><br><span class="line">trainloader = torch.utils.data.DataLoader(train_data, batch_size=<span class="number">64</span>, shuffle=<span class="literal">True</span>)</span><br><span class="line">validloader = torch.utils.data.DataLoader(valid_data, batch_size=<span class="number">64</span>)</span><br><span class="line">testloader = torch.utils.data.DataLoader(test_data, batch_size=<span class="number">64</span>)</span><br><span class="line"></span><br><span class="line">image_datasets = [train_data, valid_data, test_data]</span><br><span class="line">dataloaders = [trainloader, validloader, testloader]</span><br></pre></td></tr></table></figure>
+
+<h3 id="Label-mapping"><a href="#Label-mapping" class="headerlink" title="Label mapping"></a>Label mapping</h3><p>You’ll also need to load in a mapping from category label to category name. You can find this in the file <code>cat_to_name.json</code>. It’s a JSON object which you can read in with the <a href="https://docs.python.org/2/library/json.html" target="_blank" rel="noopener"><code>json</code> module</a>. This will give you a dictionary mapping the integer encoded categories to the actual names of the flowers.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">with</span> open(<span class="string">'cat_to_name.json'</span>, <span class="string">'r'</span>) <span class="keyword">as</span> f:</span><br><span class="line">    cat_to_name = json.load(f)</span><br></pre></td></tr></table></figure>
+
+<h1 id="Building-and-training-the-classifier"><a href="#Building-and-training-the-classifier" class="headerlink" title="Building and training the classifier"></a>Building and training the classifier</h1><p>Now that the data is ready, it’s time to build and train the classifier. As usual, you should use one of the pretrained models from <code>torchvision.models</code> to get the image features. Build and train a new feed-forward classifier using those features.</p>
+<p>We’re going to leave this part up to you. Refer to <a href="https://review.udacity.com/#!/rubrics/1663/view" target="_blank" rel="noopener">the rubric</a> for guidance on successfully completing this section. Things you’ll need to do:</p>
+<ul>
+<li>Load a <a href="http://pytorch.org/docs/master/torchvision/models.html" target="_blank" rel="noopener">pre-trained network</a> (If you need a starting point, the VGG networks work great and are straightforward to use)</li>
+<li>Define a new, untrained feed-forward network as a classifier, using ReLU activations and dropout</li>
+<li>Train the classifier layers using backpropagation using the pre-trained network to get the features</li>
+<li>Track the loss and accuracy on the validation set to determine the best hyperparameters</li>
+</ul>
+<p>We’ve left a cell open for you below, but use as many as you need. Our advice is to break the problem up into smaller parts you can run separately. Check that each part is doing what you expect, then move on to the next. You’ll likely find that as you work through each part, you’ll need to go back and modify your previous code. This is totally normal!</p>
+<p>When training make sure you’re updating only the weights of the feed-forward network. You should be able to get the validation accuracy above 70% if you build everything right. Make sure to try different hyperparameters (learning rate, units in the classifier, epochs, etc) to find the best model. Save those hyperparameters to use as default values in the next part of the project.</p>
+<p>One last important tip if you’re using the workspace to run your code: To avoid having your workspace disconnect during the long-running tasks in this notebook, please read in the earlier page in this lesson called Intro to<br>GPU Workspaces about Keeping Your Session Active. You’ll want to include code from the workspace_utils.py module.</p>
+<p><strong>Note for Workspace users:</strong> If your network is over 1 GB when saved as a checkpoint, there might be issues with saving backups in your workspace. Typically this happens with wide dense layers after the convolutional layers. If your saved checkpoint is larger than 1 GB (you can open a terminal and check with <code>ls -lh</code>), you should reduce the size of your hidden layers and train again.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">device = torch.device(<span class="string">"cuda"</span> <span class="keyword">if</span> torch.cuda.is_available() <span class="keyword">else</span> <span class="string">"cpu"</span>)</span><br><span class="line"><span class="comment"># <span class="doctag">TODO:</span> Build and train your network</span></span><br><span class="line">model = models.vgg19(pretrained=<span class="literal">True</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># Freeze parameters so we don't backprop through them</span></span><br><span class="line"><span class="keyword">for</span> param <span class="keyword">in</span> model.parameters():</span><br><span class="line">    param.requires_grad = <span class="literal">False</span></span><br><span class="line">    </span><br><span class="line">model.classifier = nn.Sequential(nn.Linear(<span class="number">25088</span>, <span class="number">2048</span>),</span><br><span class="line">                                 nn.ReLU(),</span><br><span class="line">                                 nn.Dropout(<span class="number">0.25</span>),</span><br><span class="line">                                 nn.Linear(<span class="number">2048</span>, <span class="number">102</span>),</span><br><span class="line">                                 nn.LogSoftmax(dim=<span class="number">1</span>))</span><br><span class="line"></span><br><span class="line">criterion = nn.NLLLoss()</span><br><span class="line"></span><br><span class="line"><span class="comment"># Only train the classifier parameters, feature parameters are frozen</span></span><br><span class="line">optimizer = optim.Adam(model.classifier.parameters(), lr=<span class="number">0.001</span>)</span><br><span class="line"></span><br><span class="line">model</span><br></pre></td></tr></table></figure>
+
+
+
+
+<pre><code>VGG(
+  (features): Sequential(
+    (0): Conv2d(3, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (1): ReLU(inplace=True)
+    (2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (3): ReLU(inplace=True)
+    (4): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+    (5): Conv2d(64, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (6): ReLU(inplace=True)
+    (7): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (8): ReLU(inplace=True)
+    (9): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+    (10): Conv2d(128, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (11): ReLU(inplace=True)
+    (12): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (13): ReLU(inplace=True)
+    (14): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (15): ReLU(inplace=True)
+    (16): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (17): ReLU(inplace=True)
+    (18): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+    (19): Conv2d(256, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (20): ReLU(inplace=True)
+    (21): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (22): ReLU(inplace=True)
+    (23): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (24): ReLU(inplace=True)
+    (25): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (26): ReLU(inplace=True)
+    (27): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+    (28): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (29): ReLU(inplace=True)
+    (30): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (31): ReLU(inplace=True)
+    (32): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (33): ReLU(inplace=True)
+    (34): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (35): ReLU(inplace=True)
+    (36): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+  )
+  (avgpool): AdaptiveAvgPool2d(output_size=(7, 7))
+  (classifier): Sequential(
+    (0): Linear(in_features=25088, out_features=2048, bias=True)
+    (1): ReLU()
+    (2): Dropout(p=0.25, inplace=False)
+    (3): Linear(in_features=2048, out_features=102, bias=True)
+    (4): LogSoftmax()
+  )
+)</code></pre><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">model.to(device)</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line">epochs = <span class="number">8</span></span><br><span class="line">steps = <span class="number">0</span></span><br><span class="line">running_loss = <span class="number">0</span></span><br><span class="line">print_every = <span class="number">50</span></span><br><span class="line">start = time.time()</span><br><span class="line"><span class="keyword">for</span> e <span class="keyword">in</span> range(epochs):</span><br><span class="line">    <span class="keyword">for</span> inputs, labels <span class="keyword">in</span> trainloader:</span><br><span class="line">        steps += <span class="number">1</span></span><br><span class="line">        inputs, labels = inputs.to(device), labels.to(device)</span><br><span class="line">        </span><br><span class="line">        optimizer.zero_grad()</span><br><span class="line">        </span><br><span class="line">        logps = model.forward(inputs)</span><br><span class="line">        loss = criterion(logps, labels)</span><br><span class="line">        loss.backward()</span><br><span class="line">        optimizer.step()</span><br><span class="line"></span><br><span class="line">        running_loss += loss.item()</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">if</span> steps % print_every == <span class="number">0</span>:</span><br><span class="line">            test_loss = <span class="number">0</span></span><br><span class="line">            accuracy = <span class="number">0</span></span><br><span class="line">            model.eval()</span><br><span class="line">            <span class="keyword">with</span> torch.no_grad():</span><br><span class="line">                <span class="keyword">for</span> inputs, labels <span class="keyword">in</span> validloader:</span><br><span class="line">                    inputs, labels = inputs.to(device), labels.to(device)</span><br><span class="line">                    logps = model.forward(inputs)</span><br><span class="line">                    batch_loss = criterion(logps, labels)</span><br><span class="line">                    </span><br><span class="line">                    test_loss += batch_loss.item()</span><br><span class="line">                    </span><br><span class="line">                    <span class="comment"># Calculate accuracy</span></span><br><span class="line">                    ps = torch.exp(logps)</span><br><span class="line">                    top_p, top_class = ps.topk(<span class="number">1</span>, dim=<span class="number">1</span>)</span><br><span class="line">                    equals = top_class == labels.view(*top_class.shape)</span><br><span class="line">                    accuracy += torch.mean(equals.type(torch.FloatTensor)).item()</span><br><span class="line">                    </span><br><span class="line">            print(<span class="string">"Epoch: &#123;&#125;/&#123;&#125;.. "</span>.format(e+<span class="number">1</span>, epochs),</span><br><span class="line">                  <span class="string">f"Train loss: <span class="subst">&#123;running_loss/print_every:<span class="number">.3</span>f&#125;</span>.. "</span></span><br><span class="line">                  <span class="string">f"Valid loss: <span class="subst">&#123;test_loss/len(validloader):<span class="number">.3</span>f&#125;</span>.. "</span></span><br><span class="line">                  <span class="string">f"Valid accuracy: <span class="subst">&#123;accuracy/len(validloader):<span class="number">.3</span>f&#125;</span>"</span>)</span><br><span class="line">            running_loss = <span class="number">0</span></span><br><span class="line">            model.train()</span><br><span class="line">time_end = time.time() - start</span><br><span class="line">print(<span class="string">"\nTotal time: &#123;:.0f&#125;m &#123;:.0f&#125;s"</span>.format(time_end//<span class="number">60</span>, time_end % <span class="number">60</span>))</span><br></pre></td></tr></table></figure>
+
+<pre><code>Epoch: 1/8..  Train loss: 3.569.. Valid loss: 1.455.. Valid accuracy: 0.612
+Epoch: 1/8..  Train loss: 1.689.. Valid loss: 0.859.. Valid accuracy: 0.768
+Epoch: 2/8..  Train loss: 1.296.. Valid loss: 0.759.. Valid accuracy: 0.784
+Epoch: 2/8..  Train loss: 1.181.. Valid loss: 0.720.. Valid accuracy: 0.800
+Epoch: 3/8..  Train loss: 1.054.. Valid loss: 0.655.. Valid accuracy: 0.809
+Epoch: 3/8..  Train loss: 1.020.. Valid loss: 0.517.. Valid accuracy: 0.839
+Epoch: 4/8..  Train loss: 0.988.. Valid loss: 0.487.. Valid accuracy: 0.850
+Epoch: 4/8..  Train loss: 0.932.. Valid loss: 0.596.. Valid accuracy: 0.832
+Epoch: 5/8..  Train loss: 0.893.. Valid loss: 0.517.. Valid accuracy: 0.857
+Epoch: 5/8..  Train loss: 0.854.. Valid loss: 0.493.. Valid accuracy: 0.870
+Epoch: 6/8..  Train loss: 0.790.. Valid loss: 0.508.. Valid accuracy: 0.861
+Epoch: 6/8..  Train loss: 0.806.. Valid loss: 0.491.. Valid accuracy: 0.873
+Epoch: 7/8..  Train loss: 0.806.. Valid loss: 0.565.. Valid accuracy: 0.861
+Epoch: 7/8..  Train loss: 0.825.. Valid loss: 0.449.. Valid accuracy: 0.887
+Epoch: 8/8..  Train loss: 0.734.. Valid loss: 0.453.. Valid accuracy: 0.882
+Epoch: 8/8..  Train loss: 0.773.. Valid loss: 0.539.. Valid accuracy: 0.860
+
+Total time: 14m 39s</code></pre><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h2 id="Testing-your-network"><a href="#Testing-your-network" class="headerlink" title="Testing your network"></a>Testing your network</h2><p>It’s good practice to test your trained network on test data, images the network has never seen either in training or validation. This will give you a good estimate for the model’s performance on completely new images. Run the test images through the network and measure the accuracy, the same way you did validation. You should be able to reach around 70% accuracy on the test set if the model has been trained well.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># <span class="doctag">TODO:</span> Do validation on the test set</span></span><br><span class="line">model.eval()</span><br><span class="line">accuracy = <span class="number">0</span></span><br><span class="line"><span class="keyword">with</span> torch.no_grad():</span><br><span class="line">    <span class="keyword">for</span> inputs, labels <span class="keyword">in</span> testloader:</span><br><span class="line">        inputs, labels = inputs.to(device), labels.to(device)</span><br><span class="line">        logps = model.forward(inputs)</span><br><span class="line">        batch_loss = criterion(logps, labels)</span><br><span class="line">                    </span><br><span class="line">        test_loss += batch_loss.item()</span><br><span class="line">                    </span><br><span class="line">        <span class="comment"># Calculate accuracy</span></span><br><span class="line">        ps = torch.exp(logps)</span><br><span class="line">        top_p, top_class = ps.topk(<span class="number">1</span>, dim=<span class="number">1</span>)</span><br><span class="line">        equals = top_class == labels.view(*top_class.shape)</span><br><span class="line">        accuracy += torch.mean(equals.type(torch.FloatTensor)).item()</span><br><span class="line">print(<span class="string">f"Valid accuracy: <span class="subst">&#123;accuracy/len(testloader):<span class="number">.3</span>f&#125;</span>"</span>)</span><br></pre></td></tr></table></figure>
+
+<pre><code>Valid accuracy: 0.854</code></pre><h2 id="Save-the-checkpoint"><a href="#Save-the-checkpoint" class="headerlink" title="Save the checkpoint"></a>Save the checkpoint</h2><p>Now that your network is trained, save the model so you can load it later for making predictions. You probably want to save other things such as the mapping of classes to indices which you get from one of the image datasets: <code>image_datasets[&#39;train&#39;].class_to_idx</code>. You can attach this to the model as an attribute which makes inference easier later on.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">Remember that you&#39;ll want to completely rebuild the model later so you can use it for inference. Make sure to include any information you need in the checkpoint. If you want to load the model and keep training, you&#39;ll want to save the number of epochs as well as the optimizer state, &#96;optimizer.state_dict&#96;. You&#39;ll likely want to use this trained model in the next part of the project, so best to save it now.</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&#96;&#96;&#96;python</span><br><span class="line"># TODO: Save the checkpoint     </span><br><span class="line">classifier &#x3D; nn.Sequential(nn.Linear(25088, 2048),</span><br><span class="line">                           nn.ReLU(),</span><br><span class="line">                           nn.Dropout(0.25),</span><br><span class="line">                           nn.Linear(2048, 102),</span><br><span class="line">                           nn.LogSoftmax(dim&#x3D;1))</span><br><span class="line"></span><br><span class="line">model.class_to_idx &#x3D; image_datasets[0].class_to_idx</span><br><span class="line">checkpoint &#x3D; &#123;&#39;input_size&#39;: 25088,</span><br><span class="line">              &#39;output_size&#39;: 102,</span><br><span class="line">              &#39;classifier&#39; : classifier,</span><br><span class="line">              &#39;arch&#39;: &#39;vgg19&#39;,</span><br><span class="line">              &#39;optimizer&#39;: optimizer.state_dict(),</span><br><span class="line">              &#39;state_dict&#39;: model.state_dict(),</span><br><span class="line">              &#39;class_to_idx&#39;: model.class_to_idx&#125;</span><br><span class="line">torch.save(checkpoint, &#39;checkpoint.pth&#39;)</span><br></pre></td></tr></table></figure>
+
+<h2 id="Loading-the-checkpoint"><a href="#Loading-the-checkpoint" class="headerlink" title="Loading the checkpoint"></a>Loading the checkpoint</h2><p>At this point it’s good to write a function that can load a checkpoint and rebuild the model. That way you can come back to this project and keep working on it without having to retrain the network.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># <span class="doctag">TODO:</span> Write a function that loads a checkpoint and rebuilds the model</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">load_checkpoint</span><span class="params">(filepath)</span>:</span></span><br><span class="line">    checkpoints = torch.load(filepath)</span><br><span class="line">    model = models.vgg19(pretrained=<span class="literal">True</span>)</span><br><span class="line">    model.class_to_idx = checkpoints[<span class="string">'class_to_idx'</span>]</span><br><span class="line">    </span><br><span class="line">    model.classifier = checkpoints[<span class="string">'classifier'</span>]</span><br><span class="line">    </span><br><span class="line">    model.load_state_dict(checkpoints[<span class="string">'state_dict'</span>])</span><br><span class="line">    optimizer.load_state_dict(checkpoints[<span class="string">'optimizer'</span>])                       </span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> model</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">model = load_checkpoint(<span class="string">'checkpoint.pth'</span>)</span><br><span class="line">print(model)</span><br></pre></td></tr></table></figure>
+
+<pre><code>VGG(
+  (features): Sequential(
+    (0): Conv2d(3, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (1): ReLU(inplace=True)
+    (2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (3): ReLU(inplace=True)
+    (4): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+    (5): Conv2d(64, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (6): ReLU(inplace=True)
+    (7): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (8): ReLU(inplace=True)
+    (9): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+    (10): Conv2d(128, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (11): ReLU(inplace=True)
+    (12): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (13): ReLU(inplace=True)
+    (14): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (15): ReLU(inplace=True)
+    (16): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (17): ReLU(inplace=True)
+    (18): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+    (19): Conv2d(256, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (20): ReLU(inplace=True)
+    (21): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (22): ReLU(inplace=True)
+    (23): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (24): ReLU(inplace=True)
+    (25): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (26): ReLU(inplace=True)
+    (27): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+    (28): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (29): ReLU(inplace=True)
+    (30): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (31): ReLU(inplace=True)
+    (32): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (33): ReLU(inplace=True)
+    (34): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (35): ReLU(inplace=True)
+    (36): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+  )
+  (avgpool): AdaptiveAvgPool2d(output_size=(7, 7))
+  (classifier): Sequential(
+    (0): Linear(in_features=25088, out_features=2048, bias=True)
+    (1): ReLU()
+    (2): Dropout(p=0.25, inplace=False)
+    (3): Linear(in_features=2048, out_features=102, bias=True)
+    (4): LogSoftmax()
+  )
+)</code></pre><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h1 id="Inference-for-classification"><a href="#Inference-for-classification" class="headerlink" title="Inference for classification"></a>Inference for classification</h1><p>Now you’ll write a function to use a trained network for inference. That is, you’ll pass an image into the network and predict the class of the flower in the image. Write a function called <code>predict</code> that takes an image and a model, then returns the top $K$ most likely classes along with the probabilities. It should look like </p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">probs, classes = predict(image_path, model)</span><br><span class="line">print(probs)</span><br><span class="line">print(classes)</span><br><span class="line">&gt; [ <span class="number">0.01558163</span>  <span class="number">0.01541934</span>  <span class="number">0.01452626</span>  <span class="number">0.01443549</span>  <span class="number">0.01407339</span>]</span><br><span class="line">&gt; [<span class="string">'70'</span>, <span class="string">'3'</span>, <span class="string">'45'</span>, <span class="string">'62'</span>, <span class="string">'55'</span>]</span><br></pre></td></tr></table></figure>
+
+<p>First you’ll need to handle processing the input image such that it can be used in your network. </p>
+<h2 id="Image-Preprocessing"><a href="#Image-Preprocessing" class="headerlink" title="Image Preprocessing"></a>Image Preprocessing</h2><p>You’ll want to use <code>PIL</code> to load the image (<a href="https://pillow.readthedocs.io/en/latest/reference/Image.html" target="_blank" rel="noopener">documentation</a>). It’s best to write a function that preprocesses the image so it can be used as input for the model. This function should process the images in the same manner used for training. </p>
+<p>First, resize the images where the shortest side is 256 pixels, keeping the aspect ratio. This can be done with the <a href="http://pillow.readthedocs.io/en/3.1.x/reference/Image.html#PIL.Image.Image.thumbnail" target="_blank" rel="noopener"><code>thumbnail</code></a> or <a href="http://pillow.readthedocs.io/en/3.1.x/reference/Image.html#PIL.Image.Image.thumbnail" target="_blank" rel="noopener"><code>resize</code></a> methods. Then you’ll need to crop out the center 224x224 portion of the image.</p>
+<p>Color channels of images are typically encoded as integers 0-255, but the model expected floats 0-1. You’ll need to convert the values. It’s easiest with a Numpy array, which you can get from a PIL image like so <code>np_image = np.array(pil_image)</code>.</p>
+<p>As before, the network expects the images to be normalized in a specific way. For the means, it’s <code>[0.485, 0.456, 0.406]</code> and for the standard deviations <code>[0.229, 0.224, 0.225]</code>. You’ll want to subtract the means from each color channel, then divide by the standard deviation. </p>
+<p>And finally, PyTorch expects the color channel to be the first dimension but it’s the third dimension in the PIL image and Numpy array. You can reorder dimensions using <a href="https://docs.scipy.org/doc/numpy-1.13.0/reference/generated/numpy.ndarray.transpose.html" target="_blank" rel="noopener"><code>ndarray.transpose</code></a>. The color channel needs to be first and retain the order of the other two dimensions.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># <span class="doctag">TODO:</span> Process a PIL image for use in a PyTorch model</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">process_image</span><span class="params">(image)</span>:</span></span><br><span class="line">    <span class="string">''' Scales, crops, and normalizes a PIL image for a PyTorch model,</span></span><br><span class="line"><span class="string">        returns an Numpy array</span></span><br><span class="line"><span class="string">    '''</span></span><br><span class="line">    im = Image.open(image)</span><br><span class="line">    im = im.resize((<span class="number">256</span>,<span class="number">256</span>))</span><br><span class="line">    transform = transforms.Compose([transforms.CenterCrop(<span class="number">224</span>),</span><br><span class="line">                                    transforms.ToTensor(),</span><br><span class="line">                                    transforms.Normalize([<span class="number">0.485</span>, <span class="number">0.456</span>, <span class="number">0.406</span>], </span><br><span class="line">                                                         [<span class="number">0.229</span>, <span class="number">0.224</span>, <span class="number">0.225</span>])])</span><br><span class="line">    im = transform(im)</span><br><span class="line">    <span class="keyword">return</span> im</span><br></pre></td></tr></table></figure>
+
+<p>To check your work, the function below converts a PyTorch tensor and displays it in the notebook. If your <code>process_image</code> function works, running the output through this function should return the original image (except for the cropped out portions).</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">imshow</span><span class="params">(image, ax=None, title=None)</span>:</span></span><br><span class="line">    <span class="string">"""Imshow for Tensor."""</span></span><br><span class="line">    <span class="keyword">if</span> ax <span class="keyword">is</span> <span class="literal">None</span>:</span><br><span class="line">        fig, ax = plt.subplots()</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># PyTorch tensors assume the color channel is the first dimension</span></span><br><span class="line">    <span class="comment"># but matplotlib assumes is the third dimension</span></span><br><span class="line">    image = image.numpy().transpose((<span class="number">1</span>, <span class="number">2</span>, <span class="number">0</span>))</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># Undo preprocessing</span></span><br><span class="line">    mean = np.array([<span class="number">0.485</span>, <span class="number">0.456</span>, <span class="number">0.406</span>])</span><br><span class="line">    std = np.array([<span class="number">0.229</span>, <span class="number">0.224</span>, <span class="number">0.225</span>])</span><br><span class="line">    image = std * image + mean</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># Image needs to be clipped between 0 and 1 or it looks like noise when displayed</span></span><br><span class="line">    image = np.clip(image, <span class="number">0</span>, <span class="number">1</span>)</span><br><span class="line">    </span><br><span class="line">    ax.imshow(image)</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> ax</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Show original pics</span></span><br><span class="line">image_path = test_dir + <span class="string">'/17/image_03911.jpg'</span></span><br><span class="line">pic = Image.open(image_path)</span><br><span class="line">pic</span><br></pre></td></tr></table></figure>
+
+
+
+
+<p><img src="output_24_0.png" alt="png"></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Show processed pics</span></span><br><span class="line">pic_process = process_image(image_path)</span><br><span class="line">imshow(pic_process)</span><br></pre></td></tr></table></figure>
+
+
+
+
+<pre><code>&lt;matplotlib.axes._subplots.AxesSubplot at 0x2ae83fbbf08&gt;</code></pre><p><img src="output_25_1.png" alt="png"></p>
+<h2 id="Class-Prediction"><a href="#Class-Prediction" class="headerlink" title="Class Prediction"></a>Class Prediction</h2><p>Once you can get images in the correct format, it’s time to write a function for making predictions with your model. A common practice is to predict the top 5 or so (usually called top-$K$) most probable classes. You’ll want to calculate the class probabilities then find the $K$ largest values.</p>
+<p>To get the top $K$ largest values in a tensor use <a href="http://pytorch.org/docs/master/torch.html#torch.topk" target="_blank" rel="noopener"><code>x.topk(k)</code></a>. This method returns both the highest <code>k</code> probabilities and the indices of those probabilities corresponding to the classes. You need to convert from these indices to the actual class labels using <code>class_to_idx</code> which hopefully you added to the model or from an <code>ImageFolder</code> you used to load the data (<a href="#Save-the-checkpoint">see here</a>). Make sure to invert the dictionary so you get a mapping from index to class as well.</p>
+<p>Again, this method should take a path to an image and a model checkpoint, then return the probabilities and classes.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">probs, classes = predict(image_path, model)</span><br><span class="line">print(probs)</span><br><span class="line">print(classes)</span><br><span class="line">&gt; [ <span class="number">0.01558163</span>  <span class="number">0.01541934</span>  <span class="number">0.01452626</span>  <span class="number">0.01443549</span>  <span class="number">0.01407339</span>]</span><br><span class="line">&gt; [<span class="string">'70'</span>, <span class="string">'3'</span>, <span class="string">'45'</span>, <span class="string">'62'</span>, <span class="string">'55'</span>]</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">predict</span><span class="params">(image_path, model, topk=<span class="number">5</span>)</span>:</span></span><br><span class="line">    <span class="string">''' Predict the class (or classes) of an image using a trained deep learning model.</span></span><br><span class="line"><span class="string">    '''</span></span><br><span class="line">    </span><br><span class="line">    processed_image = process_image(image_path)</span><br><span class="line">    processed_image.unsqueeze_(<span class="number">0</span>)</span><br><span class="line">    probs = torch.exp(model.forward(processed_image))</span><br><span class="line">    top_probs, top_index = probs.topk(topk)</span><br><span class="line">    top_index = top_index[<span class="number">0</span>].numpy()</span><br><span class="line">    index = []</span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> range(len(model.class_to_idx.items())):</span><br><span class="line">        index.append(list(model.class_to_idx.items())[i][<span class="number">0</span>])</span><br><span class="line"></span><br><span class="line">    label = []</span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> range(<span class="number">5</span>):</span><br><span class="line">        label.append(index[top_index[i]])</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> top_probs, label</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">img_path = test_dir  + <span class="string">'/17/image_03911.jpg'</span></span><br><span class="line">predict(img_path, model, topk=<span class="number">5</span>)</span><br></pre></td></tr></table></figure>
+
+
+
+
+<pre><code>(tensor([[9.8274e-01, 1.6505e-02, 3.9908e-04, 1.0707e-04, 9.1983e-05]],
+        grad_fn=&lt;TopkBackward&gt;), [&apos;17&apos;, &apos;100&apos;, &apos;18&apos;, &apos;34&apos;, &apos;92&apos;])</code></pre><h2 id="Sanity-Checking"><a href="#Sanity-Checking" class="headerlink" title="Sanity Checking"></a>Sanity Checking</h2><p>Now that you can use a trained model for predictions, check to make sure it makes sense. Even if the testing accuracy is high, it’s always good to check that there aren’t obvious bugs. Use <code>matplotlib</code> to plot the probabilities for the top 5 classes as a bar graph, along with the input image. It should look like this:</p>
+<img src='assets/inference_example.png' width=300px>
+
+<p>You can convert from the class integer encoding to actual flower names with the <code>cat_to_name.json</code> file (should have been loaded earlier in the notebook). To show a PyTorch tensor as an image, use the <code>imshow</code> function defined above.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># <span class="doctag">TODO:</span> Display an image along with the top 5 classes</span></span><br><span class="line">prob, classes = predict(img_path, model)</span><br><span class="line">prob = prob[<span class="number">0</span>].detach().numpy()</span><br><span class="line">labels = []</span><br><span class="line"><span class="keyword">for</span> each <span class="keyword">in</span> classes:</span><br><span class="line">    labels.append(cat_to_name[each])</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">plt.figure(figsize = (<span class="number">8</span>,<span class="number">8</span>))</span><br><span class="line">ax = plt.subplot(<span class="number">2</span>,<span class="number">1</span>,<span class="number">1</span>)</span><br><span class="line">flower_num = img_path.split(<span class="string">'/'</span>)[<span class="number">2</span>] <span class="comment"># find the index of the flower</span></span><br><span class="line">title= cat_to_name[flower_num] </span><br><span class="line">img = process_image(img_path)</span><br><span class="line">plt.title(title)</span><br><span class="line">imshow(img, ax)</span><br><span class="line">plt.subplot(<span class="number">2</span>,<span class="number">1</span>,<span class="number">2</span>)</span><br><span class="line">sns.barplot(prob, y=labels)</span><br><span class="line">plt.show()</span><br></pre></td></tr></table></figure>
+
+
+<p><img src="output_31_0.png" alt="png"></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># test a flower pic outside the dataset</span></span><br><span class="line">img_path = <span class="string">'C:\\Users\\jasonguo\\Desktop\\flowers_zwy\\11.JPG'</span></span><br><span class="line">prob, classes = predict(img_path, model)</span><br><span class="line">prob = prob[<span class="number">0</span>].detach().numpy()</span><br><span class="line">labels = []</span><br><span class="line"><span class="keyword">for</span> each <span class="keyword">in</span> classes:</span><br><span class="line">    labels.append(cat_to_name[each])</span><br><span class="line">plt.figure(figsize = (<span class="number">8</span>,<span class="number">8</span>))</span><br><span class="line">ax = plt.subplot(<span class="number">2</span>,<span class="number">1</span>,<span class="number">1</span>)</span><br><span class="line">img = process_image(img_path)</span><br><span class="line">imshow(img, ax)</span><br><span class="line">plt.subplot(<span class="number">2</span>,<span class="number">1</span>,<span class="number">2</span>)</span><br><span class="line">sns.barplot(prob, y=labels)</span><br><span class="line">plt.show()</span><br><span class="line"><span class="comment"># wihch is exactly true</span></span><br></pre></td></tr></table></figure>
+
+
+<p><img src="output_32_0.png" alt="png"></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
       
 
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
+        </div>
       
     </div>
     <div class="article-info article-info-index">
@@ -194,16 +461,75 @@
       
 
       
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2020/01/19/Image%20Classifier%20with%20Deep%20learning/">展开全文 >></a>
-        </p>
-      
 
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
+        </div>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2020/01/19/Image%20Classifier%20with%20Deep%20learning/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
       
       <div class="clearfix"></div>
     </div>
   </div>
 </article>
+
+  
+<nav id="article-nav">
+  
+  
+    <a href="/2020/01/19/%E7%94%A8GitHub%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">用GitHub搭建个人博客</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
 
 <aside class="wrap-side-operation">
     <div class="mod-side-operation">
@@ -223,145 +549,14 @@
 
 
 
-
   
-    <article id="post-用GitHub搭建个人博客" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
   
-    <h1 itemprop="name">
-      <a class="article-title" href="/2020/01/19/%E7%94%A8GitHub%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/">用GitHub搭建个人博客</a>
-    </h1>
   
 
-        
-        <a href="/2020/01/19/%E7%94%A8GitHub%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/" class="archive-article-date">
-  	<time datetime="2020-01-19T17:13:35.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-01-19</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2020/01/19/%E7%94%A8GitHub%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-hello-world" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2020/01/19/hello-world/">Hello World</a>
-    </h1>
   
 
-        
-        <a href="/2020/01/19/hello-world/" class="archive-article-date">
-  	<time datetime="2020-01-19T16:41:59.412Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-01-19</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>Welcome to <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="noopener">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="noopener">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="noopener">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">"My New Post"</span></span><br></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="noopener">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="noopener">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="noopener">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/one-command-deployment.html" target="_blank" rel="noopener">Deployment</a></p>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2020/01/19/hello-world/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
   
+
   
 
 
@@ -384,8 +579,8 @@
     <script>
 	var yiliaConfig = {
 		mathjax: false,
-		isHome: true,
-		isPost: false,
+		isHome: false,
+		isPost: true,
 		isArchive: false,
 		isTag: false,
 		isCategory: false,
