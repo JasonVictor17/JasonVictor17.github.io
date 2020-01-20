@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/mouse32.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/mouse16.ico">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('http://yoursite.com').hostname,
+    root: '/',
+    scheme: 'Muse',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="Git以及Git的几个最常用的指令,初步了解版本管理。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Git的几个基本指令">
+<meta property="og:url" content="http://yoursite.com/2020/01/20/Git%E7%9A%84%E5%87%A0%E4%B8%AA%E5%9F%BA%E6%9C%AC%E6%8C%87%E4%BB%A4/index.html">
+<meta property="og:site_name" content="Jingde&#39;s Blog">
+<meta property="og:description" content="Git以及Git的几个最常用的指令,初步了解版本管理。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://yoursite.com/2020/01/20/Git%E7%9A%84%E5%87%A0%E4%B8%AA%E5%9F%BA%E6%9C%AC%E6%8C%87%E4%BB%A4/1.png">
+<meta property="article:published_time" content="2020-01-20T16:13:35.000Z">
+<meta property="article:modified_time" content="2020-01-20T16:21:25.037Z">
+<meta property="article:author" content="Jason">
+<meta property="article:tag" content="Git">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://yoursite.com/2020/01/20/Git%E7%9A%84%E5%87%A0%E4%B8%AA%E5%9F%BA%E6%9C%AC%E6%8C%87%E4%BB%A4/1.png">
+
+<link rel="canonical" href="http://yoursite.com/2020/01/20/Git%E7%9A%84%E5%87%A0%E4%B8%AA%E5%9F%BA%E6%9C%AC%E6%8C%87%E4%BB%A4/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>Git的几个基本指令 | Jingde's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Jingde's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/01/20/Git%E7%9A%84%E5%87%A0%E4%B8%AA%E5%9F%BA%E6%9C%AC%E6%8C%87%E4%BB%A4/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Jason">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Jingde's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Git的几个基本指令
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2020-01-20 17:13:35 / 修改时间：17:21:25" itemprop="dateCreated datePublished" datetime="2020-01-20T17:13:35+01:00">2020-01-20</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Git-GitHub/" itemprop="url" rel="index">
+                    <span itemprop="name">Git & GitHub</span>
+                  </a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>Git以及Git的几个最常用的指令,初步了解版本管理。</p>
+<a id="more"></a>
+<hr>
+<h1 id="什么是Git以及为何使用Git"><a href="#什么是Git以及为何使用Git" class="headerlink" title="什么是Git以及为何使用Git?"></a>什么是Git以及为何使用Git?</h1><p>Git 是目前使用人数最多的版本管理工具。为什么会有Git呢?因为要版本控制。 举一个例子,小德要写论文那么他就可能要修改好几次,这时候比起在一个文件里修改小德可能会复制一个新的论文文件在新文件里修改。这时候就可能会有好几个版本的论文。其实平时使用的快捷键ctrl+z的撤回就是最简单的版本管理。</p>
+<p>情况再复杂些,小德可能做的是一个小组作业,大家都有各自要做的部分,那么好玩的情况就是大家做完一部分后就要在微信或者邮箱里传来传去,而有了Git 一个团队就可以轻松合作。想要更加深入了解什么是Git 的可以访问 <a href="http://blog.a0z.me/2014/05/21/GitBeginning/" target="_blank" rel="noopener">Ghosty Core 的博客</a>。</p>
+<p>Git 官网: <a href="https://git-scm.com/" target="_blank" rel="noopener">https://git-scm.com/</a></p>
+<h1 id="Git-的基本操作"><a href="#Git-的基本操作" class="headerlink" title="Git 的基本操作"></a>Git 的基本操作</h1><h3 id="1-命令行基本操作-和Linux一样"><a href="#1-命令行基本操作-和Linux一样" class="headerlink" title="1. 命令行基本操作(和Linux一样)"></a>1. 命令行基本操作(和Linux一样)</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">cd blog # 切换到当前目录下叫blog的文件夹</span><br><span class="line">cd .. # 退回上一级目录</span><br><span class="line">ls # 查看当前目录下所有文件和文件夹</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">cd # 返回home目录~</span><br><span class="line">ls -ah # 查看当前目录下所有文件,文件夹以及隐藏文件</span><br><span class="line">pwd # 查看当前路径</span><br><span class="line">touch balabala.py # 在当前目录创建一个名字叫做balabala的python文件</span><br><span class="line">mkdir blog # 在当前目录创建一个叫blog的文件夹</span><br><span class="line">rm balabala.py # 删除该文件</span><br><span class="line">rm -r blog # 删除该文件夹</span><br><span class="line">mv &#123;src&#125; &#123;dest&#125; # 移动文件,如果 dest 是目录,则移动,是文件名则覆盖</span><br></pre></td></tr></table></figure>
+<p>要使用git掌握前三个可以把目录移到工作目录init就行了… 下面的作为补充, 万一哪天没有图形化界面只有个命令行呢。</p>
+<h3 id="2-创建一个仓库-初始化"><a href="#2-创建一个仓库-初始化" class="headerlink" title="2. 创建一个仓库,初始化"></a>2. 创建一个仓库,初始化</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git init</span><br></pre></td></tr></table></figure>
+<p>在一个工作目录下输入后,就完成了初始化,可以看到隐藏文件有git文件夹。我们就有了一个仓库。</p>
+<h3 id="3-查看目前状态"><a href="#3-查看目前状态" class="headerlink" title="3. 查看目前状态"></a>3. 查看目前状态</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git status</span><br></pre></td></tr></table></figure>
+<p>会提示你当前库的状态,追踪的文件,未追踪的文件,做过修改未commit(注释)的文件。</p>
+<h3 id="4-提交修改"><a href="#4-提交修改" class="headerlink" title="4. 提交修改"></a>4. 提交修改</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git add &lt;file&gt; # 指定一个文件提交</span><br><span class="line">git add . # 提交所有当前目录下文件</span><br></pre></td></tr></table></figure>
+<p>修改文件完首先要把文件推送到staging index,选择要推送的文件或全部</p>
+<h3 id="5-commit-注释"><a href="#5-commit-注释" class="headerlink" title="5. commit(注释)"></a>5. commit(注释)</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git commit -m &quot;descriptions&quot; # 直接注释</span><br><span class="line">git commit 打开编辑器进行注释</span><br><span class="line">git commit --amend 对最近一次的提交做内容修改</span><br></pre></td></tr></table></figure>
+<p>推送到staging index后需要添加注释,可以直接注释也可以选择自己喜欢的文本编辑器进行注释,Linux下的话可以是vim和nano等,Windows下可以是Notepad++等。注释完后文件就从staging index 推送到 repo仓库了。</p>
+<h3 id="6-克隆GitHub远程仓库"><a href="#6-克隆GitHub远程仓库" class="headerlink" title="6. 克隆GitHub远程仓库"></a>6. 克隆GitHub远程仓库</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git clone &lt;remote address&gt;</span><br></pre></td></tr></table></figure>
+<p>可以下载远程Github的仓库到本地,例如</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git clone https:&#x2F;&#x2F;github.com&#x2F;JasonVictor17&#x2F;Housing.git</span><br></pre></td></tr></table></figure>
+<p>就可以复制我的一个repo到本地了。</p>
+<h3 id="7-关联并推送到Github远程仓库"><a href="#7-关联并推送到Github远程仓库" class="headerlink" title="7. 关联并推送到Github远程仓库"></a>7. 关联并推送到Github远程仓库</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">git remote add origin &lt;remote address&gt;	在本地工作区目录下按照 GitHub 提示进行关联</span><br><span class="line">git remote rm origin			解除错误关联</span><br><span class="line">git push -u origin master		第一次将本地仓库推送至远程仓库(每次在本地提交后进行操作)</span><br><span class="line">git push origin master			以后每次将本地仓库推送至远程仓库(每次在本地提交后进行操作)</span><br></pre></td></tr></table></figure>
+
+<p>第一步要把本地库关联到一个GitHub库,在GitHub创建新库时会有提示如何操作。第二步就是推送本地库到远程库,第一次操作有所不同以后都一样。</p>
+<h3 id="8-流程图"><a href="#8-流程图" class="headerlink" title="8.流程图"></a>8.流程图</h3><p>至此,一个大致的结构就可以形成了。</p>
+<p><img src="/2020/01/20/Git%E7%9A%84%E5%87%A0%E4%B8%AA%E5%9F%BA%E6%9C%AC%E6%8C%87%E4%BB%A4/1.png" alt="github"></p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div></div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.jpg" alt="Jason 微信支付">
+        <p>微信支付</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Git/" rel="tag"># Git</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/01/20/%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2%E5%BB%BA%E8%AE%BE-%E5%9C%A8GitHub%E5%88%9B%E5%BB%BA%E4%B8%80%E4%B8%AA%E4%BB%93%E5%BA%93%E5%B9%B6%E9%85%8D%E7%BD%AEGit/" rel="prev" title="在GitHub创建一个仓库并配置Git">
+      <i class="fa fa-chevron-left"></i> 在GitHub创建一个仓库并配置Git
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/01/20/%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2%E5%BB%BA%E8%AE%BE-%E5%AE%89%E8%A3%85%E5%B9%B6%E9%85%8D%E7%BD%AENode.js%E4%BB%A5%E5%8F%8AHexo/" rel="next" title="安装并配置Node.js以及Hexo">
+      安装并配置Node.js以及Hexo <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#什么是Git以及为何使用Git"><span class="nav-number">1.</span> <span class="nav-text">什么是Git以及为何使用Git?</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Git-的基本操作"><span class="nav-number">2.</span> <span class="nav-text">Git 的基本操作</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-命令行基本操作-和Linux一样"><span class="nav-number">2.0.1.</span> <span class="nav-text">1. 命令行基本操作(和Linux一样)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-创建一个仓库-初始化"><span class="nav-number">2.0.2.</span> <span class="nav-text">2. 创建一个仓库,初始化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-查看目前状态"><span class="nav-number">2.0.3.</span> <span class="nav-text">3. 查看目前状态</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-提交修改"><span class="nav-number">2.0.4.</span> <span class="nav-text">4. 提交修改</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-commit-注释"><span class="nav-number">2.0.5.</span> <span class="nav-text">5. commit(注释)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-克隆GitHub远程仓库"><span class="nav-number">2.0.6.</span> <span class="nav-text">6. 克隆GitHub远程仓库</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-关联并推送到Github远程仓库"><span class="nav-number">2.0.7.</span> <span class="nav-text">7. 关联并推送到Github远程仓库</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#8-流程图"><span class="nav-number">2.0.8.</span> <span class="nav-text">8.流程图</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Jason</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">5</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/JasonVictor17" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;JasonVictor17" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/guojingde17@163.com" title="E-Mail → guojingde17@163.com"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Jason</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v4.2.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.7.0
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  
+  <script color='0,0,255' opacity='0.5' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
