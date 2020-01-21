@@ -541,4 +541,234 @@ Total time: 14m 39s</code></pre><figure class="highlight python"><table><tr><td 
         <tag>博客搭建</tag>
       </tags>
   </entry>
+  <entry>
+    <title>用GitHub搭建个人博客(目录)</title>
+    <url>/2020/01/19/%E5%9F%BA%E4%BA%8Epython%E7%9A%84%E5%9F%BA%E9%87%91%E5%AE%9A%E6%8A%95%E5%88%86%E6%9E%90/</url>
+    <content><![CDATA[<font size="3">
+使用python可视化分析基金定投和普通投资之间的区别和优缺点。探讨基金定投的降低风险作用。
+
+<a id="more"></a>
+<hr>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"><span class="keyword">from</span> bs4 <span class="keyword">import</span> BeautifulSoup</span><br><span class="line"><span class="keyword">import</span> re</span><br><span class="line"><span class="keyword">import</span> pandas <span class="keyword">as</span> pd</span><br><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"><span class="keyword">import</span> random</span><br><span class="line"><span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt</span><br></pre></td></tr></table></figure>
+<h2 id="爬取东方财富网关于基金的数据并处理数据"><a href="#爬取东方财富网关于基金的数据并处理数据" class="headerlink" title="爬取东方财富网关于基金的数据并处理数据"></a>爬取东方财富网关于基金的数据并处理数据</h2><figure class="highlight python"><table><tr><td class="code"><pre><span class="line">link=<span class="string">"http://fund.eastmoney.com/f10/F10DataApi.aspx?type=lsjz&amp;code=000311&amp;page=1&amp;sdate=2018-01-02&amp;edate=2020-01-10&amp;per=20"</span></span><br><span class="line">headers=&#123;</span><br><span class="line">    <span class="string">'user-agent'</span>: <span class="string">"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36"</span>,</span><br><span class="line">&#125;</span><br><span class="line">r=requests.get(link,headers=headers)</span><br><span class="line"></span><br><span class="line">s1 = requests.get(link)</span><br><span class="line">s1.encoding = <span class="string">'utf-8'</span></span><br><span class="line">soup1=BeautifulSoup(s1.text,<span class="string">'lxml'</span>)</span><br><span class="line">fund_detail=soup1.find_all(<span class="string">'tr'</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment">###获取总页数</span></span><br><span class="line">pattern=re.compile(<span class="string">r'pages:(.*),'</span>)</span><br><span class="line">html=r.text</span><br><span class="line">result=re.search(pattern,html).group(<span class="number">1</span>)</span><br><span class="line">pages=int(result)</span><br><span class="line">pages</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">data_list=[]</span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> range(<span class="number">1</span>, pages+<span class="number">1</span>):</span><br><span class="line">    link=<span class="string">'http://fund.eastmoney.com/f10/F10DataApi.aspx?type=lsjz&amp;code=000311&amp;page='</span>+str(i)+<span class="string">'&amp;sdate=2018-01-02&amp;edate=2020-01-10&amp;per=20'</span></span><br><span class="line">    r=requests.get(link,headers=headers)</span><br><span class="line">    s1 = requests.get(link)</span><br><span class="line">    s1.encoding = <span class="string">'utf-8'</span></span><br><span class="line">    soup1=BeautifulSoup(s1.text,<span class="string">'lxml'</span>)</span><br><span class="line">    fund_detail=soup1.find_all(<span class="string">'tr'</span>)</span><br><span class="line">    <span class="keyword">for</span> each <span class="keyword">in</span> fund_detail:</span><br><span class="line">       <span class="keyword">if</span> each.td <span class="keyword">is</span> <span class="literal">None</span>:</span><br><span class="line">        <span class="keyword">continue</span></span><br><span class="line">       <span class="keyword">else</span>:</span><br><span class="line">        date=each.td.text.strip()<span class="comment">##only first td</span></span><br><span class="line">        unit_value=each.find(<span class="string">'td'</span>,class_=<span class="string">'tor bold'</span>).text.strip()<span class="comment">##first tor bold</span></span><br><span class="line">        cum_value=each.find(<span class="string">'td'</span>,class_=<span class="string">'tor bold'</span>).next_sibling.text.strip()<span class="comment">##second td</span></span><br><span class="line">        percent=each.find(<span class="string">'td'</span>).next_sibling.next_sibling.next_sibling.text.strip()</span><br><span class="line">        purchase_condition=each.find(<span class="string">'td'</span>).next_sibling.next_sibling.next_sibling.next_sibling.text.strip()</span><br><span class="line">        sale_condition=each.find(<span class="string">'td'</span>).next_sibling.next_sibling.next_sibling.next_sibling.next_sibling.text.strip()</span><br><span class="line">        dividend=each.find(<span class="string">'td'</span>,class_=<span class="string">'red unbold'</span>).text.strip()</span><br><span class="line">        code= <span class="string">'000311'</span></span><br><span class="line">        name=  <span class="string">'景顺长城沪深300增强'</span></span><br><span class="line">        data_list.append([code, name, date,unit_value, cum_value, percent,purchase_condition, sale_condition, dividend])</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">len(data_list)</span><br></pre></td></tr></table></figure>
+
+
+
+
+<pre><code>497</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><span class="line">fund_000311 = pd.DataFrame(data_list)<span class="comment"># 设置列名</span></span><br><span class="line">fund_000311.columns=[<span class="string">'代码'</span>,<span class="string">'名字'</span>,<span class="string">'时间'</span>,<span class="string">'单位净值'</span>,<span class="string">'累计净值'</span>,<span class="string">'涨跌幅'</span>,<span class="string">'申购'</span>,<span class="string">'赎回'</span>,<span class="string">'分红'</span>]</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">fund_000311.to_csv(<span class="string">"data0003111"</span>)</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">fund_000311.head()</span><br></pre></td></tr></table></figure>
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+<pre><code>.dataframe tbody tr th {
+    vertical-align: top;
+}
+
+.dataframe thead th {
+    text-align: right;
+}</code></pre><p></style><p></p>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>代码</th>
+      <th>名字</th>
+      <th>时间</th>
+      <th>单位净值</th>
+      <th>累计净值</th>
+      <th>涨跌幅</th>
+      <th>申购</th>
+      <th>赎回</th>
+      <th>分红</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>000311</td>
+      <td>景顺长城沪深300增强</td>
+      <td>2020-01-10</td>
+      <td>2.2260</td>
+      <td>2.5660</td>
+      <td>0.32%</td>
+      <td>开放申购</td>
+      <td>开放赎回</td>
+      <td></td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>000311</td>
+      <td>景顺长城沪深300增强</td>
+      <td>2020-01-09</td>
+      <td>2.2190</td>
+      <td>2.5590</td>
+      <td>1.46%</td>
+      <td>开放申购</td>
+      <td>开放赎回</td>
+      <td></td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>000311</td>
+      <td>景顺长城沪深300增强</td>
+      <td>2020-01-08</td>
+      <td>2.1870</td>
+      <td>2.5270</td>
+      <td>-1.44%</td>
+      <td>开放申购</td>
+      <td>开放赎回</td>
+      <td></td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>000311</td>
+      <td>景顺长城沪深300增强</td>
+      <td>2020-01-07</td>
+      <td>2.2190</td>
+      <td>2.5590</td>
+      <td>0.91%</td>
+      <td>开放申购</td>
+      <td>开放赎回</td>
+      <td></td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>000311</td>
+      <td>景顺长城沪深300增强</td>
+      <td>2020-01-06</td>
+      <td>2.1990</td>
+      <td>2.5390</td>
+      <td>-0.36%</td>
+      <td>开放申购</td>
+      <td>开放赎回</td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+
+
+
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment">##画出走势图(累计净值),共1328个交易日,累计净值=单位净值+累计分红</span></span><br><span class="line">cum_price=fund_000311[[<span class="string">'单位净值'</span>]]</span><br><span class="line">cum_price=np.array(cum_price)</span><br><span class="line">cum_price=cum_price.tolist()</span><br><span class="line">cum_value=list()</span><br><span class="line">t = np.arange(<span class="number">0.0</span>, <span class="number">497.0</span>, <span class="number">1</span>)</span><br><span class="line"><span class="keyword">for</span> each <span class="keyword">in</span> reversed(cum_price):<span class="comment">##倒序 从头开始</span></span><br><span class="line"> cum_price=float(*each)</span><br><span class="line"> cum_value.append(cum_price)</span><br><span class="line">plt.plot(t,cum_value,<span class="string">'r-'</span>)</span><br><span class="line">plt.ylabel(<span class="string">'value'</span>)</span><br><span class="line">plt.xlabel(<span class="string">'time'</span>) </span><br><span class="line">plt.title(<span class="string">'Fund 000311 HuSheng 300 '</span>)</span><br></pre></td></tr></table></figure>
+
+
+
+
+<pre><code>Text(0.5, 1.0, &apos;Fund 000311 HuSheng 300 &apos;)</code></pre><p><img src="/2020/01/19/%E5%9F%BA%E4%BA%8Epython%E7%9A%84%E5%9F%BA%E9%87%91%E5%AE%9A%E6%8A%95%E5%88%86%E6%9E%90/output_6_1.png" alt="png"></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment">##涨跌情况</span></span><br><span class="line">percent=fund_000311[[<span class="string">'涨跌幅'</span>]]</span><br><span class="line">percent=np.array(percent)</span><br><span class="line">percent=percent.tolist()</span><br><span class="line"><span class="keyword">while</span> [<span class="string">''</span>] <span class="keyword">in</span> percent:</span><br><span class="line"> percent.remove([<span class="string">''</span>])<span class="comment">#去除三个空白值</span></span><br><span class="line">percent_val=[]</span><br><span class="line">t = np.arange(<span class="number">0.0</span>, <span class="number">494.0</span>, <span class="number">1</span>)</span><br><span class="line">i=<span class="number">1</span></span><br><span class="line"><span class="keyword">for</span> each <span class="keyword">in</span> reversed(percent):<span class="comment">##倒序 从头开始</span></span><br><span class="line">   each=float(str(*each).strip(<span class="string">'%'</span>))</span><br><span class="line">   percent_val.append(each)</span><br><span class="line">   i=i+<span class="number">1</span>  </span><br><span class="line">plt.plot(t,percent_val,<span class="string">'r-'</span>,linewidth=<span class="number">0.5</span>)</span><br><span class="line">plt.ylabel(<span class="string">'ratio(%)'</span>)</span><br><span class="line">plt.xlabel(<span class="string">'time'</span>) </span><br><span class="line">plt.title(<span class="string">'Fund 000311 HuSheng 300 '</span>)</span><br><span class="line"><span class="comment">##可以看到在第二百到第三百个交易日波动率明显变大,400到500明显波动率小。</span></span><br></pre></td></tr></table></figure>
+
+
+
+
+<pre><code>Text(0.5, 1.0, &apos;Fund 000311 HuSheng 300 &apos;)</code></pre><p><img src="/2020/01/19/%E5%9F%BA%E4%BA%8Epython%E7%9A%84%E5%9F%BA%E9%87%91%E5%AE%9A%E6%8A%95%E5%88%86%E6%9E%90/output_7_1.png" alt="png"></p>
+<h2 id="基金定投研究"><a href="#基金定投研究" class="headerlink" title="基金定投研究"></a>基金定投研究</h2><figure class="highlight python"><table><tr><td class="code"><pre><span class="line">unit_price=fund_000311[[<span class="string">'单位净值'</span>]]</span><br><span class="line">unit_price=np.array(unit_price)</span><br><span class="line">unit_price=unit_price.tolist()</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 查出分红情况</span></span><br><span class="line">dividend=fund_000311.loc[fund_000311[<span class="string">'分红'</span>] != <span class="string">''</span>]</span><br><span class="line">dividend <span class="comment"># 期间无分红</span></span><br></pre></td></tr></table></figure>
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+<pre><code>.dataframe tbody tr th {
+    vertical-align: top;
+}
+
+.dataframe thead th {
+    text-align: right;
+}</code></pre><p></style><p></p>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>代码</th>
+      <th>名字</th>
+      <th>时间</th>
+      <th>单位净值</th>
+      <th>累计净值</th>
+      <th>涨跌幅</th>
+      <th>申购</th>
+      <th>赎回</th>
+      <th>分红</th>
+    </tr>
+  </thead>
+  <tbody>
+  </tbody>
+</table>
+</div>
+
+
+
+<h4 id="1-简单情况一次买入"><a href="#1-简单情况一次买入" class="headerlink" title="1. 简单情况一次买入"></a>1. 简单情况一次买入</h4><figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 计算年化收益</span></span><br><span class="line"></span><br><span class="line">total_yearly_once = []</span><br><span class="line">unit_price_new = unit_price[<span class="number">50</span>:<span class="number">494</span>] <span class="comment"># 避免投资时间太短不考虑近50个交易日</span></span><br><span class="line">dayday = <span class="number">497</span> <span class="comment"># 投资时长</span></span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> reversed(unit_price_new):</span><br><span class="line"> i=float(*i)</span><br><span class="line"> pie=<span class="number">1000</span>/i <span class="comment">##份额</span></span><br><span class="line"> temp = pie*<span class="number">2.226</span> <span class="comment"># 2.226 20年1月10日</span></span><br><span class="line"> total_return = (temp<span class="number">-1000</span>)/<span class="number">1000</span></span><br><span class="line"> yearly_return = total_return/dayday*<span class="number">250</span> <span class="comment"># 250个交易日</span></span><br><span class="line"> total_yearly_once.append(yearly_return)</span><br><span class="line"> dayday = dayday - <span class="number">1</span></span><br><span class="line">total_yearly_once_df=pd.DataFrame(total_yearly_once)</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 画图</span></span><br><span class="line"></span><br><span class="line">t = np.arange(<span class="number">0.0</span>, <span class="number">444.0</span>, <span class="number">1</span>)</span><br><span class="line">plt.plot(t,total_yearly_once_df,<span class="string">'r-'</span>)</span><br><span class="line">plt.ylabel(<span class="string">'ratio(%)'</span>)</span><br><span class="line">plt.xlabel(<span class="string">'time'</span>) </span><br><span class="line">plt.title(<span class="string">'Fund 000311 normal investment '</span>)</span><br></pre></td></tr></table></figure>
+
+
+
+
+<pre><code>Text(0.5, 1.0, &apos;Fund 000311 normal investment &apos;)</code></pre><p><img src="/2020/01/19/%E5%9F%BA%E4%BA%8Epython%E7%9A%84%E5%9F%BA%E9%87%91%E5%AE%9A%E6%8A%95%E5%88%86%E6%9E%90/output_13_1.png" alt="png"></p>
+<p>可以看到收益率的波动率在这段期间非常的大,大致从0到将近60%,并且存在负收益率。</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">plt.hist(total_yearly_once, bins=<span class="number">5</span>,facecolor=<span class="string">"red"</span>, edgecolor=<span class="string">"black"</span>, alpha=<span class="number">0.7</span>)</span><br></pre></td></tr></table></figure>
+
+
+
+
+<pre><code>(array([101., 110., 124.,  78.,  31.]),
+ array([-0.02019805,  0.09804444,  0.21628694,  0.33452944,  0.45277193,
+         0.57101443]),
+ &lt;a list of 5 Patch objects&gt;)</code></pre><p><img src="/2020/01/19/%E5%9F%BA%E4%BA%8Epython%E7%9A%84%E5%9F%BA%E9%87%91%E5%AE%9A%E6%8A%95%E5%88%86%E6%9E%90/output_15_1.png" alt="png"></p>
+<ol start="2">
+<li>定投简单情况(不考虑时间价值)automatic investment plan</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 计算年化收益</span></span><br><span class="line">total_yearly_auto = []</span><br><span class="line">times= np.arange(<span class="number">494</span>, <span class="number">50</span>, <span class="number">-1</span>)</span><br><span class="line">dayday = <span class="number">497</span> <span class="comment"># 投资时长</span></span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> times:</span><br><span class="line">    unit_price_new = unit_price[<span class="number">50</span>:i+<span class="number">1</span>] <span class="comment"># 避免投资时间太短不考虑近50个交易日</span></span><br><span class="line">    each_pie=[]</span><br><span class="line">    each_amount=<span class="number">1000</span>/(len(unit_price_new)) <span class="comment"># 每笔投资多少</span></span><br><span class="line">    <span class="keyword">for</span> each <span class="keyword">in</span> (unit_price_new):</span><br><span class="line">        each=float(*each)</span><br><span class="line">        pie=each_amount/each</span><br><span class="line">        each_pie.append(pie)</span><br><span class="line">    total_return=(sum(each_pie)*<span class="number">2.226</span><span class="number">-1000</span>)/<span class="number">1000</span></span><br><span class="line">    yearly_return = total_return/dayday*<span class="number">250</span></span><br><span class="line">    total_yearly_auto.append(yearly_return)</span><br><span class="line">    dayday = dayday - <span class="number">1</span></span><br><span class="line">total_yearly_auto_df=pd.DataFrame(total_yearly_auto)</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">t = np.arange(<span class="number">0.0</span>, <span class="number">444.0</span>, <span class="number">1</span>)</span><br><span class="line">plt.plot(t,total_yearly_auto_df,<span class="string">'b-'</span>, label=<span class="string">'auto'</span>)</span><br><span class="line">plt.plot(t,total_yearly_once_df,<span class="string">'r-'</span>, label=<span class="string">'normal'</span>)</span><br><span class="line">plt.legend(loc=<span class="string">'upper right'</span>)</span><br><span class="line">plt.ylabel(<span class="string">'ratio(%)'</span>)</span><br><span class="line">plt.xlabel(<span class="string">'time'</span>) </span><br><span class="line">plt.title(<span class="string">'Fund 000311 auto investment'</span>)</span><br></pre></td></tr></table></figure>
+
+
+
+
+<pre><code>Text(0.5, 1.0, &apos;Fund 000311 auto investment&apos;)</code></pre><p><img src="/2020/01/19/%E5%9F%BA%E4%BA%8Epython%E7%9A%84%E5%9F%BA%E9%87%91%E5%AE%9A%E6%8A%95%E5%88%86%E6%9E%90/output_18_1.png" alt="png"></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">plt.hist(total_yearly_once, bins=<span class="number">10</span>,facecolor=<span class="string">"red"</span>, edgecolor=<span class="string">"black"</span>, alpha=<span class="number">0.7</span>)</span><br><span class="line">plt.hist(total_yearly_auto, bins=<span class="number">10</span>,facecolor=<span class="string">"blue"</span>, edgecolor=<span class="string">"black"</span>, alpha=<span class="number">0.7</span>)</span><br></pre></td></tr></table></figure>
+
+
+
+
+<pre><code>(array([ 52., 107., 148., 108.,   6.,  12.,   2.,   5.,   2.,   2.]),
+ array([0.07401984, 0.09161269, 0.10920555, 0.1267984 , 0.14439126,
+        0.16198411, 0.17957697, 0.19716982, 0.21476267, 0.23235553,
+        0.24994838]),
+ &lt;a list of 10 Patch objects&gt;)</code></pre><p><img src="/2020/01/19/%E5%9F%BA%E4%BA%8Epython%E7%9A%84%E5%9F%BA%E9%87%91%E5%AE%9A%E6%8A%95%E5%88%86%E6%9E%90/output_19_1.png" alt="png"></p>
+<p>通过画图可以看出,定投具有更小的收益率波动性,因此也具有更小的风险。收益率大致在10%到15%之间,没有负收益率。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>可以看出定投具有所谓的“削峰填谷”的作用, 可以达到随时买入而年化收益波动不大的效果。而普通投资的收益率不稳定,可能一下子“暴富”也可能“白忙活”,需要投资者掌握投资时机。定投对于想要稳定增值资产的投资者是一个相对比较好的选择。</p>
+</font>]]></content>
+      <categories>
+        <category>博客搭建</category>
+      </categories>
+      <tags>
+        <tag>博客搭建</tag>
+      </tags>
+  </entry>
 </search>
