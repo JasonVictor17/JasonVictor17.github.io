@@ -1,6 +1,137 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>个人博客建设6-主题的配置Next</title>
+    <url>/2020/01/21/%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2%E5%BB%BA%E8%AE%BE6-%E4%B8%BB%E9%A2%98%E7%9A%84%E9%85%8D%E7%BD%AENext/</url>
+    <content><![CDATA[<font size="3">
+个人博客建设第六步:本篇介绍如何配置Next主题,其他主题的配置其实也大同小异可以参考,这篇也是本教程的最后一篇,以后可能会更新更多关于博客建设的内容。
+
+<a id="more"></a>
+<hr>
+<p>首先我们找到主题文件夹Next里的配置文件,对,就是那个和站点配置文件一样名字的_config.yml。 打开会发现里面有几百行。。。不过没关系我会介绍最主要的几个配置。其他就留给大家自行探索了。 </p>
+<h3 id="1-菜单栏"><a href="#1-菜单栏" class="headerlink" title="1. 菜单栏"></a>1. 菜单栏</h3><p>看我的博客可以看见有很多标签和分类,但是初始状态是没有的,我们需要配置。<br>首先我们找到menu 栏,把tags(标签),Categories(分类)或者其他需要的标签前的#号删除,表面我们使用这行代码</p>
+<p><img src="/2020/01/21/%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2%E5%BB%BA%E8%AE%BE6-%E4%B8%BB%E9%A2%98%E7%9A%84%E9%85%8D%E7%BD%AENext/1.png" alt="peizhi">  </p>
+<p>保存后我们在博客主目录下输入:</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">hexo new page tags</span><br></pre></td></tr></table></figure>
+<p>我们就会在source文件夹内发现生成了一个tags的文件夹,打开里面的index.md文件按照如下设置</p>
+<p><img src="/2020/01/21/%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2%E5%BB%BA%E8%AE%BE6-%E4%B8%BB%E9%A2%98%E7%9A%84%E9%85%8D%E7%BD%AENext/2.png" alt="peizhi"> </p>
+<p> 然后保存就行了,其他的标签也是类似操作就不赘述了。之后我们在写文章时候按照如下格式写开头:</p>
+<p> <img src="/2020/01/21/%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2%E5%BB%BA%E8%AE%BE6-%E4%B8%BB%E9%A2%98%E7%9A%84%E9%85%8D%E7%BD%AENext/3.png" alt="peizhi">  </p>
+<p>就可以自动生成标签和分类了。每一次有新的标签和分类都会自动在网页生成,方便快捷~(自动保存在public文件夹内)</p>
+<h3 id="2-语言"><a href="#2-语言" class="headerlink" title="2.语言"></a>2.语言</h3><p> 在站点配置文件中填写: language: ‘zh-CN’就可以设置中文了</p>
+<p> <img src="/2020/01/21/%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2%E5%BB%BA%E8%AE%BE6-%E4%B8%BB%E9%A2%98%E7%9A%84%E9%85%8D%E7%BD%AENext/4.png" alt="peizhi"></p>
+<h3 id="3"><a href="#3" class="headerlink" title="3."></a>3.</h3><hr>
+<p>上一步: [个人博客建设5-Markdown语法]<br>目录: <a href="https://www.guojingde.cn/2020/01/19/%E7%94%A8GitHub%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/" target="_blank" rel="noopener">用GitHub搭建个人博客(目录)</a></p>
+</font>]]></content>
+      <categories>
+        <category>博客搭建</category>
+      </categories>
+      <tags>
+        <tag>博客搭建</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>个人博客建设5-Markdown语法</title>
+    <url>/2020/01/21/%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2%E5%BB%BA%E8%AE%BE5-Markdown%E8%AF%AD%E6%B3%95/</url>
+    <content><![CDATA[<font size="3">
+个人博客建设第五步:用基本的Markdown语法来写博客...
+
+<a id="more"></a>
+<hr>
+<h3 id="为什么markdown"><a href="#为什么markdown" class="headerlink" title="为什么markdown"></a>为什么markdown</h3><p>首先我们写的每一篇博客都是基于md也就是markdown文件的,其次Markdown 是一种轻量级标记语言,它允许人们使用易读易写的纯文本格式编写文档,非常适合写博客。</p>
+<h3 id="编辑器的选择"><a href="#编辑器的选择" class="headerlink" title="编辑器的选择"></a>编辑器的选择</h3><p>可以使用<a href="https://code.visualstudio.com/" target="_blank" rel="noopener">VS code</a>, <a href="http://markdownpad.com/" target="_blank" rel="noopener">MarkdownPad</a>或者<a href="https://sosfos.wordpress.com/" target="_blank" rel="noopener">BookPad</a>(注意这个收费14块)<br>具体的选择结合自身喜好,没有什么大的区别,都具有实时预览功能我觉得就够了。</p>
+<h3 id="简单的几个语法"><a href="#简单的几个语法" class="headerlink" title="简单的几个语法"></a>简单的几个语法</h3><h4 id="1-标题"><a href="#1-标题" class="headerlink" title="1. 标题"></a>1. 标题</h4><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line"># hello</span><br><span class="line">## hello</span><br></pre></td></tr></table></figure>
+<p>上面两个分别是主标题和次级标题的区别,井号越多字体就越小,标题也越次级。</p>
+<h4 id="2-字体和颜色"><a href="#2-字体和颜色" class="headerlink" title="2. 字体和颜色"></a>2. 字体和颜色</h4><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&lt;font face&#x3D;&quot;黑体&quot;&gt;</span><br><span class="line">&lt;font color&#x3D;red size&#x3D;4&gt;</span><br><span class="line">&lt;font color&#x3D;red size&#x3D;4 face&#x3D;&quot;黑体&quot;&gt;</span><br></pre></td></tr></table></figure>
+<p>使用如上方式在之后加上文字的效果分别如下:<br><font face="黑体" size="4">我是好人<br><font color="red" size="4">我是好人<br><font color="red" size="6" face="黑体">我是好人</font></font></font></p>
+<p>:kissing:</p>
+<p><font size="3" face="微软雅黑">想要打出如上表情我们只需要输入</font></p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">:kissing:</span><br></pre></td></tr></table></figure>
+<p>具体可以参考GitHub上: <a href="https://github.com/guodongxiaren/README/blob/master/emoji.md" target="_blank" rel="noopener">https://github.com/guodongxiaren/README/blob/master/emoji.md</a></p>
+<h4 id="3-图片的插入"><a href="#3-图片的插入" class="headerlink" title="3. 图片的插入"></a>3. 图片的插入</h4><p>当我们使用Hexo建立博客的时候免不了要插入图片,我们可以在source下创建一个image文件夹然后通过:</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">![](&#x2F;image&#x2F;image.png)</span><br></pre></td></tr></table></figure>
+<p>来访问。但是这里我推荐以下一种用法虽然略有点麻烦,但是以后处理图片会很方便。<br>首先在博客的目录blog下用命令行运行如下代码安装一个小插件, 参考:<a href="https://github.com/xcodebuild/hexo-asset-image" target="_blank" rel="noopener">https://github.com/xcodebuild/hexo-asset-image</a></p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">npm install hexo-asset-image --save</span><br></pre></td></tr></table></figure>
+<p>然后我们在站点配置文件_congif.yml中设置:</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">post_asset_folder: true</span><br></pre></td></tr></table></figure>
+<p>之后我们我们只要在撰写博客的目录下,也就是source目录下的_posts文件夹内创建一个和这篇博客名字一样的文件夹,把图片放入其中,就可以按照如下来插入图片了:</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">![图片命名](logo.jpg)</span><br></pre></td></tr></table></figure>
+<p>不需要指定图片的路径,另外如果是在命令行使用 hexo new 命令来创立新的md文件时会自动生成同名文件夹不需要手动另外创建。</p>
+<h4 id="4-网站链接"><a href="#4-网站链接" class="headerlink" title="4. 网站链接"></a>4. 网站链接</h4><p>比起直接复制链接更好的方式是:</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">[VS code](https:&#x2F;&#x2F;code.visualstudio.com&#x2F;)</span><br></pre></td></tr></table></figure>
+<p>前面写在文章中呈现的名字,后面写链接,这样直接点文字就可以进入链接。</p>
+<h4 id="5-强调"><a href="#5-强调" class="headerlink" title="5.强调"></a>5.强调</h4><p>使用如下命令就可以达到对某些文字强调的作用  </p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">*single asterisks*</span><br><span class="line">_single underscores_  </span><br><span class="line">**double asterisks**</span><br><span class="line">__double underscores__</span><br></pre></td></tr></table></figure>
+<p><em>single asterisks</em><br><em>single underscores</em><br><strong>double asterisks</strong><br><strong>double underscores</strong> </p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>学会这几个基本命令就差不多可以开始写博客了,至于其他更多的命令请参考<a href="https://www.appinn.com/markdown/" target="_blank" rel="noopener">Markdown中文版说明</a>。<br>希望大家写博客愉快!</p>
+<hr>
+<p>上一步: [个人博客建设4-选择博客主题]<br>下一步: [个人博客建设6-主题的配置Next]<br>目录: <a href="https://www.guojingde.cn/2020/01/19/%E7%94%A8GitHub%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/" target="_blank" rel="noopener">用GitHub搭建个人博客(目录)</a></p>
+</font>]]></content>
+      <categories>
+        <category>博客搭建</category>
+      </categories>
+      <tags>
+        <tag>博客搭建</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>个人博客建设4-选择博客主题</title>
+    <url>/2020/01/21/%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2%E5%BB%BA%E8%AE%BE4-%E9%80%89%E6%8B%A9%E5%8D%9A%E5%AE%A2%E4%B8%BB%E9%A2%98/</url>
+    <content><![CDATA[<font size="3">
+个人博客建设第四步:选择一个自己喜欢的主题模板...
+
+<a id="more"></a>
+<hr>
+<h3 id="为什么使用模板"><a href="#为什么使用模板" class="headerlink" title="为什么使用模板"></a>为什么使用模板</h3><p>因为简单快速,自己开发的话。。。就要系统学习了。总之关于模板的选择我们可以参考知乎的之一篇回答:<a href="https://www.zhihu.com/question/24422335" target="_blank" rel="noopener">有哪些好看的 Hexo 主题</a>, 以及官网<a href="https://hexo.io/themes/。" target="_blank" rel="noopener">https://hexo.io/themes/。</a><br>我选用的是我个人觉得还蛮好的Next主题,大致样子可以参照我现在的博客。</p>
+<h3 id="部署模板"><a href="#部署模板" class="headerlink" title="部署模板"></a>部署模板</h3><p>找到我们喜欢的模板后,在终端窗口下,定位到 Hexo 站点目录下,也就是blog文件夹内。使用 Git checkout 代码:</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">$ git clone https:&#x2F;&#x2F;github.com&#x2F;iissnan&#x2F;hexo-theme-next themes&#x2F;next</span><br></pre></td></tr></table></figure>
+<p>等待下载完成后我们可以在站点目录下的themes看到多出来一个next文件夹,这就是我们的主题所在位置了。接着我们需要在站点配置文件里修改我们的主题(注意在我们的主题,也就是next文件夹里面也有一个同样名字的配置文件,那是主题配置文件,不要搞错了。)</p>
+<p><img src="/2020/01/21/%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2%E5%BB%BA%E8%AE%BE4-%E9%80%89%E6%8B%A9%E5%8D%9A%E5%AE%A2%E4%B8%BB%E9%A2%98/1.png" alt="moban"></p>
+<p>把主题如图修改完成后,我们输入:</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">hexo clean</span><br><span class="line">hexo g</span><br><span class="line">hexo d</span><br></pre></td></tr></table></figure>
+<p>就可以部署我们新的主题上线了,当然也可以使用hexo server在本地查看主题的变化,不推送上线。<br>我们可以下载不止一个模板来查看他们是否适合我们,只需要重复如上步骤下载主题到themes文件夹内,然后修改站点配置文件就行了。<br>希望大家可以找到自己心仪的网站主题!!!</p>
+<hr>
+<p>上一步: [个人博客建设3-申请并绑定域名]<br>下一步: [个人博客建设5-Markdown语法]<br>目录: <a href="https://www.guojingde.cn/2020/01/19/%E7%94%A8GitHub%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/" target="_blank" rel="noopener">用GitHub搭建个人博客(目录)</a></p>
+</font>]]></content>
+      <categories>
+        <category>博客搭建</category>
+      </categories>
+      <tags>
+        <tag>博客搭建</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>个人博客建设3-申请并绑定域名</title>
+    <url>/2020/01/21/%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2%E5%BB%BA%E8%AE%BE3-%E7%94%B3%E8%AF%B7%E5%B9%B6%E7%BB%91%E5%AE%9A%E5%9F%9F%E5%90%8D/</url>
+    <content><![CDATA[<font size="3">
+个人博客建设第三步:申请并绑定域名...
+
+<a id="more"></a>
+<hr>
+<h3 id="阿里云申请域名"><a href="#阿里云申请域名" class="headerlink" title="阿里云申请域名"></a>阿里云申请域名</h3><p>为什么要申请一个域名?因为酷炫啊!这里可以在任何地方申请域名,现在大多数平台都有云解析服务所以无所谓。这里以<a href="https://wanwang.aliyun.com/" target="_blank" rel="noopener">阿里云</a>举例子。</p>
+<p><img src="/2020/01/21/%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2%E5%BB%BA%E8%AE%BE3-%E7%94%B3%E8%AF%B7%E5%B9%B6%E7%BB%91%E5%AE%9A%E5%9F%9F%E5%90%8D/1.png" alt="github"></p>
+<p>输入想要的域名然后搜索,可以选择还未被注册的域名。.com是国际域名.cn是国内域名,二者没有实质区别,当然也有些特别的选项…</p>
+<p>买好域名后我们就要进行解析,登录阿里云后我们就可以开始解析了。</p>
+<p><img src="/2020/01/21/%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2%E5%BB%BA%E8%AE%BE3-%E7%94%B3%E8%AF%B7%E5%B9%B6%E7%BB%91%E5%AE%9A%E5%9F%9F%E5%90%8D/3.jpg" alt="github"></p>
+<p>点进我们的域名后来到解析设置,添加两条A记录和一条CNAME记录(红圈),A记录的记录值是固定的192.30.252.153和190.30.252.154,为GitHub地址,CNAME记录为: 用户名.github.io 的形式。</p>
+<p>这里A记录可实现将域名指向 IP 地址,当需要将域名指向另一个域名,再由另一个域名提供 IP 地址,就需要添加 CNAME 记录。</p>
+<p>添加完记录后打开GitHub进入我们之前设置博客的仓库,点击settings(设置),我们拉到页面偏下方。</p>
+<p><img src="/2020/01/21/%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2%E5%BB%BA%E8%AE%BE3-%E7%94%B3%E8%AF%B7%E5%B9%B6%E7%BB%91%E5%AE%9A%E5%9F%9F%E5%90%8D/4.png" alt="github"></p>
+<p>输入你申请的域名然后保存。</p>
+<p>终于最后一步了,完成这步之后你的博客就可以通过域名访问了。冷静一下,我们打开本地保存博客的文件夹,进入source文件夹创建一个空白记事本在里面输入你申请的域名,然后把它保存为所有文件格式并且命名为CNAME。</p>
+<p><img src="/2020/01/21/%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2%E5%BB%BA%E8%AE%BE3-%E7%94%B3%E8%AF%B7%E5%B9%B6%E7%BB%91%E5%AE%9A%E5%9F%9F%E5%90%8D/5.png" alt="github"></p>
+<p>然后常规操作g+d就可以使用自己的域名登录网站啦。</p>
+<hr>
+<p>上一步: <a href="https://www.guojingde.cn/2020/01/20/%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2%E5%BB%BA%E8%AE%BE2-%E5%AE%89%E8%A3%85%E5%B9%B6%E9%85%8D%E7%BD%AENode.js%E4%BB%A5%E5%8F%8AHexo/" target="_blank" rel="noopener">个人博客建设2-安装并配置Node.js以及Hexo</a><br>下一步: [个人博客建设4-选择博客主题]<br>目录: <a href="https://www.guojingde.cn/2020/01/19/%E7%94%A8GitHub%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/" target="_blank" rel="noopener">用GitHub搭建个人博客(目录)</a></p>
+</font>]]></content>
+      <categories>
+        <category>博客搭建</category>
+      </categories>
+      <tags>
+        <tag>博客搭建</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>个人博客建设2:安装并配置Node.js以及Hexo</title>
     <url>/2020/01/20/%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2%E5%BB%BA%E8%AE%BE2-%E5%AE%89%E8%A3%85%E5%B9%B6%E9%85%8D%E7%BD%AENode.js%E4%BB%A5%E5%8F%8AHexo/</url>
     <content><![CDATA[<font size="3">
