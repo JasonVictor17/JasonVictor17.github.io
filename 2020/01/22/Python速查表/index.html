@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/mouse32.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/mouse16.ico">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('http://yoursite.com').hostname,
+    root: '/',
+    scheme: 'Muse',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="Python 各种速查表,Cheat Sheet。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Python速查表">
+<meta property="og:url" content="http://yoursite.com/2020/01/22/Python%E9%80%9F%E6%9F%A5%E8%A1%A8/index.html">
+<meta property="og:site_name" content="Jingde&#39;s Blog">
+<meta property="og:description" content="Python 各种速查表,Cheat Sheet。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://yoursite.com/2020/01/22/Python%E9%80%9F%E6%9F%A5%E8%A1%A8/1.png">
+<meta property="article:published_time" content="2020-01-22T10:13:35.000Z">
+<meta property="article:modified_time" content="2020-01-22T11:05:06.154Z">
+<meta property="article:author" content="Jason">
+<meta property="article:tag" content="速查表">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://yoursite.com/2020/01/22/Python%E9%80%9F%E6%9F%A5%E8%A1%A8/1.png">
+
+<link rel="canonical" href="http://yoursite.com/2020/01/22/Python%E9%80%9F%E6%9F%A5%E8%A1%A8/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>Python速查表 | Jingde's Blog</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?<061f7a05407b07f04642d8ffecfff900>";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Jingde's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/01/22/Python%E9%80%9F%E6%9F%A5%E8%A1%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Jason">
+      <meta itemprop="description" content="A free place">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Jingde's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Python速查表
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2020-01-22 11:13:35 / 修改时间：12:05:06" itemprop="dateCreated datePublished" datetime="2020-01-22T11:13:35+01:00">2020-01-22</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Python%E5%AD%A6%E4%B9%A0/" itemprop="url" rel="index">
+                    <span itemprop="name">Python学习</span>
+                  </a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <font size="3">
+Python 各种速查表,Cheat Sheet。
+
+<a id="more"></a>
+<hr>
+<h1 id="1-Python-基础"><a href="#1-Python-基础" class="headerlink" title="1. Python 基础"></a>1. Python 基础</h1><h2 id="Python-basic"><a href="#Python-basic" class="headerlink" title="Python basic"></a>Python basic</h2><div class="pdf" target="./Python_basic.pdf" height></div>
+
+<h2 id="Python-classes"><a href="#Python-classes" class="headerlink" title="Python classes"></a>Python classes</h2><div class="pdf" target="./Python_classes.pdf" height></div>  
+
+<h2 id="Python-dictionaries"><a href="#Python-dictionaries" class="headerlink" title="Python dictionaries"></a>Python dictionaries</h2><div class="pdf" target="./Python_dictionaries.pdf" height></div>  
+
+<h2 id="Python-lists"><a href="#Python-lists" class="headerlink" title="Python lists"></a>Python lists</h2><div class="pdf" target="./Python_lists.pdf" height></div>  
+
+<h2 id="Python-functions"><a href="#Python-functions" class="headerlink" title="Python functions"></a>Python functions</h2><div class="pdf" target="./Python_functions.pdf" height></div>
+
+<h2 id="Python-if-and-while"><a href="#Python-if-and-while" class="headerlink" title="Python if and while"></a>Python if and while</h2><div class="pdf" target="./Python_if_while.pdf" height></div> 
+
+<h2 id="Python-regular-expressions"><a href="#Python-regular-expressions" class="headerlink" title="Python regular expressions"></a>Python regular expressions</h2><div class="pdf" target="./python_regular_expressions" height></div> 
+
+<h2 id="Python-read-files"><a href="#Python-read-files" class="headerlink" title="Python read files"></a>Python read files</h2><div class="pdf" target="./Python_files_exceptions.pdf" height></div>  
+
+<h1 id="2-Python-各种包"><a href="#2-Python-各种包" class="headerlink" title="2. Python 各种包"></a>2. Python 各种包</h1><h2 id="1-Numpy"><a href="#1-Numpy" class="headerlink" title="1. Numpy"></a>1. Numpy</h2><div class="pdf" target="./Numpy.pdf" height></div>  
+
+<h2 id="2-Pandas"><a href="#2-Pandas" class="headerlink" title="2. Pandas"></a>2. Pandas</h2><div class="pdf" target="./Pandas.pdf" height></div>  
+
+<h2 id="3-Matplotlib"><a href="#3-Matplotlib" class="headerlink" title="3. Matplotlib"></a>3. Matplotlib</h2><div class="pdf" target="./Matplotlib.pdf" height></div>  
+
+<h2 id="4-Seaborn"><a href="#4-Seaborn" class="headerlink" title="4. Seaborn"></a>4. Seaborn</h2><div class="pdf" target="./Seaborn.pdf" height></div>  
+
+<h2 id="5-Scikit-learn"><a href="#5-Scikit-learn" class="headerlink" title="5. Scikit-learn"></a>5. Scikit-learn</h2><div class="pdf" target="./Sklearn.pdf" height></div> 
+
+<p><img src="/2020/01/22/Python%E9%80%9F%E6%9F%A5%E8%A1%A8/1.png" alt="sklearn"></p>
+<h2 id="6-Pytorch"><a href="#6-Pytorch" class="headerlink" title="6. Pytorch"></a>6. Pytorch</h2><p>官方文档: <a href="https://pytorch.org/tutorials/beginner/ptcheat.html" target="_blank" rel="noopener">https://pytorch.org/tutorials/beginner/ptcheat.html</a></p>
+<h1 id="来源以及最后"><a href="#来源以及最后" class="headerlink" title="来源以及最后"></a>来源以及最后</h1><ol>
+<li><a href="https://ehmatthes.github.io/pcc_2e/cheat_sheets/cheat_sheets/" target="_blank" rel="noopener">https://ehmatthes.github.io/pcc_2e/cheat_sheets/cheat_sheets/</a></li>
+<li><a href="https://www.datacamp.com/community/data-science-cheatsheets" target="_blank" rel="noopener">https://www.datacamp.com/community/data-science-cheatsheets</a></li>
+<li><a href="https://www.dataquest.io/blog/regex-cheatsheet/" target="_blank" rel="noopener">https://www.dataquest.io/blog/regex-cheatsheet/</a></li>
+<li>一个很好的python基础速查表: <a href="https://github.com/crazyguitar/pysheeet" target="_blank" rel="noopener">https://github.com/crazyguitar/pysheeet</a> </li>
+<li>大家有好的Cheat sheet欢迎留言补充</li>
+</ol>
+</font>
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div></div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.jpg" alt="Jason 微信支付">
+        <p>微信支付</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E9%80%9F%E6%9F%A5%E8%A1%A8/" rel="tag"># 速查表</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/01/21/%E5%9F%BA%E4%BA%8Epython%E7%9A%84%E5%9F%BA%E9%87%91%E5%AE%9A%E6%8A%95%E5%88%86%E6%9E%90/" rel="prev" title="基于python的基金定投分析">
+      <i class="fa fa-chevron-left"></i> 基于python的基金定投分析
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/01/22/R%E9%80%9F%E6%9F%A5%E8%A1%A8/" rel="next" title="R速查表">
+      R速查表 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC80ODM1Ny8yNDg1MQ=="></div>
+  </div>
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-Python-基础"><span class="nav-number">1.</span> <span class="nav-text">1. Python 基础</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Python-basic"><span class="nav-number">1.1.</span> <span class="nav-text">Python basic</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Python-classes"><span class="nav-number">1.2.</span> <span class="nav-text">Python classes</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Python-dictionaries"><span class="nav-number">1.3.</span> <span class="nav-text">Python dictionaries</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Python-lists"><span class="nav-number">1.4.</span> <span class="nav-text">Python lists</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Python-functions"><span class="nav-number">1.5.</span> <span class="nav-text">Python functions</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Python-if-and-while"><span class="nav-number">1.6.</span> <span class="nav-text">Python if and while</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Python-regular-expressions"><span class="nav-number">1.7.</span> <span class="nav-text">Python regular expressions</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Python-read-files"><span class="nav-number">1.8.</span> <span class="nav-text">Python read files</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-Python-各种包"><span class="nav-number">2.</span> <span class="nav-text">2. Python 各种包</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-Numpy"><span class="nav-number">2.1.</span> <span class="nav-text">1. Numpy</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-Pandas"><span class="nav-number">2.2.</span> <span class="nav-text">2. Pandas</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-Matplotlib"><span class="nav-number">2.3.</span> <span class="nav-text">3. Matplotlib</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-Seaborn"><span class="nav-number">2.4.</span> <span class="nav-text">4. Seaborn</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-Scikit-learn"><span class="nav-number">2.5.</span> <span class="nav-text">5. Scikit-learn</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-Pytorch"><span class="nav-number">2.6.</span> <span class="nav-text">6. Pytorch</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#来源以及最后"><span class="nav-number">3.</span> <span class="nav-text">来源以及最后</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Jason</p>
+  <div class="site-description" itemprop="description">A free place</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">12</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/JasonVictor17" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;JasonVictor17" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Jason</span>
+</div>
+<!--
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v4.2.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.7.0
+  </div>
+-->
+<div class="powered-by">
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <i class="fa fa-user-md"></i>
+    <span id="busuanzi_container_site_uv">
+        本站访客数:<span id="busuanzi_value_site_uv"></span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span id="busuanzi_container_site_pv">
+        本站访问量<span id="busuanzi_value_site_pv"></span>
+    </span>
+</div>
+<div class="theme-info">
+  <div class="powered-by"></div>
+  <span class="post-count">本博客全站共10.9k字</span>
+</div>
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  
+  <script color='0,0,255' opacity='0.5' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '500px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+
+
+  
+
+  
+
+<script>
+NexT.utils.loadComments(document.querySelector('#lv-container'), () => {
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+});
+</script>
+
+</body>
+</html>

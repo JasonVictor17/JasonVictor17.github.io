@@ -1,6 +1,115 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>R速查表</title>
+    <url>/2020/01/22/R%E9%80%9F%E6%9F%A5%E8%A1%A8/</url>
+    <content><![CDATA[<font size="3">
+R 各种速查表, Cheat Sheet。
+
+<a id="more"></a>
+<hr>
+<h1 id="1-R-基础"><a href="#1-R-基础" class="headerlink" title="1. R 基础"></a>1. R 基础</h1><h2 id="R-basic"><a href="#R-basic" class="headerlink" title="R basic"></a>R basic</h2><div class="pdf" target="./base-r.pdf" height></div>
+
+<h2 id="R-advanced"><a href="#R-advanced" class="headerlink" title="R advanced"></a>R advanced</h2><div class="pdf" target="./advancedR.pdf" height></div>  
+
+<h2 id="Regular-expressions"><a href="#Regular-expressions" class="headerlink" title="Regular expressions"></a>Regular expressions</h2><div class="pdf" target="./regex.pdf" height></div>
+
+<h2 id="R-Markdown"><a href="#R-Markdown" class="headerlink" title="R Markdown"></a>R Markdown</h2><div class="pdf" target="./rmarkdown-2.0.pdf" height></div> 
+
+<h2 id="Use-Python-in-R"><a href="#Use-Python-in-R" class="headerlink" title="Use Python in R"></a>Use Python in R</h2><div class="pdf" target="./reticulate.pdf" height></div> 
+
+<h1 id="2-数据处理"><a href="#2-数据处理" class="headerlink" title="2. 数据处理"></a>2. 数据处理</h1><h2 id="Data-import"><a href="#Data-import" class="headerlink" title="Data import"></a>Data import</h2><div class="pdf" target="./data-import.pdf" height></div>
+
+<h2 id="dplyr"><a href="#dplyr" class="headerlink" title="dplyr"></a>dplyr</h2><div class="pdf" target="./dplyr.pdf" height></div> 
+
+<h2 id="Data-transformation"><a href="#Data-transformation" class="headerlink" title="Data transformation"></a>Data transformation</h2><div class="pdf" target="./data-transformation.pdf" height></div> 
+
+<h2 id="Strings"><a href="#Strings" class="headerlink" title="Strings"></a>Strings</h2><div class="pdf" target="./strings.pdf" height></div>
+
+<h2 id="Factors"><a href="#Factors" class="headerlink" title="Factors"></a>Factors</h2><div class="pdf" target="./factors.pdf" height></div>  
+
+<h2 id="Dates-and-times-with-lubridate"><a href="#Dates-and-times-with-lubridate" class="headerlink" title="Dates and times with lubridate"></a>Dates and times with lubridate</h2><div class="pdf" target="./lubridate.pdf" height></div>
+
+<h2 id="Apply-functions-with-purrr"><a href="#Apply-functions-with-purrr" class="headerlink" title="Apply functions with purrr"></a>Apply functions with purrr</h2><div class="pdf" target="./purrr.pdf" height></div>
+
+<h2 id="Data-Science-in-Spark-with-sparklyr"><a href="#Data-Science-in-Spark-with-sparklyr" class="headerlink" title="Data Science in Spark with sparklyr"></a>Data Science in Spark with sparklyr</h2><div class="pdf" target="./sparklyr.pdf" height></div>
+
+
+<h1 id="3-数据可视化"><a href="#3-数据可视化" class="headerlink" title="3. 数据可视化"></a>3. 数据可视化</h1><h2 id="ggplot2"><a href="#ggplot2" class="headerlink" title="ggplot2"></a>ggplot2</h2><div class="pdf" target="./ggplot2.pdf" height></div>
+
+<h2 id="Thematic-maps-with-cartography"><a href="#Thematic-maps-with-cartography" class="headerlink" title="Thematic maps with cartography"></a>Thematic maps with cartography</h2><div class="pdf" target="./cartography.pdf" height></div>
+
+<h1 id="4-机器学习"><a href="#4-机器学习" class="headerlink" title="4. 机器学习"></a>4. 机器学习</h1><h2 id="R-自带"><a href="#R-自带" class="headerlink" title="R 自带"></a>R 自带</h2><div class="pdf" target="./Machine" height="Learning"></div>
+
+<h2 id="caret-Classification-And-REgression-Training"><a href="#caret-Classification-And-REgression-Training" class="headerlink" title="caret(Classification And REgression Training)"></a>caret(Classification And REgression Training)</h2><div class="pdf" target="./caret(Classification" height="And"></div>
+
+<h2 id="Deep-Learning-with-Keras"><a href="#Deep-Learning-with-Keras" class="headerlink" title="Deep Learning with Keras"></a>Deep Learning with Keras</h2><div class="pdf" target="./keras.pdf" height></div>
+
+<h2 id="Time-series"><a href="#Time-series" class="headerlink" title="Time series"></a>Time series</h2><div class="pdf" target="./time-series.pdf" height></div>  
+<h1 id="来源以及最后"><a href="#来源以及最后" class="headerlink" title="来源以及最后"></a>来源以及最后</h1><ol>
+<li><a href="https://rstudio.com/resources/cheatsheets/" target="_blank" rel="noopener">https://rstudio.com/resources/cheatsheets/</a></li>
+<li>大家有好的Cheat sheet欢迎留言补充</li>
+</ol>
+</font>]]></content>
+      <categories>
+        <category>R学习</category>
+      </categories>
+      <tags>
+        <tag>速查表</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Python速查表</title>
+    <url>/2020/01/22/Python%E9%80%9F%E6%9F%A5%E8%A1%A8/</url>
+    <content><![CDATA[<font size="3">
+Python 各种速查表,Cheat Sheet。
+
+<a id="more"></a>
+<hr>
+<h1 id="1-Python-基础"><a href="#1-Python-基础" class="headerlink" title="1. Python 基础"></a>1. Python 基础</h1><h2 id="Python-basic"><a href="#Python-basic" class="headerlink" title="Python basic"></a>Python basic</h2><div class="pdf" target="./Python_basic.pdf" height></div>
+
+<h2 id="Python-classes"><a href="#Python-classes" class="headerlink" title="Python classes"></a>Python classes</h2><div class="pdf" target="./Python_classes.pdf" height></div>  
+
+<h2 id="Python-dictionaries"><a href="#Python-dictionaries" class="headerlink" title="Python dictionaries"></a>Python dictionaries</h2><div class="pdf" target="./Python_dictionaries.pdf" height></div>  
+
+<h2 id="Python-lists"><a href="#Python-lists" class="headerlink" title="Python lists"></a>Python lists</h2><div class="pdf" target="./Python_lists.pdf" height></div>  
+
+<h2 id="Python-functions"><a href="#Python-functions" class="headerlink" title="Python functions"></a>Python functions</h2><div class="pdf" target="./Python_functions.pdf" height></div>
+
+<h2 id="Python-if-and-while"><a href="#Python-if-and-while" class="headerlink" title="Python if and while"></a>Python if and while</h2><div class="pdf" target="./Python_if_while.pdf" height></div> 
+
+<h2 id="Python-regular-expressions"><a href="#Python-regular-expressions" class="headerlink" title="Python regular expressions"></a>Python regular expressions</h2><div class="pdf" target="./python_regular_expressions" height></div> 
+
+<h2 id="Python-read-files"><a href="#Python-read-files" class="headerlink" title="Python read files"></a>Python read files</h2><div class="pdf" target="./Python_files_exceptions.pdf" height></div>  
+
+<h1 id="2-Python-各种包"><a href="#2-Python-各种包" class="headerlink" title="2. Python 各种包"></a>2. Python 各种包</h1><h2 id="1-Numpy"><a href="#1-Numpy" class="headerlink" title="1. Numpy"></a>1. Numpy</h2><div class="pdf" target="./Numpy.pdf" height></div>  
+
+<h2 id="2-Pandas"><a href="#2-Pandas" class="headerlink" title="2. Pandas"></a>2. Pandas</h2><div class="pdf" target="./Pandas.pdf" height></div>  
+
+<h2 id="3-Matplotlib"><a href="#3-Matplotlib" class="headerlink" title="3. Matplotlib"></a>3. Matplotlib</h2><div class="pdf" target="./Matplotlib.pdf" height></div>  
+
+<h2 id="4-Seaborn"><a href="#4-Seaborn" class="headerlink" title="4. Seaborn"></a>4. Seaborn</h2><div class="pdf" target="./Seaborn.pdf" height></div>  
+
+<h2 id="5-Scikit-learn"><a href="#5-Scikit-learn" class="headerlink" title="5. Scikit-learn"></a>5. Scikit-learn</h2><div class="pdf" target="./Sklearn.pdf" height></div> 
+
+<p><img src="/2020/01/22/Python%E9%80%9F%E6%9F%A5%E8%A1%A8/1.png" alt="sklearn"></p>
+<h2 id="6-Pytorch"><a href="#6-Pytorch" class="headerlink" title="6. Pytorch"></a>6. Pytorch</h2><p>官方文档: <a href="https://pytorch.org/tutorials/beginner/ptcheat.html" target="_blank" rel="noopener">https://pytorch.org/tutorials/beginner/ptcheat.html</a></p>
+<h1 id="来源以及最后"><a href="#来源以及最后" class="headerlink" title="来源以及最后"></a>来源以及最后</h1><ol>
+<li><a href="https://ehmatthes.github.io/pcc_2e/cheat_sheets/cheat_sheets/" target="_blank" rel="noopener">https://ehmatthes.github.io/pcc_2e/cheat_sheets/cheat_sheets/</a></li>
+<li><a href="https://www.datacamp.com/community/data-science-cheatsheets" target="_blank" rel="noopener">https://www.datacamp.com/community/data-science-cheatsheets</a></li>
+<li><a href="https://www.dataquest.io/blog/regex-cheatsheet/" target="_blank" rel="noopener">https://www.dataquest.io/blog/regex-cheatsheet/</a></li>
+<li>一个很好的python基础速查表: <a href="https://github.com/crazyguitar/pysheeet" target="_blank" rel="noopener">https://github.com/crazyguitar/pysheeet</a> </li>
+<li>大家有好的Cheat sheet欢迎留言补充</li>
+</ol>
+</font>]]></content>
+      <categories>
+        <category>Python学习</category>
+      </categories>
+      <tags>
+        <tag>速查表</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>基于python的基金定投分析</title>
     <url>/2020/01/21/%E5%9F%BA%E4%BA%8Epython%E7%9A%84%E5%9F%BA%E9%87%91%E5%AE%9A%E6%8A%95%E5%88%86%E6%9E%90/</url>
     <content><![CDATA[<font size="3">
@@ -222,6 +331,7 @@
  &lt;a list of 10 Patch objects&gt;)</code></pre><p><img src="/2020/01/21/%E5%9F%BA%E4%BA%8Epython%E7%9A%84%E5%9F%BA%E9%87%91%E5%AE%9A%E6%8A%95%E5%88%86%E6%9E%90/output_19_1.png" alt="png"></p>
 <p>通过画图可以看出,定投具有更小的收益率波动性,因此也具有更小的风险。收益率大致在10%到15%之间,没有负收益率。</p>
 <h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>可以看出定投具有所谓的“削峰填谷”的作用, 可以达到随时买入而年化收益波动不大的效果。而普通投资的收益率不稳定,可能一下子“暴富”也可能“白忙活”,需要投资者掌握投资时机。定投对于想要稳定增值资产的投资者是一个相对比较好的选择。</p>
+<p> 最后项目在GitHub上网址:<a href="https://github.com/JasonVictor17/Stock-market-analysis" target="_blank" rel="noopener">https://github.com/JasonVictor17/Stock-market-analysis</a></p>
 </font>]]></content>
       <categories>
         <category>Python学习</category>
