@@ -39,9 +39,9 @@ R 各种速查表, Cheat Sheet。
 
 <h2 id="Thematic-maps-with-cartography"><a href="#Thematic-maps-with-cartography" class="headerlink" title="Thematic maps with cartography"></a>Thematic maps with cartography</h2><div class="pdf" target="./cartography.pdf" height></div>
 
-<h1 id="4-机器学习"><a href="#4-机器学习" class="headerlink" title="4. 机器学习"></a>4. 机器学习</h1><h2 id="R-自带"><a href="#R-自带" class="headerlink" title="R 自带"></a>R 自带</h2><div class="pdf" target="./Machine" height="Learning"></div>
+<h1 id="4-机器学习"><a href="#4-机器学习" class="headerlink" title="4. 机器学习"></a>4. 机器学习</h1><h2 id="R-自带"><a href="#R-自带" class="headerlink" title="R 自带"></a>R 自带</h2><div class="pdf" target="./Rmachinelearning.pdf" height></div>
 
-<h2 id="caret-Classification-And-REgression-Training"><a href="#caret-Classification-And-REgression-Training" class="headerlink" title="caret(Classification And REgression Training)"></a>caret(Classification And REgression Training)</h2><div class="pdf" target="./caret(Classification" height="And"></div>
+<h2 id="caret-Classification-And-REgression-Training"><a href="#caret-Classification-And-REgression-Training" class="headerlink" title="caret(Classification And REgression Training)"></a>caret(Classification And REgression Training)</h2><div class="pdf" target="./caret.pdf" height></div>
 
 <h2 id="Deep-Learning-with-Keras"><a href="#Deep-Learning-with-Keras" class="headerlink" title="Deep Learning with Keras"></a>Deep Learning with Keras</h2><div class="pdf" target="./keras.pdf" height></div>
 
