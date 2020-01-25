@@ -1,6 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>Hexo 如何优雅的加入Rmarkdown生成的html/pdf文件</title>
+    <url>/2020/01/25/Hexo%20%E5%A6%82%E4%BD%95%E4%BC%98%E9%9B%85%E7%9A%84%E5%8A%A0%E5%85%A5Rmarkdown%E7%94%9F%E6%88%90%E7%9A%84html%E6%96%87%E4%BB%B6/</url>
+    <content><![CDATA[<font size="3">
+
+<p>如何加入自己创建的html文件,以及如何忽略在_source文件夹中的.md 或者 .html文件。</p>
+<a id="more"></a>
+<hr>
+<p>在加入Rmarkdown生成的html的时候我发现自身的排版非常难看,也不会自动在博客生成标签和分类,那么有一个解决办法就是插入html文件在博客里。插入的方法是在markdown中使用iframe:</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&lt;iframe src&#x3D;&quot;filename.html&quot; width&#x3D;&quot;700&quot; height&#x3D;&quot;800&quot;&gt;&lt;&#x2F;iframe&gt;</span><br></pre></td></tr></table></figure>
+
+<p>同样和插入图片方式大同小异我们创建一个和md文件一模一样名字的文件夹,把要插入的html文件放入其中就行,不需要绝对路径。</p>
+<p>但是这时候就有一个问题,hexo会自动扫描所有_source文件夹中的文件,那么html文件就会被扫描到从而被渲染后上传到博客里,我们不希望有重复的内容,那么应该如何让hexo跳过扫描呢?</p>
+<p>网上有几种方法,一种是在html文件的开头加上</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">---  </span><br><span class="line">layout: false </span><br><span class="line">---</span><br></pre></td></tr></table></figure>
+<p>但是测试后发现并没有什么用。于是测试第二种方法,在站点配置文件下:</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">skip_render: &quot;filename.html&quot;</span><br></pre></td></tr></table></figure>
+<p>同样测试发现行不通,查阅官方文档后发现可能因为版本问题路径不对,应该为:</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">skip_render: &quot;_posts&#x2F;文件夹名&#x2F;文件名.html&quot;&quot;</span><br></pre></td></tr></table></figure>
+<p>从_posts开始,如此一来就可以忽略这个文件渲染了,当然还可以忽略其他文件,也可以利用正则表达式来忽略某类命名的文件,目前还用不到。</p>
+<p>希望大家少走弯路!</p>
+<p>最后附上一个插入pdf的方法:</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#123;% pdf .&#x2F;filename.pdf %&#125;</span><br></pre></td></tr></table></figure>
+<p>同样把文件放在md同名文件夹下就行了。</p>
+<hr>
+<p>目录: <a href="https://www.guojingde.cn/2020/01/19/%E7%94%A8GitHub%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/" target="_blank" rel="noopener">用GitHub搭建个人博客(目录)</a></p>
+</font>]]></content>
+      <categories>
+        <category>博客搭建</category>
+      </categories>
+      <tags>
+        <tag>博客搭建</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>银行客户画像分析-数据预处理 with R</title>
     <url>/2020/01/24/bank_user_profile/</url>
     <content><![CDATA[<p>分析银行客户画像并预测是否会在该银行存款,本篇使用R语言进行数据预处理,使用CART方法填补缺失值,数据标准化以及one-hot encoding。</p>
@@ -1417,12 +1451,21 @@ Total time: 14m 39s</code></pre><figure class="highlight python"><table><tr><td 
     <url>/2020/01/19/%E7%94%A8GitHub%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/</url>
     <content><![CDATA[<font size="3">
 快速上手使用GitHub+Hexo建立博客,适合新手。
-环境:Windows
+系统环境:Windows
 本文是目录篇,包含了所有关于使用GitHub+Hexo建立博客的相关教程。会逐渐更新。。。
 
 <a id="more"></a>
 <hr>
-<h1 id="首先为什么使用GitHub-Hexo建立博客"><a href="#首先为什么使用GitHub-Hexo建立博客" class="headerlink" title="首先为什么使用GitHub+Hexo建立博客"></a>首先为什么使用GitHub+Hexo建立博客</h1><h2 id="1-优点"><a href="#1-优点" class="headerlink" title="1. 优点"></a>1. 优点</h2><h4 id="1-不需要服务器省钱省时间呀-主要原因"><a href="#1-不需要服务器省钱省时间呀-主要原因" class="headerlink" title="1. 不需要服务器省钱省时间呀(主要原因)"></a>1. 不需要服务器省钱省时间呀(主要原因)</h4><h4 id="2-适合新手以及对建站不熟悉的小白-本人"><a href="#2-适合新手以及对建站不熟悉的小白-本人" class="headerlink" title="2. 适合新手以及对建站不熟悉的小白(本人)"></a>2. 适合新手以及对建站不熟悉的小白(本人)</h4><h4 id="3-有很多现成精美模板"><a href="#3-有很多现成精美模板" class="headerlink" title="3. 有很多现成精美模板"></a>3. 有很多现成精美模板</h4><h4 id="4-无流量限制"><a href="#4-无流量限制" class="headerlink" title="4. 无流量限制"></a>4. 无流量限制</h4><h2 id="2-缺点"><a href="#2-缺点" class="headerlink" title="2. 缺点"></a>2. 缺点</h2><h4 id="1-个性化空间小"><a href="#1-个性化空间小" class="headerlink" title="1.个性化空间小"></a>1.个性化空间小</h4><h4 id="2-静态页面-虽然博客以及足矣"><a href="#2-静态页面-虽然博客以及足矣" class="headerlink" title="2.静态页面(虽然博客以及足矣)"></a>2.静态页面(虽然博客以及足矣)</h4><h4 id="3-没有数据库-不适合大型网站-运行一次就要遍历所有网站内容"><a href="#3-没有数据库-不适合大型网站-运行一次就要遍历所有网站内容" class="headerlink" title="3.没有数据库,不适合大型网站,运行一次就要遍历所有网站内容"></a>3.没有数据库,不适合大型网站,运行一次就要遍历所有网站内容</h4><h1 id="总之就是非常适合做个人博客就对了。"><a href="#总之就是非常适合做个人博客就对了。" class="headerlink" title=" 总之就是非常适合做个人博客就对了。"></a><font color="red" size="4"> <strong>总之就是非常适合做个人博客就对了。</strong></font></h1><p>完成这个博客项目你需要:<br>  1.非常基础的Git知识,熟悉命令行(参照文末辅助资料)<br>  2.喜欢折腾<br>  3.耐心</p>
+<h1 id="首先为什么使用GitHub-Hexo建立博客"><a href="#首先为什么使用GitHub-Hexo建立博客" class="headerlink" title="首先为什么使用GitHub+Hexo建立博客"></a>首先为什么使用GitHub+Hexo建立博客</h1><h2 id="1-优点"><a href="#1-优点" class="headerlink" title="1. 优点"></a>1. 优点</h2><ol>
+<li>不需要服务器省钱省时间呀(主要原因)</li>
+<li>适合新手以及对建站不熟悉的小白(本人)</li>
+<li>有很多现成精美模板</li>
+<li>无流量限制<h2 id="2-缺点"><a href="#2-缺点" class="headerlink" title="2. 缺点"></a>2. 缺点</h2></li>
+<li>个性化空间小</li>
+<li>静态页面(虽然博客以及足矣)</li>
+<li>没有数据库,不适合大型网站,运行一次就要遍历所有网站内容<br><font color="red" size="4"> <strong>总之就是非常适合做个人博客就对了。</strong></font></li>
+</ol>
+<p>完成这个博客项目你需要:<br>  1.非常基础的Git知识,熟悉命令行(参照文末辅助资料)<br>  2.喜欢折腾<br>  3.耐心</p>
 <h1 id="目录"><a href="#目录" class="headerlink" title="目录"></a>目录</h1><ol>
 <li><a href="https://www.guojingde.cn/2020/01/20/%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2%E5%BB%BA%E8%AE%BE1-%E5%9C%A8GitHub%E5%88%9B%E5%BB%BA%E4%B8%80%E4%B8%AA%E4%BB%93%E5%BA%93%E5%B9%B6%E9%85%8D%E7%BD%AEGit/" target="_blank" rel="noopener">个人博客建设1-在GitHub创建一个仓库并配置Git</a></li>
 <li><a href="https://www.guojingde.cn/2020/01/20/%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2%E5%BB%BA%E8%AE%BE2-%E5%AE%89%E8%A3%85%E5%B9%B6%E9%85%8D%E7%BD%AENode.js%E4%BB%A5%E5%8F%8AHexo/" target="_blank" rel="noopener">个人博客建设2-安装并配置Node.js以及Hexo</a></li>
