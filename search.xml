@@ -1457,22 +1457,13 @@ Total time: 14m 39s</code></pre><figure class="highlight python"><table><tr><td 
 <a id="more"></a>
 <hr>
 <h1 id="首先为什么使用GitHub-Hexo建立博客"><a href="#首先为什么使用GitHub-Hexo建立博客" class="headerlink" title="首先为什么使用GitHub+Hexo建立博客"></a>首先为什么使用GitHub+Hexo建立博客</h1><h2 id="1-优点"><a href="#1-优点" class="headerlink" title="1. 优点"></a>1. 优点</h2><ol>
-<li><p>不需要服务器省钱省时间呀(主要原因)</p>
-</li>
-<li><p>适合新手以及对建站不熟悉的小白(本人)</p>
-</li>
-<li><p>有很多现成精美模板</p>
-</li>
-<li><p>无流量限制</p>
-<h2 id="2-缺点"><a href="#2-缺点" class="headerlink" title="2. 缺点"></a>2. 缺点</h2></li>
-<li><p>个性化空间小</p>
-</li>
-<li><p>静态页面(虽然博客以及足矣)</p>
-</li>
-<li><p>没有数据库,不适合大型网站,运行一次就要遍历所有网站内容</p>
-<p><font color="red" size="4"> <strong>总之就是非常适合做个人博客就对了。</strong></font></p>
-</li>
+<li>不需要服务器省钱省时间呀(主要原因)</li>
+<li>适合新手以及对建站不熟悉的小白(本人)</li>
+<li>有很多现成精美模板</li>
+<li>无流量限制</li>
 </ol>
+<h2 id="2-缺点"><a href="#2-缺点" class="headerlink" title="2. 缺点"></a>2. 缺点</h2><p> 1.个性化空间小<br> 2.静态页面(虽然博客以及足矣)<br> 3.没有数据库,不适合大型网站,运行一次就要遍历所有网站内容</p>
+<p>  <font color="red" size="4"> <strong>总之就是非常适合做个人博客就对了。</strong></font></p>
 <p>完成这个博客项目你需要:<br>  1.非常基础的Git知识,熟悉命令行(参照文末辅助资料)<br>  2.喜欢折腾<br>  3.耐心</p>
 <h1 id="目录"><a href="#目录" class="headerlink" title="目录"></a>目录</h1><ol>
 <li><a href="https://www.guojingde.cn/2020/01/20/%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2%E5%BB%BA%E8%AE%BE1-%E5%9C%A8GitHub%E5%88%9B%E5%BB%BA%E4%B8%80%E4%B8%AA%E4%BB%93%E5%BA%93%E5%B9%B6%E9%85%8D%E7%BD%AEGit/" target="_blank" rel="noopener">个人博客建设1-在GitHub创建一个仓库并配置Git</a></li>
@@ -1480,11 +1471,11 @@ Total time: 14m 39s</code></pre><figure class="highlight python"><table><tr><td 
 <li><a href="https://www.guojingde.cn/2020/01/21/%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2%E5%BB%BA%E8%AE%BE3-%E7%94%B3%E8%AF%B7%E5%B9%B6%E7%BB%91%E5%AE%9A%E5%9F%9F%E5%90%8D/#more" target="_blank" rel="noopener">个人博客建设3-申请并绑定域名</a></li>
 <li><a href="https://www.guojingde.cn/2020/01/21/%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2%E5%BB%BA%E8%AE%BE4-%E9%80%89%E6%8B%A9%E5%8D%9A%E5%AE%A2%E4%B8%BB%E9%A2%98/" target="_blank" rel="noopener">个人博客建设4-选择博客主题</a></li>
 <li><a href="https://www.guojingde.cn/2020/01/21/%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2%E5%BB%BA%E8%AE%BE5-Markdown%E8%AF%AD%E6%B3%95/" target="_blank" rel="noopener">个人博客建设5-Markdown语法</a></li>
-<li><a href="https://www.guojingde.cn/2020/01/21/%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2%E5%BB%BA%E8%AE%BE6-%E4%B8%BB%E9%A2%98%E7%9A%84%E9%85%8D%E7%BD%AENext/" target="_blank" rel="noopener">个人博客建设6-主题的配置Next</a><h1 id="其他辅助资料"><a href="#其他辅助资料" class="headerlink" title="其他辅助资料"></a>其他辅助资料</h1><ol>
+<li><a href="https://www.guojingde.cn/2020/01/21/%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2%E5%BB%BA%E8%AE%BE6-%E4%B8%BB%E9%A2%98%E7%9A%84%E9%85%8D%E7%BD%AENext/" target="_blank" rel="noopener">个人博客建设6-主题的配置Next</a></li>
+</ol>
+<h1 id="其他辅助资料"><a href="#其他辅助资料" class="headerlink" title="其他辅助资料"></a>其他辅助资料</h1><ol>
 <li><a href="https://www.guojingde.cn/2020/01/20/Git%E7%9A%84%E5%87%A0%E4%B8%AA%E5%9F%BA%E6%9C%AC%E6%8C%87%E4%BB%A4/" target="_blank" rel="noopener">Git的几个基本指令</a></li>
 <li><a href="https://www.guojingde.cn/2020/01/25/Hexo%20%E5%A6%82%E4%BD%95%E4%BC%98%E9%9B%85%E7%9A%84%E5%8A%A0%E5%85%A5Rmarkdown%E7%94%9F%E6%88%90%E7%9A%84html%E6%96%87%E4%BB%B6/" target="_blank" rel="noopener">Hexo 如何优雅的加入Rmarkdown生成的html/pdf文件</a></li>
-</ol>
-</li>
 </ol>
 </font>]]></content>
       <categories>
