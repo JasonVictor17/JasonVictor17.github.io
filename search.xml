@@ -35,39 +35,8 @@
       </tags>
   </entry>
   <entry>
-    <title>银行客户画像分析1-数据预处理 with R</title>
-    <url>/2020/01/24/bank_user_profile/</url>
-    <content><![CDATA[<p>分析银行客户画像并预测是否会在该银行存款,本篇使用R语言进行数据预处理,使用CART方法填补缺失值,数据标准化以及one-hot encoding。</p>
-<a id="more"></a>
-<hr>
-<iframe src="bank.html" width="700" height="800"></iframe>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-]]></content>
-      <categories>
-        <category>R学习</category>
-      </categories>
-      <tags>
-        <tag>机器学习</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>银行客户画像分析2-机器学习 with Python</title>
-    <url>/2020/01/24/bank_user_profile2/</url>
+    <url>/2020/01/25/bank_user_profile2/</url>
     <content><![CDATA[<p>分析银行客户画像并预测是否会在该银行存款,本篇基于上一篇,使用Python进行模型建立,模型选择,参数优化,特征选择等。</p>
 <a id="more"></a>
 <hr>
@@ -174,7 +143,46 @@ Optimized Model
 ------
 Final accuracy score on the testing data: 0.8989
 Final F-score on the testing data: 0.4920
-best params are: {&apos;algorithm&apos;: &apos;brute&apos;, &apos;n_neighbors&apos;: 9, &apos;weights&apos;: &apos;uniform&apos;}</code></pre><h3 id="提高了一点"><a href="#提高了一点" class="headerlink" title="提高了一点"></a>提高了一点</h3><h3 id="Feature-Selection"><a href="#Feature-Selection" class="headerlink" title="Feature Selection"></a>Feature Selection</h3><figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Import a supervised learning model that has 'feature_importances_'</span></span><br><span class="line"><span class="keyword">from</span> sklearn.model_selection <span class="keyword">import</span> RandomizedSearchCV</span><br><span class="line"></span><br><span class="line"><span class="comment"># Train the supervised model on the training set using .fit(X_train, y_train)</span></span><br><span class="line">param_dist = &#123;<span class="string">"max_depth"</span>: [<span class="number">3</span>, <span class="literal">None</span>],</span><br><span class="line">              <span class="string">"n_estimators"</span>: list(range(<span class="number">10</span>, <span class="number">200</span>)),</span><br><span class="line">              <span class="string">"max_features"</span>: list(range(<span class="number">1</span>, X_test.shape[<span class="number">1</span>]+<span class="number">1</span>)),</span><br><span class="line">              <span class="string">"min_samples_split"</span>: list(range(<span class="number">2</span>, <span class="number">11</span>)),</span><br><span class="line">              <span class="string">"min_samples_leaf"</span>: list(range(<span class="number">1</span>, <span class="number">11</span>)),</span><br><span class="line">              <span class="string">"bootstrap"</span>: [<span class="literal">True</span>, <span class="literal">False</span>],</span><br><span class="line">              <span class="string">"criterion"</span>: [<span class="string">"gini"</span>, <span class="string">"entropy"</span>]&#125;</span><br><span class="line">model = RandomizedSearchCV(clf_B, param_distributions=param_dist)</span><br><span class="line">model.fit(X_train, y_train.values.ravel())</span><br><span class="line"><span class="comment"># <span class="doctag">TODO:</span> Extract the feature importances using .feature_importances_ </span></span><br><span class="line">importances = model.best_estimator_.feature_importances_</span><br></pre></td></tr></table></figure>
+best params are: {&apos;algorithm&apos;: &apos;brute&apos;, &apos;n_neighbors&apos;: 9, &apos;weights&apos;: &apos;uniform&apos;}</code></pre><h3 id="Cutoff-value"><a href="#Cutoff-value" class="headerlink" title="Cutoff value"></a>Cutoff value</h3><figure class="highlight python"><table><tr><td class="code"><pre><span class="line">data = pd.read_csv(<span class="string">"processed_data5.csv"</span>)</span><br><span class="line">target = data[<span class="string">'target'</span>]</span><br><span class="line">data = data.drop(<span class="string">'Unnamed: 0'</span>, axis = <span class="number">1</span>)</span><br><span class="line">features = data.drop(<span class="string">'target'</span>, axis = <span class="number">1</span>)</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># accurate and f score in test set with cutoff = 0.5</span></span><br><span class="line">random.seed(<span class="number">42</span>)</span><br><span class="line"></span><br><span class="line">X_train, X_test, y_train, y_test = train_test_split(features, </span><br><span class="line">                                                    target, </span><br><span class="line">                                                    test_size = <span class="number">0.1</span>, </span><br><span class="line">                                                    random_state = <span class="number">0</span>)</span><br><span class="line">X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=<span class="number">0.1</span>, random_state=<span class="number">0</span>)</span><br><span class="line"></span><br><span class="line">clf_C = KNeighborsClassifier(algorithm = <span class="string">'brute'</span>,n_neighbors = <span class="number">9</span>, weights = <span class="string">'uniform'</span>)</span><br><span class="line">learner = clf_C.fit(X_train, y_train.values.ravel())</span><br><span class="line">predictions_test = learner.predict(X_test)</span><br><span class="line">print(accuracy_score(y_test, predictions_test))</span><br><span class="line">print(fbeta_score(y_test, predictions_test, beta = <span class="number">0.5</span>))</span><br></pre></td></tr></table></figure>
+
+<pre><code>0.8990046127700898
+0.4892086330935252</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> sklearn.metrics <span class="keyword">import</span> confusion_matrix</span><br><span class="line"><span class="keyword">from</span> sklearn.metrics <span class="keyword">import</span> precision_score</span><br><span class="line"><span class="keyword">from</span> sklearn.metrics <span class="keyword">import</span> recall_score</span><br><span class="line">confusion_matrix(y_test, predictions_test) <span class="comment"># 默认cutoff为p = 0.5</span></span><br></pre></td></tr></table></figure>
+
+
+
+
+<pre><code>array([[3567,   98],
+       [ 318,  136]], dtype=int64)</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><span class="line">predictions_test_p = learner.predict_proba(X_test)</span><br><span class="line">predictions_test_p=pd.DataFrame(predictions_test_p)[<span class="number">1</span>]</span><br><span class="line"><span class="comment"># 我们看到选取0.3 cutoff 真的1的预测数明显上升</span></span><br><span class="line">predictions_test_pfinal = predictions_test_p&gt;=<span class="number">0.3</span></span><br><span class="line">predictions_test_pfinal=predictions_test_pfinal.astype(int)</span><br><span class="line">confusion_matrix(y_test, predictions_test_pfinal)</span><br></pre></td></tr></table></figure>
+
+
+
+
+<pre><code>array([[3377,  288],
+       [ 230,  224]], dtype=int64)</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 找到最佳cutoff</span></span><br><span class="line">i = [<span class="number">0.1</span>,<span class="number">0.2</span>,<span class="number">0.3</span>,<span class="number">0.4</span>,<span class="number">0.5</span>,<span class="number">0.6</span>,<span class="number">0.7</span>,<span class="number">0.8</span>,<span class="number">0.9</span>,<span class="number">1</span>]</span><br><span class="line">accuracy_s = []</span><br><span class="line">f_s = []</span><br><span class="line">precision_s = []</span><br><span class="line">recall_s=[]</span><br><span class="line"><span class="keyword">for</span> each <span class="keyword">in</span> i:</span><br><span class="line">    predictions_test_pfinal = predictions_test_p&gt;=each</span><br><span class="line">    predictions_test_pfinal=predictions_test_pfinal.astype(int)</span><br><span class="line">    f_s.append(fbeta_score(y_test, predictions_test_pfinal, beta = <span class="number">1</span>))</span><br><span class="line">    accuracy_s.append(accuracy_score(y_test, predictions_test_pfinal))</span><br><span class="line">    precision_s.append(precision_score(y_test, predictions_test_pfinal))</span><br><span class="line">    recall_s.append(recall_score(y_test, predictions_test_pfinal))</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt</span><br><span class="line">plt.plot(i,precision_s, color=<span class="string">'green'</span>, label=<span class="string">'precision'</span>)</span><br><span class="line">plt.plot(i,recall_s, color=<span class="string">'red'</span>, label=<span class="string">'recall'</span>)</span><br><span class="line">plt.plot(i,accuracy_s, color=<span class="string">'blue'</span>, label=<span class="string">'accuracy'</span>)</span><br><span class="line">plt.plot(i,f_s,color=<span class="string">'black'</span>,label=<span class="string">'F1 score'</span>)</span><br><span class="line">plt.legend()</span><br><span class="line">plt.xlabel(<span class="string">'cutoff value'</span>)</span><br><span class="line">plt.ylabel(<span class="string">'rate'</span>)</span><br><span class="line">plt.show()</span><br></pre></td></tr></table></figure>
+
+
+<p><img src="/2020/01/25/bank_user_profile2/output_24_0.png" alt="png"></p>
+<p>根据图表我们可以看出在 cutoff value大致在0.33左右我们大致得到一个比较均衡的预测结果,如果我们要提高precision,也就是保证精准的找到愿意存款的人,那么我们可以选择较高的cutoff value来保持精准定位,但同时也会放弃更多的潜在的客户(节约成本),如果我们要提高recall,也就是希望覆盖更多的潜在客户,那么就要选择较低的cutoff value,这样成本会上升。</p>
+<p>最后我们在验证集中验证我们的结论,我们先选择p=0.18</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># validation set</span></span><br><span class="line"></span><br><span class="line">predictions_val_p = learner.predict_proba(X_val)</span><br><span class="line">predictions_val_p=pd.DataFrame(predictions_val_p)[<span class="number">1</span>]</span><br><span class="line">predictions_val_pfinal = predictions_val_p&gt;=<span class="number">0.18</span></span><br><span class="line">predictions_val_pfinal=predictions_val_pfinal.astype(int)</span><br><span class="line">print(confusion_matrix(y_val, predictions_val_pfinal))</span><br><span class="line">print(recall_score(y_val, predictions_val_pfinal))</span><br><span class="line">print(precision_score(y_val, predictions_val_pfinal))</span><br></pre></td></tr></table></figure>
+
+<pre><code>[[2724  542]
+ [ 173  268]]
+0.6077097505668935
+0.3308641975308642</code></pre><p>可以发现在总共441位潜在客户里我们预测到了268位,达到了60.7%。但是我们预测的810位顾客里只有268位是正确的,精准度为33%。当然不使用模型的精准度为11.9%。</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># validation set</span></span><br><span class="line">predictions_val_p = learner.predict_proba(X_val)</span><br><span class="line">predictions_val_p=pd.DataFrame(predictions_val_p)[<span class="number">1</span>]</span><br><span class="line">predictions_val_pfinal = predictions_val_p&gt;=<span class="number">0.8</span></span><br><span class="line">predictions_val_pfinal=predictions_val_pfinal.astype(int)</span><br><span class="line">print(confusion_matrix(y_val, predictions_val_pfinal))</span><br><span class="line">print(recall_score(y_val, predictions_val_pfinal))</span><br><span class="line">print(precision_score(y_val, predictions_val_pfinal))</span><br></pre></td></tr></table></figure>
+
+<pre><code>[[3257    9]
+ [ 419   22]]
+0.049886621315192746
+0.7096774193548387</code></pre><p>可以发现调高cutoff value后,我们的预测变得更加谨慎,在预测的31位潜在客户里有22位是真的潜在客户,达到了71%的正确率。但是覆盖面不够广,损失了大多数的潜在客户。</p>
+<h3 id="Feature-Selection"><a href="#Feature-Selection" class="headerlink" title="Feature Selection"></a>Feature Selection</h3><figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Import a supervised learning model that has 'feature_importances_'</span></span><br><span class="line"><span class="keyword">from</span> sklearn.model_selection <span class="keyword">import</span> RandomizedSearchCV</span><br><span class="line"></span><br><span class="line"><span class="comment"># Train the supervised model on the training set using .fit(X_train, y_train)</span></span><br><span class="line">param_dist = &#123;<span class="string">"max_depth"</span>: [<span class="number">3</span>, <span class="literal">None</span>],</span><br><span class="line">              <span class="string">"n_estimators"</span>: list(range(<span class="number">10</span>, <span class="number">200</span>)),</span><br><span class="line">              <span class="string">"max_features"</span>: list(range(<span class="number">1</span>, X_test.shape[<span class="number">1</span>]+<span class="number">1</span>)),</span><br><span class="line">              <span class="string">"min_samples_split"</span>: list(range(<span class="number">2</span>, <span class="number">11</span>)),</span><br><span class="line">              <span class="string">"min_samples_leaf"</span>: list(range(<span class="number">1</span>, <span class="number">11</span>)),</span><br><span class="line">              <span class="string">"bootstrap"</span>: [<span class="literal">True</span>, <span class="literal">False</span>],</span><br><span class="line">              <span class="string">"criterion"</span>: [<span class="string">"gini"</span>, <span class="string">"entropy"</span>]&#125;</span><br><span class="line">model = RandomizedSearchCV(clf_B, param_distributions=param_dist)</span><br><span class="line">model.fit(X_train, y_train.values.ravel())</span><br><span class="line"><span class="comment"># <span class="doctag">TODO:</span> Extract the feature importances using .feature_importances_ </span></span><br><span class="line">importances = model.best_estimator_.feature_importances_</span><br></pre></td></tr></table></figure>
 
 <pre><code>C:\Users\jasonguo\Anaconda3\lib\site-packages\sklearn\model_selection\_split.py:1978: FutureWarning: The default value of cv will change from 3 to 5 in version 0.22. Specify it explicitly to silence this warning.
   warnings.warn(CV_WARNING, FutureWarning)</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Plot</span></span><br><span class="line"><span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> pl</span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">feature_plot</span><span class="params">(importances, X_train, y_train)</span>:</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment"># Display the five most important features</span></span><br><span class="line">    indices = np.argsort(importances)[::<span class="number">-1</span>]</span><br><span class="line">    columns = X_train.columns.values[indices[:<span class="number">5</span>]]</span><br><span class="line">    values = importances[indices][:<span class="number">5</span>]</span><br><span class="line"></span><br><span class="line">    <span class="comment"># Creat the plot</span></span><br><span class="line">    fig = pl.figure(figsize = (<span class="number">9</span>,<span class="number">5</span>))</span><br><span class="line">    pl.title(<span class="string">"Normalized Weights for First Five Most Predictive Features"</span>, fontsize = <span class="number">16</span>)</span><br><span class="line">    pl.bar(np.arange(<span class="number">5</span>), values, width = <span class="number">0.6</span>, align=<span class="string">"center"</span>, color = <span class="string">'#00A000'</span>, \</span><br><span class="line">          label = <span class="string">"Feature Weight"</span>)</span><br><span class="line">    pl.bar(np.arange(<span class="number">5</span>) - <span class="number">0.3</span>, np.cumsum(values), width = <span class="number">0.2</span>, align = <span class="string">"center"</span>, color = <span class="string">'#00A0A0'</span>, \</span><br><span class="line">          label = <span class="string">"Cumulative Feature Weight"</span>)</span><br><span class="line">    pl.xticks(np.arange(<span class="number">5</span>), columns)</span><br><span class="line">    pl.xlim((<span class="number">-0.5</span>, <span class="number">4.5</span>))</span><br><span class="line">    pl.ylabel(<span class="string">"Weight"</span>, fontsize = <span class="number">12</span>)</span><br><span class="line">    pl.xlabel(<span class="string">"Feature"</span>, fontsize = <span class="number">12</span>)</span><br><span class="line">    </span><br><span class="line">    pl.legend(loc = <span class="string">'upper center'</span>)</span><br><span class="line">    pl.tight_layout()</span><br><span class="line">    pl.show()</span><br></pre></td></tr></table></figure>
@@ -183,7 +191,7 @@ best params are: {&apos;algorithm&apos;: &apos;brute&apos;, &apos;n_neighbors&ap
 <figure class="highlight python"><table><tr><td class="code"><pre><span class="line">feature_plot(importances, X_train, y_train)</span><br></pre></td></tr></table></figure>
 
 
-<p><img src="/2020/01/24/bank_user_profile2/output_22_0.png" alt="png"></p>
+<p><img src="/2020/01/25/bank_user_profile2/output_34_0.png" alt="png"></p>
 <p>可以看到前五个重要的指标,第一个是雇佣员工数,第二个是欧洲银行间利率,第三个是年龄,第四个和第五个都是受访相关参数。私以为,机器学习和计量经济学的方法不同之处在于机器学习更加注重预测结果的准确性,而忽视了预测结果和参数直接的因果关系,这些因果关系是很难通过机器学习的一些方法被解释的,即使预测结果非常准确,但是一些参数可能和预测目标没有实际的相关性。接下来就使用计量经济学的方法来研究哪些因素可能导致用户存款。</p>
 <figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> sklearn.base <span class="keyword">import</span> clone</span><br><span class="line"></span><br><span class="line"><span class="comment"># Reduce the feature space</span></span><br><span class="line">X_train_reduced = X_train[X_train.columns.values[(np.argsort(importances)[::<span class="number">-1</span>])[:<span class="number">5</span>]]]</span><br><span class="line">X_test_reduced = X_test[X_test.columns.values[(np.argsort(importances)[::<span class="number">-1</span>])[:<span class="number">5</span>]]]</span><br><span class="line"></span><br><span class="line"><span class="comment"># Train on the "best" model found from grid search earlier</span></span><br><span class="line">clf = (clone(best_clf)).fit(X_train_reduced, y_train)</span><br><span class="line"></span><br><span class="line"><span class="comment"># Make new predictions</span></span><br><span class="line">reduced_predictions = clf.predict(X_test_reduced)</span><br><span class="line"></span><br><span class="line"><span class="comment"># Report scores from the final model using both versions of data</span></span><br><span class="line">print(<span class="string">"Final Model trained on full data\n------"</span>)</span><br><span class="line">print(<span class="string">"Accuracy on testing data: &#123;:.4f&#125;"</span>.format(accuracy_score(y_test, best_predictions)))</span><br><span class="line">print(<span class="string">"F-score on testing data: &#123;:.4f&#125;"</span>.format(fbeta_score(y_test, best_predictions, beta = <span class="number">0.5</span>)))</span><br><span class="line">print(<span class="string">"\nFinal Model trained on reduced data\n------"</span>)</span><br><span class="line">print(<span class="string">"Accuracy on testing data: &#123;:.4f&#125;"</span>.format(accuracy_score(y_test, reduced_predictions)))</span><br><span class="line">print(<span class="string">"F-score on testing data: &#123;:.4f&#125;"</span>.format(fbeta_score(y_test, reduced_predictions, beta = <span class="number">0.5</span>)))</span><br></pre></td></tr></table></figure>
 
@@ -196,9 +204,41 @@ Final Model trained on reduced data
 ------
 Accuracy on testing data: 0.8934
 F-score on testing data: 0.4420</code></pre><p>可以发现只取排名前五个参数的模型,F score 下降了一些, 意味着预测有存款意向的人的准确度变低了一些,但不是很多。</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
 ]]></content>
       <categories>
         <category>Python学习</category>
+      </categories>
+      <tags>
+        <tag>机器学习</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>银行客户画像分析1-数据预处理 with R</title>
+    <url>/2020/01/24/bank_user_profile/</url>
+    <content><![CDATA[<p>分析银行客户画像并预测是否会在该银行存款,本篇使用R语言进行数据预处理,使用CART方法填补缺失值,数据标准化以及one-hot encoding。</p>
+<a id="more"></a>
+<hr>
+<iframe src="bank.html" width="700" height="800"></iframe>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+]]></content>
+      <categories>
+        <category>R学习</category>
       </categories>
       <tags>
         <tag>机器学习</tag>
