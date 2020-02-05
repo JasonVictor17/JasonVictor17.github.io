@@ -1,0 +1,1508 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/mouse32.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/mouse16.ico">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('http://yoursite.com').hostname,
+    root: '/',
+    scheme: 'Muse',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="Identify segments of the population that form the core customer base for a mail-order sales company in Germany. These segments can then be used to direct marketing campaigns towards audiences that wi">
+<meta property="og:type" content="article">
+<meta property="og:title" content="基于python的基金定投分析">
+<meta property="og:url" content="http://yoursite.com/2020/02/05/Identify_Customer_Segments/index.html">
+<meta property="og:site_name" content="Jingde&#39;s Blog">
+<meta property="og:description" content="Identify segments of the population that form the core customer base for a mail-order sales company in Germany. These segments can then be used to direct marketing campaigns towards audiences that wi">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://yoursite.com/2020/02/05/Identify_Customer_Segments/output_12_0.png">
+<meta property="og:image" content="http://yoursite.com/2020/02/05/Identify_Customer_Segments/output_14_0.png">
+<meta property="og:image" content="http://yoursite.com/2020/02/05/Identify_Customer_Segments/output_21_0.png">
+<meta property="og:image" content="http://yoursite.com/2020/02/05/Identify_Customer_Segments/output_25_0.png">
+<meta property="og:image" content="http://yoursite.com/2020/02/05/Identify_Customer_Segments/output_26_0.png">
+<meta property="og:image" content="http://yoursite.com/2020/02/05/Identify_Customer_Segments/output_27_0.png">
+<meta property="og:image" content="http://yoursite.com/2020/02/05/Identify_Customer_Segments/output_28_0.png">
+<meta property="og:image" content="http://yoursite.com/2020/02/05/Identify_Customer_Segments/output_29_0.png">
+<meta property="og:image" content="http://yoursite.com/2020/02/05/Identify_Customer_Segments/output_56_1.png">
+<meta property="og:image" content="http://yoursite.com/2020/02/05/Identify_Customer_Segments/output_57_1.png">
+<meta property="og:image" content="http://yoursite.com/2020/02/05/Identify_Customer_Segments/output_68_1.png">
+<meta property="og:image" content="http://yoursite.com/2020/02/05/Identify_Customer_Segments/output_81_0.png">
+<meta property="article:published_time" content="2020-02-05T09:04:35.000Z">
+<meta property="article:modified_time" content="2020-02-05T09:05:10.575Z">
+<meta property="article:author" content="Jason">
+<meta property="article:tag" content="机器学习">
+<meta property="article:tag" content="无监督学习">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://yoursite.com/2020/02/05/Identify_Customer_Segments/output_12_0.png">
+
+<link rel="canonical" href="http://yoursite.com/2020/02/05/Identify_Customer_Segments/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>基于python的基金定投分析 | Jingde's Blog</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?<061f7a05407b07f04642d8ffecfff900>";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Jingde's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/02/05/Identify_Customer_Segments/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Jason">
+      <meta itemprop="description" content="A free place">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Jingde's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          基于python的基金定投分析
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2020-02-05 10:04:35 / 修改时间：10:05:10" itemprop="dateCreated datePublished" datetime="2020-02-05T10:04:35+01:00">2020-02-05</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Python%E5%AD%A6%E4%B9%A0/" itemprop="url" rel="index">
+                    <span itemprop="name">Python学习</span>
+                  </a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <font size="3">
+Identify segments of the population that form the core customer base for a mail-order sales company in Germany. These segments can then be used to direct marketing campaigns towards audiences that will have the highest expected rate of returns.
+
+<a id="more"></a>
+<hr>
+<h1 id="Project-Identify-Customer-Segments"><a href="#Project-Identify-Customer-Segments" class="headerlink" title="Project: Identify Customer Segments"></a>Project: Identify Customer Segments</h1><p>In this project, you will apply unsupervised learning techniques to identify segments of the population that form the core customer base for a mail-order sales company in Germany. These segments can then be used to direct marketing campaigns towards audiences that will have the highest expected rate of returns. The data that you will use has been provided by our partners at Bertelsmann Arvato Analytics, and represents a real-life data science task.</p>
+<p>This notebook will help you complete this task by providing a framework within which you will perform your analysis steps. In each step of the project, you will see some text describing the subtask that you will perform, followed by one or more code cells for you to complete your work. <strong>Feel free to add additional code and markdown cells as you go along so that you can explore everything in precise chunks.</strong> The code cells provided in the base template will outline only the major tasks, and will usually not be enough to cover all of the minor tasks that comprise it.</p>
+<p>It should be noted that while there will be precise guidelines on how you should handle certain tasks in the project, there will also be places where an exact specification is not provided. <strong>There will be times in the project where you will need to make and justify your own decisions on how to treat the data.</strong> These are places where there may not be only one way to handle the data. In real-life tasks, there may be many valid ways to approach an analysis task. One of the most important things you can do is clearly document your approach so that other scientists can understand the decisions you’ve made.</p>
+<p>At the end of most sections, there will be a Markdown cell labeled <strong>Discussion</strong>. In these cells, you will report your findings for the completed section, as well as document the decisions that you made in your approach to each subtask. <strong>Your project will be evaluated not just on the code used to complete the tasks outlined, but also your communication about your observations and conclusions at each stage.</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># import libraries here; add more as necessary</span></span><br><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"><span class="keyword">import</span> pandas <span class="keyword">as</span> pd</span><br><span class="line"><span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt</span><br><span class="line"><span class="keyword">import</span> seaborn <span class="keyword">as</span> sns</span><br><span class="line"><span class="keyword">import</span> re</span><br><span class="line"><span class="keyword">from</span> sklearn.preprocessing <span class="keyword">import</span> StandardScaler</span><br><span class="line"><span class="keyword">from</span> sklearn.decomposition <span class="keyword">import</span> PCA</span><br><span class="line"><span class="keyword">from</span> sklearn.cluster <span class="keyword">import</span> KMeans</span><br><span class="line"><span class="comment"># magic word for producing visualizations in notebook</span></span><br><span class="line">%matplotlib inline</span><br></pre></td></tr></table></figure>
+
+<h3 id="Step-0-Load-the-Data"><a href="#Step-0-Load-the-Data" class="headerlink" title="Step 0: Load the Data"></a>Step 0: Load the Data</h3><p>There are four files associated with this project (not including this one):</p>
+<ul>
+<li><code>Udacity_AZDIAS_Subset.csv</code>: Demographics data for the general population of Germany; 891211 persons (rows) x 85 features (columns).</li>
+<li><code>Udacity_CUSTOMERS_Subset.csv</code>: Demographics data for customers of a mail-order company; 191652 persons (rows) x 85 features (columns).</li>
+<li><code>Data_Dictionary.md</code>: Detailed information file about the features in the provided datasets.</li>
+<li><code>AZDIAS_Feature_Summary.csv</code>: Summary of feature attributes for demographics data; 85 features (rows) x 4 columns</li>
+</ul>
+<p>Each row of the demographics files represents a single person, but also includes information outside of individuals, including information about their household, building, and neighborhood. You will use this information to cluster the general population into groups with similar demographic properties. Then, you will see how the people in the customers dataset fit into those created clusters. The hope here is that certain clusters are over-represented in the customers data, as compared to the general population; those over-represented clusters will be assumed to be part of the core userbase. This information can then be used for further applications, such as targeting for a marketing campaign.</p>
+<p>To start off with, load in the demographics data for the general population into a pandas DataFrame, and do the same for the feature attributes summary. Note for all of the <code>.csv</code> data files in this project: they’re semicolon (<code>;</code>) delimited, so you’ll need an additional argument in your <a href="https://pandas.pydata.org/pandas-docs/stable/generated/pandas.read_csv.html" target="_blank" rel="noopener"><code>read_csv()</code></a> call to read in the data properly. Also, considering the size of the main dataset, it may take some time for it to load completely.</p>
+<p>Once the dataset is loaded, it’s recommended that you take a little bit of time just browsing the general structure of the dataset and feature summary file. You’ll be getting deep into the innards of the cleaning in the first major step of the project, so gaining some general familiarity can help you get your bearings.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Load in the general demographics data.</span></span><br><span class="line">azdias = pd.read_csv(<span class="string">'Udacity_AZDIAS_Subset.csv'</span>,sep=<span class="string">';'</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># Load in the feature summary file.</span></span><br><span class="line">feat_info = pd.read_csv(<span class="string">'AZDIAS_Feature_Summary.csv'</span>,sep=<span class="string">';'</span>)</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Check the structure of the data after it's loaded (e.g. print the number of</span></span><br><span class="line"><span class="comment"># rows and columns, print the first few rows).</span></span><br><span class="line"><span class="comment"># Info for general demographics data.</span></span><br><span class="line">print(<span class="string">"Total number of rows: &#123;&#125;"</span>.format(azdias.shape[<span class="number">0</span>]))</span><br><span class="line">print(<span class="string">"Total number of columns: &#123;&#125;"</span>.format(azdias.shape[<span class="number">1</span>]))</span><br><span class="line">azdias.head()</span><br></pre></td></tr></table></figure>
+
+<pre><code>Total number of rows: 891221
+Total number of columns: 85</code></pre><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+<pre><code>.dataframe tbody tr th {
+    vertical-align: top;
+}
+
+.dataframe thead th {
+    text-align: right;
+}</code></pre><p></style><p></p>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>AGER_TYP</th>
+      <th>ALTERSKATEGORIE_GROB</th>
+      <th>ANREDE_KZ</th>
+      <th>CJT_GESAMTTYP</th>
+      <th>FINANZ_MINIMALIST</th>
+      <th>FINANZ_SPARER</th>
+      <th>FINANZ_VORSORGER</th>
+      <th>FINANZ_ANLEGER</th>
+      <th>FINANZ_UNAUFFAELLIGER</th>
+      <th>FINANZ_HAUSBAUER</th>
+      <th>...</th>
+      <th>PLZ8_ANTG1</th>
+      <th>PLZ8_ANTG2</th>
+      <th>PLZ8_ANTG3</th>
+      <th>PLZ8_ANTG4</th>
+      <th>PLZ8_BAUMAX</th>
+      <th>PLZ8_HHZ</th>
+      <th>PLZ8_GBZ</th>
+      <th>ARBEIT</th>
+      <th>ORTSGR_KLS9</th>
+      <th>RELAT_AB</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>-1</td>
+      <td>2</td>
+      <td>1</td>
+      <td>2.0</td>
+      <td>3</td>
+      <td>4</td>
+      <td>3</td>
+      <td>5</td>
+      <td>5</td>
+      <td>3</td>
+      <td>...</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>-1</td>
+      <td>1</td>
+      <td>2</td>
+      <td>5.0</td>
+      <td>1</td>
+      <td>5</td>
+      <td>2</td>
+      <td>5</td>
+      <td>4</td>
+      <td>5</td>
+      <td>...</td>
+      <td>2.0</td>
+      <td>3.0</td>
+      <td>2.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>5.0</td>
+      <td>4.0</td>
+      <td>3.0</td>
+      <td>5.0</td>
+      <td>4.0</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>-1</td>
+      <td>3</td>
+      <td>2</td>
+      <td>3.0</td>
+      <td>1</td>
+      <td>4</td>
+      <td>1</td>
+      <td>2</td>
+      <td>3</td>
+      <td>5</td>
+      <td>...</td>
+      <td>3.0</td>
+      <td>3.0</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>4.0</td>
+      <td>4.0</td>
+      <td>3.0</td>
+      <td>5.0</td>
+      <td>2.0</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>2</td>
+      <td>4</td>
+      <td>2</td>
+      <td>2.0</td>
+      <td>4</td>
+      <td>2</td>
+      <td>5</td>
+      <td>2</td>
+      <td>1</td>
+      <td>2</td>
+      <td>...</td>
+      <td>2.0</td>
+      <td>2.0</td>
+      <td>2.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>3.0</td>
+      <td>4.0</td>
+      <td>2.0</td>
+      <td>3.0</td>
+      <td>3.0</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>-1</td>
+      <td>3</td>
+      <td>1</td>
+      <td>5.0</td>
+      <td>4</td>
+      <td>3</td>
+      <td>4</td>
+      <td>1</td>
+      <td>3</td>
+      <td>2</td>
+      <td>...</td>
+      <td>2.0</td>
+      <td>4.0</td>
+      <td>2.0</td>
+      <td>1.0</td>
+      <td>2.0</td>
+      <td>3.0</td>
+      <td>3.0</td>
+      <td>4.0</td>
+      <td>6.0</td>
+      <td>5.0</td>
+    </tr>
+  </tbody>
+</table>
+<p>5 rows × 85 columns</p>
+</div>
+
+
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># info for the feature summary file</span></span><br><span class="line">print(<span class="string">"Total number of rows: &#123;&#125;"</span>.format(feat_info.shape[<span class="number">0</span>]))</span><br><span class="line">print(<span class="string">"Total number of columns: &#123;&#125;"</span>.format(feat_info.shape[<span class="number">1</span>]))</span><br><span class="line">feat_info.head()</span><br></pre></td></tr></table></figure>
+
+<pre><code>Total number of rows: 85
+Total number of columns: 4</code></pre><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+<pre><code>.dataframe tbody tr th {
+    vertical-align: top;
+}
+
+.dataframe thead th {
+    text-align: right;
+}</code></pre><p></style><p></p>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>attribute</th>
+      <th>information_level</th>
+      <th>type</th>
+      <th>missing_or_unknown</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>AGER_TYP</td>
+      <td>person</td>
+      <td>categorical</td>
+      <td>[-1,0]</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>ALTERSKATEGORIE_GROB</td>
+      <td>person</td>
+      <td>ordinal</td>
+      <td>[-1,0,9]</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>ANREDE_KZ</td>
+      <td>person</td>
+      <td>categorical</td>
+      <td>[-1,0]</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>CJT_GESAMTTYP</td>
+      <td>person</td>
+      <td>categorical</td>
+      <td>[0]</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>FINANZ_MINIMALIST</td>
+      <td>person</td>
+      <td>ordinal</td>
+      <td>[-1]</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+
+
+<blockquote>
+<p><strong>Tip</strong>: Add additional cells to keep everything in reasonably-sized chunks! Keyboard shortcut <code>esc --&gt; a</code> (press escape to enter command mode, then press the ‘A’ key) adds a new cell before the active cell, and <code>esc --&gt; b</code> adds a new cell after the active cell. If you need to convert an active cell to a markdown cell, use <code>esc --&gt; m</code> and to convert to a code cell, use <code>esc --&gt; y</code>. </p>
+</blockquote>
+<h2 id="Step-1-Preprocessing"><a href="#Step-1-Preprocessing" class="headerlink" title="Step 1: Preprocessing"></a>Step 1: Preprocessing</h2><h3 id="Step-1-1-Assess-Missing-Data"><a href="#Step-1-1-Assess-Missing-Data" class="headerlink" title="Step 1.1: Assess Missing Data"></a>Step 1.1: Assess Missing Data</h3><p>The feature summary file contains a summary of properties for each demographics data column. You will use this file to help you make cleaning decisions during this stage of the project. First of all, you should assess the demographics data in terms of missing data. Pay attention to the following points as you perform your analysis, and take notes on what you observe. Make sure that you fill in the <strong>Discussion</strong> cell with your findings and decisions at the end of each step that has one!</p>
+<h4 id="Step-1-1-1-Convert-Missing-Value-Codes-to-NaNs"><a href="#Step-1-1-1-Convert-Missing-Value-Codes-to-NaNs" class="headerlink" title="Step 1.1.1: Convert Missing Value Codes to NaNs"></a>Step 1.1.1: Convert Missing Value Codes to NaNs</h4><p>The fourth column of the feature attributes summary (loaded in above as <code>feat_info</code>) documents the codes from the data dictionary that indicate missing or unknown data. While the file encodes this as a list (e.g. <code>[-1,0]</code>), this will get read in as a string object. You’ll need to do a little bit of parsing to make use of it to identify and clean the data. Convert data that matches a ‘missing’ or ‘unknown’ value code into a numpy NaN value. You might want to see how much data takes on a ‘missing’ or ‘unknown’ code, and how much data is naturally missing, as a point of interest.</p>
+<p><strong>As one more reminder, you are encouraged to add additional cells to break up your analysis into manageable chunks.</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># How much data is naturally missing in the dataset for each column.</span></span><br><span class="line">nature_missing = azdias.isna().sum()</span><br><span class="line">nature_missing[nature_missing != <span class="number">0</span>]</span><br></pre></td></tr></table></figure>
+
+
+
+
+<pre><code>CJT_GESAMTTYP            4854
+GFK_URLAUBERTYP          4854
+LP_LEBENSPHASE_FEIN      4854
+LP_LEBENSPHASE_GROB      4854
+LP_FAMILIE_FEIN          4854
+LP_FAMILIE_GROB          4854
+LP_STATUS_FEIN           4854
+LP_STATUS_GROB           4854
+RETOURTYP_BK_S           4854
+SOHO_KZ                 73499
+TITEL_KZ                73499
+ALTER_HH                73499
+ANZ_PERSONEN            73499
+ANZ_TITEL               73499
+HH_EINKOMMEN_SCORE      18348
+KK_KUNDENTYP           584612
+W_KEIT_KIND_HH         107602
+WOHNDAUER_2008          73499
+ANZ_HAUSHALTE_AKTIV     93148
+ANZ_HH_TITEL            97008
+GEBAEUDETYP             93148
+KONSUMNAEHE             73969
+MIN_GEBAEUDEJAHR        93148
+OST_WEST_KZ             93148
+WOHNLAGE                93148
+CAMEO_DEUG_2015         98979
+CAMEO_DEU_2015          98979
+CAMEO_INTL_2015         98979
+KBA05_ANTG1            133324
+KBA05_ANTG2            133324
+KBA05_ANTG3            133324
+KBA05_ANTG4            133324
+KBA05_BAUMAX           133324
+KBA05_GBZ              133324
+BALLRAUM                93740
+EWDICHTE                93740
+INNENSTADT              93740
+GEBAEUDETYP_RASTER      93155
+KKK                    121196
+MOBI_REGIO             133324
+ONLINE_AFFINITAET        4854
+REGIOTYP               121196
+KBA13_ANZAHL_PKW       105800
+PLZ8_ANTG1             116515
+PLZ8_ANTG2             116515
+PLZ8_ANTG3             116515
+PLZ8_ANTG4             116515
+PLZ8_BAUMAX            116515
+PLZ8_HHZ               116515
+PLZ8_GBZ               116515
+ARBEIT                  97216
+ORTSGR_KLS9             97216
+RELAT_AB                97216
+dtype: int64</code></pre><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Identify missing or unknown data values and convert them to NaNs.</span></span><br><span class="line">pattern = re.compile(<span class="string">r'\-\d+|\d+'</span>) <span class="comment"># find all numbers</span></span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> range (len(feat_info)):</span><br><span class="line">    index = pattern.findall(feat_info[<span class="string">'missing_or_unknown'</span>][i])</span><br><span class="line">    index = list(map(int, index))</span><br><span class="line">    azdias.iloc[:,i] = azdias.iloc[:,i].replace(index,np.nan)</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">pattern = re.compile(<span class="string">r'[A-Z]+'</span>) <span class="comment"># find all XX</span></span><br><span class="line">i = np.arange(<span class="number">57</span>,<span class="number">60</span>)</span><br><span class="line"><span class="keyword">for</span> each <span class="keyword">in</span> i:</span><br><span class="line">    index = pattern.findall(feat_info[<span class="string">'missing_or_unknown'</span>][each])[<span class="number">0</span>]</span><br><span class="line">    azdias.iloc[:,each] = azdias.iloc[:,each].replace(index,np.nan)</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># How mcuh data takes on a 'missing' or 'unknown' code</span></span><br><span class="line">indicated_miss = azdias.isna().sum()-nature_missing</span><br><span class="line">indicated_miss[indicated_miss != <span class="number">0</span>]</span><br></pre></td></tr></table></figure>
+
+
+
+
+<pre><code>AGER_TYP                 685843
+ALTERSKATEGORIE_GROB       2881
+GEBURTSJAHR              392318
+HEALTH_TYP               111196
+LP_LEBENSPHASE_FEIN       92778
+LP_LEBENSPHASE_GROB       89718
+LP_FAMILIE_FEIN           72938
+LP_FAMILIE_GROB           72938
+NATIONALITAET_KZ         108315
+PRAEGENDE_JUGENDJAHRE    108164
+SHOPPER_TYP              111196
+TITEL_KZ                 815562
+VERS_TYP                 111196
+ALTER_HH                 236768
+W_KEIT_KIND_HH            40386
+ANZ_HAUSHALTE_AKTIV        6463
+CAMEO_DEUG_2015             373
+CAMEO_DEU_2015              373
+CAMEO_INTL_2015             373
+KBA05_BAUMAX             343200
+KKK                       36868
+REGIOTYP                  36868
+ARBEIT                      159
+ORTSGR_KLS9                  58
+RELAT_AB                    159
+dtype: int64</code></pre><h4 id="Step-1-1-2-Assess-Missing-Data-in-Each-Column"><a href="#Step-1-1-2-Assess-Missing-Data-in-Each-Column" class="headerlink" title="Step 1.1.2: Assess Missing Data in Each Column"></a>Step 1.1.2: Assess Missing Data in Each Column</h4><p>How much missing data is present in each column? There are a few columns that are outliers in terms of the proportion of values that are missing. You will want to use matplotlib’s <a href="https://matplotlib.org/api/_as_gen/matplotlib.pyplot.hist.html" target="_blank" rel="noopener"><code>hist()</code></a> function to visualize the distribution of missing value counts to find these columns. Identify and document these columns. While some of these columns might have justifications for keeping or re-encoding the data, for this project you should just remove them from the dataframe. (Feel free to make remarks about these outlier columns in the discussion, however!)</p>
+<p>For the remaining features, are there any patterns in which columns have, or share, missing data?</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Perform an assessment of how much missing data there is in each column of the dataset.</span></span><br><span class="line"></span><br><span class="line">count_nan = azdias.isna().sum().sort_values(ascending = <span class="literal">False</span>)</span><br><span class="line">count_nan = count_nan[count_nan != <span class="number">0</span>] <span class="comment"># sort the counts</span></span><br><span class="line">plt.hist(count_nan,bins=<span class="number">30</span>)</span><br><span class="line">plt.show()</span><br></pre></td></tr></table></figure>
+
+
+<p><img src="/2020/02/05/Identify_Customer_Segments/output_12_0.png" alt="png"></p>
+<p>Based on the graph we can notice most counts of missing values are centered around 150,000, and some are actually have a lot of missing values.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">count_nan = (count_nan/<span class="number">891221</span>)[<span class="number">0</span>:<span class="number">10</span>]</span><br><span class="line">names = list(count_nan.index)</span><br><span class="line">plt.figure()</span><br><span class="line">plt.bar(np.arange(len(names)),count_nan,  alpha=<span class="number">0.5</span>)</span><br><span class="line">plt.xticks(np.arange(len(names)),names,rotation = <span class="number">60</span>,fontsize=<span class="number">10</span>)</span><br><span class="line">plt.ylabel(<span class="string">'Percentage'</span>)</span><br><span class="line">plt.title(<span class="string">'Percentage of missing values'</span>)</span><br><span class="line">plt.tight_layout()</span><br><span class="line">plt.show()</span><br></pre></td></tr></table></figure>
+
+
+<p><img src="/2020/02/05/Identify_Customer_Segments/output_14_0.png" alt="png"></p>
+<p>From the graph above we can see top six variables have over 30% values are missing, those should be removed.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Remove the outlier columns from the dataset. (You'll perform other data</span></span><br><span class="line"><span class="comment"># engineering tasks such as re-encoding and imputation later.)</span></span><br><span class="line">remove_names = list(count_nan[<span class="number">0</span>:<span class="number">6</span>].index)</span><br><span class="line">deleted_var = azdias[remove_names] <span class="comment"># save deleted variables</span></span><br><span class="line">azdias.drop(remove_names,axis=<span class="number">1</span>,inplace=<span class="literal">True</span>)</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">print(<span class="string">"Total number of columns: &#123;&#125;"</span>.format(azdias.shape[<span class="number">1</span>]))</span><br></pre></td></tr></table></figure>
+
+<pre><code>Total number of columns: 79</code></pre><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Investigate patterns in the amount of missing data in each column.</span></span><br><span class="line">count_nan = azdias.isna().sum().sort_values(ascending = <span class="literal">False</span>)</span><br><span class="line">count_nan = count_nan[count_nan != <span class="number">0</span>] </span><br><span class="line">count_nan</span><br></pre></td></tr></table></figure>
+
+
+
+
+<pre><code>KKK                      158064
+REGIOTYP                 158064
+W_KEIT_KIND_HH           147988
+MOBI_REGIO               133324
+KBA05_ANTG4              133324
+KBA05_ANTG3              133324
+KBA05_ANTG2              133324
+KBA05_ANTG1              133324
+KBA05_GBZ                133324
+PLZ8_ANTG2               116515
+PLZ8_ANTG1               116515
+PLZ8_ANTG3               116515
+PLZ8_ANTG4               116515
+PLZ8_BAUMAX              116515
+PLZ8_HHZ                 116515
+PLZ8_GBZ                 116515
+HEALTH_TYP               111196
+SHOPPER_TYP              111196
+VERS_TYP                 111196
+NATIONALITAET_KZ         108315
+PRAEGENDE_JUGENDJAHRE    108164
+KBA13_ANZAHL_PKW         105800
+ANZ_HAUSHALTE_AKTIV       99611
+CAMEO_INTL_2015           99352
+CAMEO_DEU_2015            99352
+CAMEO_DEUG_2015           99352
+LP_LEBENSPHASE_FEIN       97632
+RELAT_AB                  97375
+ARBEIT                    97375
+ORTSGR_KLS9               97274
+ANZ_HH_TITEL              97008
+LP_LEBENSPHASE_GROB       94572
+INNENSTADT                93740
+BALLRAUM                  93740
+EWDICHTE                  93740
+GEBAEUDETYP_RASTER        93155
+OST_WEST_KZ               93148
+MIN_GEBAEUDEJAHR          93148
+WOHNLAGE                  93148
+GEBAEUDETYP               93148
+LP_FAMILIE_FEIN           77792
+LP_FAMILIE_GROB           77792
+KONSUMNAEHE               73969
+ANZ_PERSONEN              73499
+ANZ_TITEL                 73499
+WOHNDAUER_2008            73499
+SOHO_KZ                   73499
+HH_EINKOMMEN_SCORE        18348
+CJT_GESAMTTYP              4854
+GFK_URLAUBERTYP            4854
+RETOURTYP_BK_S             4854
+ONLINE_AFFINITAET          4854
+LP_STATUS_FEIN             4854
+LP_STATUS_GROB             4854
+ALTERSKATEGORIE_GROB       2881
+dtype: int64</code></pre><h4 id="Discussion-1-1-2-Assess-Missing-Data-in-Each-Column"><a href="#Discussion-1-1-2-Assess-Missing-Data-in-Each-Column" class="headerlink" title="Discussion 1.1.2: Assess Missing Data in Each Column"></a>Discussion 1.1.2: Assess Missing Data in Each Column</h4><p>Some columns have exactly the same amount of missing values, which means they might also share those missing values. The variables which have more than 30% missing values are deleted. The deleted variables are TITEL_KZ, AGER_TYP, KK_KUNDENTYP, KBA05_BAUMAX, GEBURTSJAHR, ALTER_HH.</p>
+<h4 id="Step-1-1-3-Assess-Missing-Data-in-Each-Row"><a href="#Step-1-1-3-Assess-Missing-Data-in-Each-Row" class="headerlink" title="Step 1.1.3: Assess Missing Data in Each Row"></a>Step 1.1.3: Assess Missing Data in Each Row</h4><p>Now, you’ll perform a similar assessment for the rows of the dataset. How much data is missing in each row? As with the columns, you should see some groups of points that have a very different numbers of missing values. Divide the data into two subsets: one for data points that are above some threshold for missing values, and a second subset for points below that threshold.</p>
+<p>In order to know what to do with the outlier rows, we should see if the distribution of data values on columns that are not missing data (or are missing very little data) are similar or different between the two groups. Select at least five of these columns and compare the distribution of values.</p>
+<ul>
+<li>You can use seaborn’s <a href="https://seaborn.pydata.org/generated/seaborn.countplot.html" target="_blank" rel="noopener"><code>countplot()</code></a> function to create a bar chart of code frequencies and matplotlib’s <a href="https://matplotlib.org/api/_as_gen/matplotlib.pyplot.subplot.html" target="_blank" rel="noopener"><code>subplot()</code></a> function to put bar charts for the two subplots side by side.</li>
+<li>To reduce repeated code, you might want to write a function that can perform this comparison, taking as one of its arguments a column to be compared.</li>
+</ul>
+<p>Depending on what you observe in your comparison, this will have implications on how you approach your conclusions later in the analysis. If the distributions of non-missing features look similar between the data with many missing values and the data with few or no missing values, then we could argue that simply dropping those points from the analysis won’t present a major issue. On the other hand, if the data with many missing values looks very different from the data with few or no missing values, then we should make a note on those data as special. We’ll revisit these data later on. <strong>Either way, you should continue your analysis for now using just the subset of the data with few or no missing values.</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># How much data is missing in each row of the dataset?</span></span><br><span class="line">row_miss = azdias.isna().sum(axis = <span class="number">1</span>)</span><br><span class="line">sns.countplot(row_miss)</span><br><span class="line">plt.xticks(rotation = <span class="number">90</span>,fontsize=<span class="number">10</span>)</span><br><span class="line">plt.show()</span><br></pre></td></tr></table></figure>
+
+
+<p><img src="/2020/02/05/Identify_Customer_Segments/output_21_0.png" alt="png"></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Write code to divide the data into two subsets based on the number of missing</span></span><br><span class="line"><span class="comment"># values in each row.</span></span><br><span class="line">azdias_no_miss = azdias[azdias.isna().sum(axis = <span class="number">1</span>) == <span class="number">0</span>]</span><br><span class="line">azdias_with_miss = azdias[azdias.isna().sum(axis = <span class="number">1</span>) &gt;= <span class="number">1</span>]</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Compare the distribution of values for at least five columns where there are</span></span><br><span class="line"><span class="comment"># no missing values, between the two subsets.</span></span><br><span class="line"></span><br><span class="line">list(azdias.isna().sum().sort_values().head(<span class="number">20</span>).index) <span class="comment"># choose columns with no missing values</span></span><br></pre></td></tr></table></figure>
+
+
+
+
+<pre><code>[&apos;ZABEOTYP&apos;,
+ &apos;SEMIO_REL&apos;,
+ &apos;SEMIO_MAT&apos;,
+ &apos;SEMIO_VERT&apos;,
+ &apos;SEMIO_LUST&apos;,
+ &apos;SEMIO_ERL&apos;,
+ &apos;SEMIO_KULT&apos;,
+ &apos;SEMIO_RAT&apos;,
+ &apos;SEMIO_KRIT&apos;,
+ &apos;SEMIO_DOM&apos;,
+ &apos;SEMIO_KAEM&apos;,
+ &apos;GREEN_AVANTGARDE&apos;,
+ &apos;SEMIO_PFLICHT&apos;,
+ &apos;FINANZTYP&apos;,
+ &apos;FINANZ_HAUSBAUER&apos;,
+ &apos;FINANZ_UNAUFFAELLIGER&apos;,
+ &apos;FINANZ_ANLEGER&apos;,
+ &apos;FINANZ_VORSORGER&apos;,
+ &apos;FINANZ_SPARER&apos;,
+ &apos;FINANZ_MINIMALIST&apos;]</code></pre><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># define a function</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">compare_dist</span><span class="params">(name)</span>:</span></span><br><span class="line">    plt.figure(figsize=(<span class="number">10</span>,<span class="number">5</span>))</span><br><span class="line">    ax = plt.subplot(<span class="number">1</span>,<span class="number">2</span>,<span class="number">1</span>)</span><br><span class="line">    plt.hist(azdias_no_miss[name],bins = <span class="number">30</span>)</span><br><span class="line">    ax2 = plt.subplot(<span class="number">1</span>,<span class="number">2</span>,<span class="number">2</span>)</span><br><span class="line">    plt.hist(azdias_with_miss[name],bins = <span class="number">30</span>)</span><br><span class="line">    plt.show()</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 'ZABEOTYP'</span></span><br><span class="line">compare_dist(<span class="string">'ZABEOTYP'</span>)</span><br></pre></td></tr></table></figure>
+
+
+<p><img src="/2020/02/05/Identify_Customer_Segments/output_25_0.png" alt="png"></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 'SEMIO_LUST'</span></span><br><span class="line">compare_dist(<span class="string">'SEMIO_LUST'</span>)</span><br></pre></td></tr></table></figure>
+
+
+<p><img src="/2020/02/05/Identify_Customer_Segments/output_26_0.png" alt="png"></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 'GREEN_AVANTGARDE'</span></span><br><span class="line">compare_dist(<span class="string">'GREEN_AVANTGARDE'</span>)</span><br></pre></td></tr></table></figure>
+
+
+<p><img src="/2020/02/05/Identify_Customer_Segments/output_27_0.png" alt="png"></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 'FINANZ_HAUSBAUER'</span></span><br><span class="line">compare_dist(<span class="string">'FINANZ_HAUSBAUER'</span>)</span><br></pre></td></tr></table></figure>
+
+
+<p><img src="/2020/02/05/Identify_Customer_Segments/output_28_0.png" alt="png"></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 'SEMIO_RAT'</span></span><br><span class="line">compare_dist(<span class="string">'SEMIO_RAT'</span>)</span><br></pre></td></tr></table></figure>
+
+
+<p><img src="/2020/02/05/Identify_Customer_Segments/output_29_0.png" alt="png"></p>
+<h4 id="Discussion-1-1-3-Assess-Missing-Data-in-Each-Row"><a href="#Discussion-1-1-3-Assess-Missing-Data-in-Each-Row" class="headerlink" title="Discussion 1.1.3: Assess Missing Data in Each Row"></a>Discussion 1.1.3: Assess Missing Data in Each Row</h4><p>I divide the dataset in two subsets, one without missing values and the other with missing values. I did this because rows without missing values takes the big amount.</p>
+<p>The data with missing values is not qualitatively different from the data with no missing values, based on five bar charts above.</p>
+<h3 id="Step-1-2-Select-and-Re-Encode-Features"><a href="#Step-1-2-Select-and-Re-Encode-Features" class="headerlink" title="Step 1.2: Select and Re-Encode Features"></a>Step 1.2: Select and Re-Encode Features</h3><p>Checking for missing data isn’t the only way in which you can prepare a dataset for analysis. Since the unsupervised learning techniques to be used will only work on data that is encoded numerically, you need to make a few encoding changes or additional assumptions to be able to make progress. In addition, while almost all of the values in the dataset are encoded using numbers, not all of them represent numeric values. Check the third column of the feature summary (<code>feat_info</code>) for a summary of types of measurement.</p>
+<ul>
+<li>For numeric and interval data, these features can be kept without changes.</li>
+<li>Most of the variables in the dataset are ordinal in nature. While ordinal values may technically be non-linear in spacing, make the simplifying assumption that the ordinal variables can be treated as being interval in nature (that is, kept without any changes).</li>
+<li>Special handling may be necessary for the remaining two variable types: categorical, and ‘mixed’.</li>
+</ul>
+<p>In the first two parts of this sub-step, you will perform an investigation of the categorical and mixed-type features and make a decision on each of them, whether you will keep, drop, or re-encode each. Then, in the last part, you will create a new data frame with only the selected and engineered columns.</p>
+<p>Data wrangling is often the trickiest part of the data analysis process, and there’s a lot of it to be done here. But stick with it: once you’re done with this step, you’ll be ready to get to the machine learning parts of the project!</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># How many features are there of each data type?</span></span><br><span class="line"><span class="comment"># azdias_less_miss # use dataset with less missing values</span></span><br><span class="line"><span class="keyword">for</span> each <span class="keyword">in</span> remove_names:</span><br><span class="line">    feat_info = feat_info[feat_info[<span class="string">'attribute'</span>] != each]</span><br><span class="line">    </span><br><span class="line">categorical_v = feat_info[feat_info[<span class="string">'type'</span>] == <span class="string">'categorical'</span>]</span><br><span class="line">ordinal_v = feat_info[feat_info[<span class="string">'type'</span>] == <span class="string">'ordinal'</span>]</span><br><span class="line">numeric_v = feat_info[feat_info[<span class="string">'type'</span>] == <span class="string">'numeric'</span>]</span><br><span class="line">mixed_v = feat_info[feat_info[<span class="string">'type'</span>] == <span class="string">'mixed'</span>]</span><br><span class="line">interval_v = feat_info[feat_info[<span class="string">'type'</span>] == <span class="string">'interval'</span>]</span><br><span class="line"></span><br><span class="line">print(<span class="string">"Total number of numeric variables: &#123;&#125;"</span>.format(len(numeric_v)))</span><br><span class="line">print(<span class="string">"Total number of interval variables: &#123;&#125;"</span>.format(len(interval_v)))</span><br><span class="line">print(<span class="string">"Total number of ordinal variables: &#123;&#125;"</span>.format(len(ordinal_v)))</span><br><span class="line">print(<span class="string">"Total number of categorical variables: &#123;&#125;"</span>.format(len(categorical_v)))</span><br><span class="line">print(<span class="string">"Total number of mixed variables: &#123;&#125;"</span>.format(len(mixed_v)))</span><br></pre></td></tr></table></figure>
+
+<pre><code>Total number of numeric variables: 6
+Total number of interval variables: 0
+Total number of ordinal variables: 49
+Total number of categorical variables: 18
+Total number of mixed variables: 6</code></pre><h4 id="Step-1-2-1-Re-Encode-Categorical-Features"><a href="#Step-1-2-1-Re-Encode-Categorical-Features" class="headerlink" title="Step 1.2.1: Re-Encode Categorical Features"></a>Step 1.2.1: Re-Encode Categorical Features</h4><p>For categorical data, you would ordinarily need to encode the levels as dummy variables. Depending on the number of categories, perform one of the following:</p>
+<ul>
+<li>For binary (two-level) categoricals that take numeric values, you can keep them without needing to do anything.</li>
+<li>There is one binary variable that takes on non-numeric values. For this one, you need to re-encode the values as numbers or create a dummy variable.</li>
+<li>For multi-level categoricals (three or more values), you can choose to encode the values using multiple dummy variables (e.g. via <a href="http://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.OneHotEncoder.html" target="_blank" rel="noopener">OneHotEncoder</a>), or (to keep things straightforward) just drop them from the analysis. As always, document your choices in the Discussion section.</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Assess categorical variables: which are binary, which are multi-level, and</span></span><br><span class="line"><span class="comment"># which one needs to be re-encoded?</span></span><br><span class="line">binary_v = [<span class="string">'ANREDE_KZ'</span>, <span class="string">'GREEN_AVANTGARDE'</span>,<span class="string">'SOHO_KZ'</span>,<span class="string">'VERS_TYP'</span>,<span class="string">'OST_WEST_KZ'</span>] <span class="comment"># all binary variables and 'OST_WEST_KZ' should be re-encoded</span></span><br><span class="line">multi_level_v=categorical_v</span><br><span class="line"><span class="keyword">for</span> each <span class="keyword">in</span> binary_v:</span><br><span class="line">    multi_level_v = multi_level_v[multi_level_v[<span class="string">'attribute'</span>] != each]</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Re-encode categorical variable(s) to be kept in the analysis.</span></span><br><span class="line"><span class="comment"># re-encode the binary variable</span></span><br><span class="line">azdias_no_miss.loc[:, <span class="string">'OST_WEST_KZ'</span>] = azdias_no_miss.loc[:, <span class="string">'OST_WEST_KZ'</span>].replace(<span class="string">'O'</span>,<span class="number">0</span>)</span><br><span class="line">azdias_no_miss.loc[:, <span class="string">'OST_WEST_KZ'</span>] = azdias_no_miss.loc[:, <span class="string">'OST_WEST_KZ'</span>].replace(<span class="string">'W'</span>,<span class="number">1</span>)</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># re-encode the multi-level variables</span></span><br><span class="line">multi_level_row = azdias_no_miss[multi_level_v[<span class="string">'attribute'</span>]]</span><br><span class="line">multi_level_full = pd.get_dummies(multi_level_row.astype(str))</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Change the original dataset</span></span><br><span class="line">names = list(multi_level_v[<span class="string">'attribute'</span>])</span><br><span class="line">azdias_no_miss.drop(names,axis=<span class="number">1</span>,inplace = <span class="literal">True</span>)</span><br><span class="line">azdias_no_miss = pd.concat([azdias_no_miss, multi_level_full],axis=<span class="number">1</span> )</span><br><span class="line">encoded = list(azdias_no_miss.columns)</span><br><span class="line">print(<span class="string">"&#123;&#125; total features after one-hot encoding."</span>.format(len(encoded)))</span><br></pre></td></tr></table></figure>
+
+<pre><code>191 total features after one-hot encoding.</code></pre><h4 id="Discussion-1-2-1-Re-Encode-Categorical-Features"><a href="#Discussion-1-2-1-Re-Encode-Categorical-Features" class="headerlink" title="Discussion 1.2.1: Re-Encode Categorical Features"></a>Discussion 1.2.1: Re-Encode Categorical Features</h4><p>For binary variable ‘OST_WEST_KZ’ I transform it to numeric values, For multi-level variables I transform all of them into dummy variables.</p>
+<h4 id="Step-1-2-2-Engineer-Mixed-Type-Features"><a href="#Step-1-2-2-Engineer-Mixed-Type-Features" class="headerlink" title="Step 1.2.2: Engineer Mixed-Type Features"></a>Step 1.2.2: Engineer Mixed-Type Features</h4><p>There are a handful of features that are marked as “mixed” in the feature summary that require special treatment in order to be included in the analysis. There are two in particular that deserve attention; the handling of the rest are up to your own choices:</p>
+<ul>
+<li>“PRAEGENDE_JUGENDJAHRE” combines information on three dimensions: generation by decade, movement (mainstream vs. avantgarde), and nation (east vs. west). While there aren’t enough levels to disentangle east from west, you should create two new variables to capture the other two dimensions: an interval-type variable for decade, and a binary variable for movement.</li>
+<li>“CAMEO_INTL_2015” combines information on two axes: wealth and life stage. Break up the two-digit codes by their ‘tens’-place and ‘ones’-place digits into two new ordinal variables (which, for the purposes of this project, is equivalent to just treating them as their raw numeric values).</li>
+<li>If you decide to keep or engineer new features around the other mixed-type features, make sure you note your steps in the Discussion section.</li>
+</ul>
+<p>Be sure to check <code>Data_Dictionary.md</code> for the details needed to finish these tasks.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Investigate "PRAEGENDE_JUGENDJAHRE" and engineer two new variables.</span></span><br><span class="line"><span class="comment"># movement: 1 for Mainstream, 0 for Avantgarde</span></span><br><span class="line">movement = azdias_no_miss[<span class="string">'PRAEGENDE_JUGENDJAHRE'</span>] == <span class="number">1</span> | <span class="number">3</span> | <span class="number">5</span> | <span class="number">8</span> | <span class="number">10</span> | <span class="number">12</span> | <span class="number">14</span></span><br><span class="line">movement = movement.astype(int)</span><br><span class="line">decade = []</span><br><span class="line">i = <span class="number">0</span></span><br><span class="line">temp = azdias_no_miss[<span class="string">'PRAEGENDE_JUGENDJAHRE'</span>]</span><br><span class="line"><span class="keyword">for</span> each <span class="keyword">in</span> temp:</span><br><span class="line">    <span class="keyword">if</span> each == <span class="number">1</span> <span class="keyword">or</span> each == <span class="number">2</span>:</span><br><span class="line">        i = <span class="number">1</span></span><br><span class="line">    <span class="keyword">elif</span> each == <span class="number">3</span> <span class="keyword">or</span> each == <span class="number">4</span>:</span><br><span class="line">        i = <span class="number">2</span> </span><br><span class="line">    <span class="keyword">elif</span> each == <span class="number">5</span> <span class="keyword">or</span> each == <span class="number">6</span> <span class="keyword">or</span> each == <span class="number">7</span>:</span><br><span class="line">        i = <span class="number">3</span></span><br><span class="line">    <span class="keyword">elif</span> each == <span class="number">8</span> <span class="keyword">or</span> each ==<span class="number">9</span>:</span><br><span class="line">        i = <span class="number">4</span></span><br><span class="line">    <span class="keyword">elif</span> each == <span class="number">10</span> <span class="keyword">or</span> each ==<span class="number">11</span> <span class="keyword">or</span> each ==<span class="number">12</span> <span class="keyword">or</span> each ==<span class="number">13</span>:</span><br><span class="line">        i = <span class="number">5</span></span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        i = <span class="number">6</span></span><br><span class="line">    decade.append(i)</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Investigate "CAMEO_INTL_2015" and engineer two new variables.</span></span><br><span class="line">wealth = azdias_no_miss[<span class="string">'CAMEO_INTL_2015'</span>].astype(int)/<span class="number">10</span></span><br><span class="line">wealth = wealth.astype(int)</span><br><span class="line">life_stage = azdias_no_miss[<span class="string">'CAMEO_INTL_2015'</span>].astype(int) % <span class="number">10</span></span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Drop original columns and add the new columns</span></span><br><span class="line">names = list(mixed_v[<span class="string">'attribute'</span>])</span><br><span class="line">azdias_no_miss.drop(names,axis=<span class="number">1</span>,inplace = <span class="literal">True</span>)</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">azdias_no_miss[<span class="string">'movement'</span>] = movement</span><br><span class="line">azdias_no_miss[<span class="string">'decade'</span>] = decade</span><br><span class="line">azdias_no_miss[<span class="string">'wealth'</span>] = wealth</span><br><span class="line">azdias_no_miss[<span class="string">'life_stage'</span>] = life_stage</span><br></pre></td></tr></table></figure>
+
+<h4 id="Discussion-1-2-2-Engineer-Mixed-Type-Features"><a href="#Discussion-1-2-2-Engineer-Mixed-Type-Features" class="headerlink" title="Discussion 1.2.2: Engineer Mixed-Type Features"></a>Discussion 1.2.2: Engineer Mixed-Type Features</h4><p>I transformed “PRAEGENDE_JUGENDJAHRE”  and “CAMEO_INTL_2015” . For other variables I just dropped them since some are overlapped with existed variables, for example, “LP_LEBENSPHASE_GROB”.</p>
+<h4 id="Step-1-2-3-Complete-Feature-Selection"><a href="#Step-1-2-3-Complete-Feature-Selection" class="headerlink" title="Step 1.2.3: Complete Feature Selection"></a>Step 1.2.3: Complete Feature Selection</h4><p>In order to finish this step up, you need to make sure that your data frame now only has the columns that you want to keep. To summarize, the dataframe should consist of the following:</p>
+<ul>
+<li>All numeric, interval, and ordinal type columns from the original dataset.</li>
+<li>Binary categorical features (all numerically-encoded).</li>
+<li>Engineered features from other multi-level categorical features and mixed features.</li>
+</ul>
+<p>Make sure that for any new columns that you have engineered, that you’ve excluded the original columns from the final dataset. Otherwise, their values will interfere with the analysis later on the project. For example, you should not keep “PRAEGENDE_JUGENDJAHRE”, since its values won’t be useful for the algorithm: only the values derived from it in the engineered features you created should be retained. As a reminder, your data should only be from <strong>the subset with few or no missing values</strong>.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># If there are other re-engineering tasks you need to perform, make sure you</span></span><br><span class="line"><span class="comment"># take care of them here. (Dealing with missing data will come in step 2.1.)</span></span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Do whatever you need to in order to ensure that the dataframe only contains</span></span><br><span class="line"><span class="comment"># the columns that should be passed to the algorithm functions.</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="Step-1-3-Create-a-Cleaning-Function"><a href="#Step-1-3-Create-a-Cleaning-Function" class="headerlink" title="Step 1.3: Create a Cleaning Function"></a>Step 1.3: Create a Cleaning Function</h3><p>Even though you’ve finished cleaning up the general population demographics data, it’s important to look ahead to the future and realize that you’ll need to perform the same cleaning steps on the customer demographics data. In this substep, complete the function below to execute the main feature selection, encoding, and re-engineering steps you performed above. Then, when it comes to looking at the customer data in Step 3, you can just run this function on that DataFrame to get the trimmed dataset in a single step.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">clean_data</span><span class="params">(df)</span>:</span></span><br><span class="line">    <span class="string">"""</span></span><br><span class="line"><span class="string">    Perform feature trimming, re-encoding, and engineering for demographics</span></span><br><span class="line"><span class="string">    data</span></span><br><span class="line"><span class="string">    </span></span><br><span class="line"><span class="string">    INPUT: Demographics DataFrame</span></span><br><span class="line"><span class="string">    OUTPUT: Trimmed and cleaned demographics DataFrame</span></span><br><span class="line"><span class="string">    """</span></span><br><span class="line">    feat_info = pd.read_csv(<span class="string">'AZDIAS_Feature_Summary.csv'</span>,sep=<span class="string">';'</span>)</span><br><span class="line">    <span class="comment"># Put in code here to execute all main cleaning steps:</span></span><br><span class="line">    <span class="comment"># convert missing value codes into NaNs, ...</span></span><br><span class="line">    <span class="comment"># Identify missing or unknown data values and convert them to NaNs.</span></span><br><span class="line">    pattern = re.compile(<span class="string">r'\-\d+|\d+'</span>) <span class="comment"># find all numbers</span></span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> range (len(feat_info)):</span><br><span class="line">        index = pattern.findall(feat_info[<span class="string">'missing_or_unknown'</span>][i])</span><br><span class="line">        index = list(map(int, index))</span><br><span class="line">        df.iloc[:,i] = df.iloc[:,i].replace(index,np.nan)</span><br><span class="line">    pattern = re.compile(<span class="string">r'[A-Z]+'</span>) <span class="comment"># find all XX</span></span><br><span class="line">    i = np.arange(<span class="number">57</span>,<span class="number">60</span>)</span><br><span class="line">    <span class="keyword">for</span> each <span class="keyword">in</span> i:</span><br><span class="line">        index = pattern.findall(feat_info[<span class="string">'missing_or_unknown'</span>][each])[<span class="number">0</span>]</span><br><span class="line">        df.iloc[:,each] = df.iloc[:,each].replace(index,np.nan)</span><br><span class="line">        </span><br><span class="line">    <span class="comment"># remove selected columns and rows, ...</span></span><br><span class="line">    count_nan = df.isna().sum().sort_values(ascending = <span class="literal">False</span>)</span><br><span class="line">    count_nan = count_nan[count_nan != <span class="number">0</span>] <span class="comment"># sort the counts</span></span><br><span class="line">    remove_names = [<span class="string">'TITEL_KZ'</span>,<span class="string">'AGER_TYP'</span>,<span class="string">'KK_KUNDENTYP'</span>,<span class="string">'KBA05_BAUMAX'</span>,<span class="string">'GEBURTSJAHR'</span>,<span class="string">'ALTER_HH'</span>]<span class="comment"># save deleted variables</span></span><br><span class="line">    df.drop(remove_names,axis=<span class="number">1</span>,inplace=<span class="literal">True</span>)</span><br><span class="line">    azdias_no_miss = df[df.isna().sum(axis = <span class="number">1</span>) == <span class="number">0</span>]</span><br><span class="line">    azdias_with_miss = df[df.isna().sum(axis = <span class="number">1</span>) &gt;= <span class="number">1</span>]</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># select, re-encode, and engineer column values.</span></span><br><span class="line">    <span class="keyword">for</span> each <span class="keyword">in</span> remove_names:</span><br><span class="line">        feat_info = feat_info[feat_info[<span class="string">'attribute'</span>] != each]</span><br><span class="line">    </span><br><span class="line">    categorical_v = feat_info[feat_info[<span class="string">'type'</span>] == <span class="string">'categorical'</span>]</span><br><span class="line">    ordinal_v = feat_info[feat_info[<span class="string">'type'</span>] == <span class="string">'ordinal'</span>]</span><br><span class="line">    numeric_v = feat_info[feat_info[<span class="string">'type'</span>] == <span class="string">'numeric'</span>]</span><br><span class="line">    mixed_v = feat_info[feat_info[<span class="string">'type'</span>] == <span class="string">'mixed'</span>]</span><br><span class="line">    interval_v = feat_info[feat_info[<span class="string">'type'</span>] == <span class="string">'interval'</span>]</span><br><span class="line">    </span><br><span class="line">    binary_v = [<span class="string">'ANREDE_KZ'</span>, <span class="string">'GREEN_AVANTGARDE'</span>,<span class="string">'SOHO_KZ'</span>,<span class="string">'VERS_TYP'</span>,<span class="string">'OST_WEST_KZ'</span>] <span class="comment"># all binary variables and 'OST_WEST_KZ' should be re-encoded</span></span><br><span class="line">    multi_level_v=categorical_v</span><br><span class="line">    <span class="keyword">for</span> each <span class="keyword">in</span> binary_v:</span><br><span class="line">        multi_level_v = multi_level_v[multi_level_v[<span class="string">'attribute'</span>] != each]</span><br><span class="line">    azdias_no_miss.loc[:, <span class="string">'OST_WEST_KZ'</span>] = azdias_no_miss.loc[:, <span class="string">'OST_WEST_KZ'</span>].replace(<span class="string">'O'</span>,<span class="number">0</span>)</span><br><span class="line">    azdias_no_miss.loc[:, <span class="string">'OST_WEST_KZ'</span>] = azdias_no_miss.loc[:, <span class="string">'OST_WEST_KZ'</span>].replace(<span class="string">'W'</span>,<span class="number">1</span>)</span><br><span class="line">    <span class="comment"># re-encode the multi-level variables</span></span><br><span class="line">    multi_level_row = azdias_no_miss[multi_level_v[<span class="string">'attribute'</span>]]</span><br><span class="line">    multi_level_full = pd.get_dummies(multi_level_row.astype(str))</span><br><span class="line">    <span class="comment"># Change the original dataset</span></span><br><span class="line">    names = list(multi_level_v[<span class="string">'attribute'</span>])</span><br><span class="line">    azdias_no_miss.drop(names,axis=<span class="number">1</span>,inplace = <span class="literal">True</span>)</span><br><span class="line">    azdias_no_miss = pd.concat([azdias_no_miss, multi_level_full],axis=<span class="number">1</span> )</span><br><span class="line">    </span><br><span class="line">    movement = azdias_no_miss[<span class="string">'PRAEGENDE_JUGENDJAHRE'</span>] == <span class="number">1</span> | <span class="number">3</span> | <span class="number">5</span> | <span class="number">8</span> | <span class="number">10</span> | <span class="number">12</span> | <span class="number">14</span></span><br><span class="line">    movement = movement.astype(int)</span><br><span class="line">    decade = []</span><br><span class="line">    i = <span class="number">0</span></span><br><span class="line">    temp = azdias_no_miss[<span class="string">'PRAEGENDE_JUGENDJAHRE'</span>]</span><br><span class="line">    <span class="keyword">for</span> each <span class="keyword">in</span> temp:</span><br><span class="line">        <span class="keyword">if</span> each == <span class="number">1</span> <span class="keyword">or</span> each == <span class="number">2</span>:</span><br><span class="line">            i = <span class="number">1</span></span><br><span class="line">        <span class="keyword">elif</span> each == <span class="number">3</span> <span class="keyword">or</span> each == <span class="number">4</span>:</span><br><span class="line">            i = <span class="number">2</span> </span><br><span class="line">        <span class="keyword">elif</span> each == <span class="number">5</span> <span class="keyword">or</span> each == <span class="number">6</span> <span class="keyword">or</span> each == <span class="number">7</span>:</span><br><span class="line">            i = <span class="number">3</span></span><br><span class="line">        <span class="keyword">elif</span> each == <span class="number">8</span> <span class="keyword">or</span> each ==<span class="number">9</span>:</span><br><span class="line">            i = <span class="number">4</span></span><br><span class="line">        <span class="keyword">elif</span> each == <span class="number">10</span> <span class="keyword">or</span> each ==<span class="number">11</span> <span class="keyword">or</span> each ==<span class="number">12</span> <span class="keyword">or</span> each ==<span class="number">13</span>:</span><br><span class="line">            i = <span class="number">5</span></span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            i = <span class="number">6</span></span><br><span class="line">        decade.append(i)</span><br><span class="line">        </span><br><span class="line">    <span class="comment"># Investigate "CAMEO_INTL_2015" and engineer two new variables.</span></span><br><span class="line">    wealth = azdias_no_miss[<span class="string">'CAMEO_INTL_2015'</span>].astype(int)/<span class="number">10</span></span><br><span class="line">    wealth = wealth.astype(int)</span><br><span class="line">    life_stage = azdias_no_miss[<span class="string">'CAMEO_INTL_2015'</span>].astype(int) % <span class="number">10</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment"># Drop original columns and add the new columns</span></span><br><span class="line">    names = list(mixed_v[<span class="string">'attribute'</span>])</span><br><span class="line">    azdias_no_miss.drop(names,axis=<span class="number">1</span>,inplace = <span class="literal">True</span>)</span><br><span class="line">    </span><br><span class="line">    azdias_no_miss[<span class="string">'movement'</span>] = movement</span><br><span class="line">    azdias_no_miss[<span class="string">'decade'</span>] = decade</span><br><span class="line">    azdias_no_miss[<span class="string">'wealth'</span>] = wealth</span><br><span class="line">    azdias_no_miss[<span class="string">'life_stage'</span>] = life_stage</span><br><span class="line"></span><br><span class="line">    <span class="comment"># Return the cleaned dataframe.</span></span><br><span class="line">    <span class="keyword">return</span> azdias_no_miss</span><br></pre></td></tr></table></figure>
+
+<h2 id="Step-2-Feature-Transformation"><a href="#Step-2-Feature-Transformation" class="headerlink" title="Step 2: Feature Transformation"></a>Step 2: Feature Transformation</h2><h3 id="Step-2-1-Apply-Feature-Scaling"><a href="#Step-2-1-Apply-Feature-Scaling" class="headerlink" title="Step 2.1: Apply Feature Scaling"></a>Step 2.1: Apply Feature Scaling</h3><p>Before we apply dimensionality reduction techniques to the data, we need to perform feature scaling so that the principal component vectors are not influenced by the natural differences in scale for features. Starting from this part of the project, you’ll want to keep an eye on the <a href="http://scikit-learn.org/stable/modules/classes.html" target="_blank" rel="noopener">API reference page for sklearn</a> to help you navigate to all of the classes and functions that you’ll need. In this substep, you’ll need to check the following:</p>
+<ul>
+<li>sklearn requires that data not have missing values in order for its estimators to work properly. So, before applying the scaler to your data, make sure that you’ve cleaned the DataFrame of the remaining missing values. This can be as simple as just removing all data points with missing data, or applying an <a href="http://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.Imputer.html" target="_blank" rel="noopener">Imputer</a> to replace all missing values. You might also try a more complicated procedure where you temporarily remove missing values in order to compute the scaling parameters before re-introducing those missing values and applying imputation. Think about how much missing data you have and what possible effects each approach might have on your analysis, and justify your decision in the discussion section below.</li>
+<li>For the actual scaling function, a <a href="http://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.StandardScaler.html" target="_blank" rel="noopener">StandardScaler</a> instance is suggested, scaling each feature to mean 0 and standard deviation 1.</li>
+<li>For these classes, you can make use of the <code>.fit_transform()</code> method to both fit a procedure to the data as well as apply the transformation to the data at the same time. Don’t forget to keep the fit sklearn objects handy, since you’ll be applying them to the customer demographics data towards the end of the project.</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># If you've not yet cleaned the dataset of all NaN values, then investigate and</span></span><br><span class="line"><span class="comment"># do that now.</span></span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Apply feature scaling to the general population demographics data.</span></span><br><span class="line">scaler = StandardScaler()</span><br><span class="line">azdias_trans = pd.DataFrame(scaler.fit_transform(azdias_no_miss))</span><br><span class="line">azdias_trans.columns = azdias_no_miss.columns</span><br></pre></td></tr></table></figure>
+
+<h3 id="Discussion-2-1-Apply-Feature-Scaling"><a href="#Discussion-2-1-Apply-Feature-Scaling" class="headerlink" title="Discussion 2.1: Apply Feature Scaling"></a>Discussion 2.1: Apply Feature Scaling</h3><p>I removed all missing values brfore, and I transformed all features with StandardScaler.</p>
+<h3 id="Step-2-2-Perform-Dimensionality-Reduction"><a href="#Step-2-2-Perform-Dimensionality-Reduction" class="headerlink" title="Step 2.2: Perform Dimensionality Reduction"></a>Step 2.2: Perform Dimensionality Reduction</h3><p>On your scaled data, you are now ready to apply dimensionality reduction techniques.</p>
+<ul>
+<li>Use sklearn’s <a href="http://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html" target="_blank" rel="noopener">PCA</a> class to apply principal component analysis on the data, thus finding the vectors of maximal variance in the data. To start, you should not set any parameters (so all components are computed) or set a number of components that is at least half the number of features (so there’s enough features to see the general trend in variability).</li>
+<li>Check out the ratio of variance explained by each principal component as well as the cumulative variance explained. Try plotting the cumulative or sequential values using matplotlib’s <a href="https://matplotlib.org/api/_as_gen/matplotlib.pyplot.plot.html" target="_blank" rel="noopener"><code>plot()</code></a> function. Based on what you find, select a value for the number of transformed features you’ll retain for the clustering part of the project.</li>
+<li>Once you’ve made a choice for the number of components to keep, make sure you re-fit a PCA instance to perform the decided-on transformation.</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Apply PCA to the data.</span></span><br><span class="line"><span class="keyword">from</span> sklearn.decomposition <span class="keyword">import</span> PCA</span><br><span class="line">pca = PCA()</span><br><span class="line">azdias_pca = pca.fit_transform(azdias_trans)</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Investigate the variance accounted for by each principal component.</span></span><br><span class="line">var_ratio = pca.explained_variance_ratio_</span><br><span class="line">plt.plot(var_ratio)</span><br></pre></td></tr></table></figure>
+
+
+
+
+<pre><code>[&lt;matplotlib.lines.Line2D at 0x1f0a9327e08&gt;]</code></pre><p><img src="/2020/02/05/Identify_Customer_Segments/output_56_1.png" alt="png"></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">plt.plot(np.cumsum(var_ratio))</span><br></pre></td></tr></table></figure>
+
+
+
+
+<pre><code>[&lt;matplotlib.lines.Line2D at 0x1f0a8f7dc08&gt;]</code></pre><p><img src="/2020/02/05/Identify_Customer_Segments/output_57_1.png" alt="png"></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Re-apply PCA to the data while selecting for number of components to retain.</span></span><br><span class="line">pca = PCA(n_components=<span class="number">100</span>)</span><br><span class="line">azdias_pca = pca.fit_transform(azdias_trans)</span><br></pre></td></tr></table></figure>
+
+<h3 id="Discussion-2-2-Perform-Dimensionality-Reduction"><a href="#Discussion-2-2-Perform-Dimensionality-Reduction" class="headerlink" title="Discussion 2.2: Perform Dimensionality Reduction"></a>Discussion 2.2: Perform Dimensionality Reduction</h3><p>With 100 components, over 80% variance can be explained. Thus I choose 100 components.</p>
+<h3 id="Step-2-3-Interpret-Principal-Components"><a href="#Step-2-3-Interpret-Principal-Components" class="headerlink" title="Step 2.3: Interpret Principal Components"></a>Step 2.3: Interpret Principal Components</h3><p>Now that we have our transformed principal components, it’s a nice idea to check out the weight of each variable on the first few components to see if they can be interpreted in some fashion.</p>
+<p>As a reminder, each principal component is a unit vector that points in the direction of highest variance (after accounting for the variance captured by earlier principal components). The further a weight is from zero, the more the principal component is in the direction of the corresponding feature. If two features have large weights of the same sign (both positive or both negative), then increases in one tend expect to be associated with increases in the other. To contrast, features with different signs can be expected to show a negative correlation: increases in one variable should result in a decrease in the other.</p>
+<ul>
+<li>To investigate the features, you should map each weight to their corresponding feature name, then sort the features according to weight. The most interesting features for each principal component, then, will be those at the beginning and end of the sorted list. Use the data dictionary document to help you understand these most prominent features, their relationships, and what a positive or negative value on the principal component might indicate.</li>
+<li>You should investigate and interpret feature associations from the first three principal components in this substep. To help facilitate this, you should write a function that you can call at any time to print the sorted list of feature weights, for the <em>i</em>-th principal component. This might come in handy in the next step of the project, when you interpret the tendencies of the discovered clusters.</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Map weights for the first principal component to corresponding feature names</span></span><br><span class="line"><span class="comment"># and then print the linked values, sorted by weight.</span></span><br><span class="line"><span class="comment"># HINT: Try defining a function here or in a new cell that you can reuse in the</span></span><br><span class="line"><span class="comment"># other cells.</span></span><br><span class="line">feature_select = pd.DataFrame(pca.components_,columns=azdias_trans.columns).T</span><br><span class="line">feature_select[<span class="number">0</span>].sort_values()</span><br></pre></td></tr></table></figure>
+
+
+
+
+<pre><code>MOBI_REGIO           -0.202737
+FINANZ_MINIMALIST    -0.195380
+KBA05_ANTG1          -0.190736
+PLZ8_ANTG1           -0.180144
+KBA05_GBZ            -0.179441
+                        ...   
+PLZ8_ANTG4            0.172431
+PLZ8_ANTG3            0.178166
+HH_EINKOMMEN_SCORE    0.178693
+wealth                0.180169
+LP_STATUS_GROB_1.0    0.192540
+Name: 0, Length: 189, dtype: float64</code></pre><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Map weights for the second principal component to corresponding feature names</span></span><br><span class="line"><span class="comment"># and then print the linked values, sorted by weight.</span></span><br><span class="line"></span><br><span class="line">feature_select[<span class="number">1</span>].sort_values()</span><br></pre></td></tr></table></figure>
+
+
+
+
+<pre><code>decade                  -0.228497
+SEMIO_REL               -0.213832
+FINANZ_SPARER           -0.212535
+FINANZ_UNAUFFAELLIGER   -0.207468
+SEMIO_PFLICHT           -0.205000
+                           ...   
+RETOURTYP_BK_S           0.156204
+SEMIO_ERL                0.181138
+ZABEOTYP_3               0.197800
+FINANZ_VORSORGER         0.205081
+ALTERSKATEGORIE_GROB     0.225616
+Name: 1, Length: 189, dtype: float64</code></pre><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Map weights for the third principal component to corresponding feature names</span></span><br><span class="line"><span class="comment"># and then print the linked values, sorted by weight.</span></span><br><span class="line">feature_select[<span class="number">2</span>].sort_values()</span><br></pre></td></tr></table></figure>
+
+
+
+
+<pre><code>ANREDE_KZ     -0.346752
+SEMIO_KAEM    -0.319185
+SEMIO_DOM     -0.286983
+SEMIO_KRIT    -0.262582
+SEMIO_ERL     -0.199994
+                 ...   
+FINANZTYP_5    0.135987
+SEMIO_KULT     0.246536
+SEMIO_SOZ      0.257146
+SEMIO_FAM      0.260536
+SEMIO_VERT     0.324047
+Name: 2, Length: 189, dtype: float64</code></pre><h3 id="Discussion-2-3-Interpret-Principal-Components"><a href="#Discussion-2-3-Interpret-Principal-Components" class="headerlink" title="Discussion 2.3: Interpret Principal Components"></a>Discussion 2.3: Interpret Principal Components</h3><p>Component 1: Movement patterns and social status are negatively correlated, which means higher movement higher income. Also wealth and social status are positively correlated. Therefore, the first component is correalted with people’s wealth.</p>
+<p>Component 2: Estimated age based on given name analysis is negatively correlated with variable decade, since they are negatively correlated by nature. Thus this one is correlated with ages.</p>
+<p>Component 3: People who is not likely to be dreamful is more likely to be a male. This Component is related to the gender.</p>
+<h2 id="Step-3-Clustering"><a href="#Step-3-Clustering" class="headerlink" title="Step 3: Clustering"></a>Step 3: Clustering</h2><h3 id="Step-3-1-Apply-Clustering-to-General-Population"><a href="#Step-3-1-Apply-Clustering-to-General-Population" class="headerlink" title="Step 3.1: Apply Clustering to General Population"></a>Step 3.1: Apply Clustering to General Population</h3><p>You’ve assessed and cleaned the demographics data, then scaled and transformed them. Now, it’s time to see how the data clusters in the principal components space. In this substep, you will apply k-means clustering to the dataset and use the average within-cluster distances from each point to their assigned cluster’s centroid to decide on a number of clusters to keep.</p>
+<ul>
+<li>Use sklearn’s <a href="http://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html#sklearn.cluster.KMeans" target="_blank" rel="noopener">KMeans</a> class to perform k-means clustering on the PCA-transformed data.</li>
+<li>Then, compute the average difference from each point to its assigned cluster’s center. <strong>Hint</strong>: The KMeans object’s <code>.score()</code> method might be useful here, but note that in sklearn, scores tend to be defined so that larger is better. Try applying it to a small, toy dataset, or use an internet search to help your understanding.</li>
+<li>Perform the above two steps for a number of different cluster counts. You can then see how the average distance decreases with an increasing number of clusters. However, each additional cluster provides a smaller net benefit. Use this fact to select a final number of clusters in which to group the data. <strong>Warning</strong>: because of the large size of the dataset, it can take a long time for the algorithm to resolve. The more clusters to fit, the longer the algorithm will take. You should test for cluster counts through at least 10 clusters to get the full picture, but you shouldn’t need to test for a number of clusters above about 30.</li>
+<li>Once you’ve selected a final number of clusters to use, re-fit a KMeans instance to perform the clustering operation. Make sure that you also obtain the cluster assignments for the general demographics data, since you’ll be using them in the final Step 3.3.</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Function to calculate K-Means score for a centroid</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">get_kmeans_score</span><span class="params">(data, center)</span>:</span></span><br><span class="line">    </span><br><span class="line">    kmeans = KMeans(n_clusters = center, random_state=<span class="number">2020</span>)</span><br><span class="line">    model = kmeans.fit(data)</span><br><span class="line">    score = np.abs(model.score(data))</span><br><span class="line">    <span class="keyword">return</span> score</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">score = []</span><br><span class="line">centroids = [<span class="number">2</span>,<span class="number">5</span>,<span class="number">10</span>,<span class="number">11</span>,<span class="number">12</span>,<span class="number">13</span>,<span class="number">14</span>,<span class="number">16</span>,<span class="number">20</span>,<span class="number">23</span>,<span class="number">25</span>]</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> each <span class="keyword">in</span> centroids:</span><br><span class="line">    score.append(get_kmeans_score(azdias_pca,each))</span><br><span class="line">    print(<span class="string">'Finished for:'</span>,each)</span><br></pre></td></tr></table></figure>
+
+<pre><code>Finished for: 2
+Finished for: 5
+Finished for: 10
+Finished for: 11
+Finished for: 12
+Finished for: 13
+Finished for: 14
+Finished for: 16
+Finished for: 20
+Finished for: 23
+Finished for: 25</code></pre><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Investigate the change in within-cluster distance across number of clusters.</span></span><br><span class="line"><span class="comment"># HINT: Use matplotlib's plot function to visualize this relationship.</span></span><br><span class="line"></span><br><span class="line">plt.plot(centroids,score,color=<span class="string">'blue'</span>)</span><br></pre></td></tr></table></figure>
+
+
+
+
+<pre><code>[&lt;matplotlib.lines.Line2D at 0x1f0a955a4c8&gt;]</code></pre><p><img src="/2020/02/05/Identify_Customer_Segments/output_68_1.png" alt="png"></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Re-fit the k-means model with the selected number of clusters and obtain</span></span><br><span class="line"><span class="comment"># cluster predictions for the general population demographics data.</span></span><br><span class="line">kmeans = KMeans(n_clusters = <span class="number">11</span>, random_state=<span class="number">2020</span>)</span><br><span class="line">result = kmeans.fit_predict(azdias_pca)</span><br></pre></td></tr></table></figure>
+
+<h3 id="Discussion-3-1-Apply-Clustering-to-General-Population"><a href="#Discussion-3-1-Apply-Clustering-to-General-Population" class="headerlink" title="Discussion 3.1: Apply Clustering to General Population"></a>Discussion 3.1: Apply Clustering to General Population</h3><p>The first elbow occurs at ‘n_clusters = 5’, the second elbow occurs at 11, therefore I choose 11 centroids. </p>
+<h3 id="Step-3-2-Apply-All-Steps-to-the-Customer-Data"><a href="#Step-3-2-Apply-All-Steps-to-the-Customer-Data" class="headerlink" title="Step 3.2: Apply All Steps to the Customer Data"></a>Step 3.2: Apply All Steps to the Customer Data</h3><p>Now that you have clusters and cluster centers for the general population, it’s time to see how the customer data maps on to those clusters. Take care to not confuse this for re-fitting all of the models to the customer data. Instead, you’re going to use the fits from the general population to clean, transform, and cluster the customer data. In the last step of the project, you will interpret how the general population fits apply to the customer data.</p>
+<ul>
+<li>Don’t forget when loading in the customers data, that it is semicolon (<code>;</code>) delimited.</li>
+<li>Apply the same feature wrangling, selection, and engineering steps to the customer demographics using the <code>clean_data()</code> function you created earlier. (You can assume that the customer demographics data has similar meaning behind missing data patterns as the general demographics data.)</li>
+<li>Use the sklearn objects from the general demographics data, and apply their transformations to the customers data. That is, you should not be using a <code>.fit()</code> or <code>.fit_transform()</code> method to re-fit the old objects, nor should you be creating new sklearn objects! Carry the data through the feature scaling, PCA, and clustering steps, obtaining cluster assignments for all of the data in the customer demographics data.</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Load in the customer demographics data.</span></span><br><span class="line">customers = pd.read_csv(<span class="string">'Udacity_CUSTOMERS_Subset.csv'</span>,sep=<span class="string">';'</span>)</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Apply preprocessing, feature transformation, and clustering from the general</span></span><br><span class="line"><span class="comment"># demographics onto the customer data, obtaining cluster predictions for the</span></span><br><span class="line"><span class="comment"># customer demographics data.</span></span><br><span class="line">customers.shape</span><br></pre></td></tr></table></figure>
+
+
+
+
+<pre><code>(191652, 85)</code></pre><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">customers_clean = clean_data(customers)</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">customers_clean.shape</span><br></pre></td></tr></table></figure>
+
+
+
+
+<pre><code>(115643, 188)</code></pre><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># feature transformation</span></span><br><span class="line">scaler = StandardScaler()</span><br><span class="line">customers_clean_trans = pd.DataFrame(scaler.fit_transform(customers_clean))</span><br><span class="line">customers_clean_trans.columns = customers_clean.columns</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># pca</span></span><br><span class="line">pca = PCA(n_components=<span class="number">100</span>)</span><br><span class="line">customers_pca = pca.fit_transform(customers_clean_trans)</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># cluster predictions for the customer data.</span></span><br><span class="line">kmeans = KMeans(n_clusters = <span class="number">11</span>, random_state=<span class="number">2020</span>)</span><br><span class="line">result_customer = kmeans.fit_predict(customers_pca)</span><br></pre></td></tr></table></figure>
+
+<h3 id="Step-3-3-Compare-Customer-Data-to-Demographics-Data"><a href="#Step-3-3-Compare-Customer-Data-to-Demographics-Data" class="headerlink" title="Step 3.3: Compare Customer Data to Demographics Data"></a>Step 3.3: Compare Customer Data to Demographics Data</h3><p>At this point, you have clustered data based on demographics of the general population of Germany, and seen how the customer data for a mail-order sales company maps onto those demographic clusters. In this final substep, you will compare the two cluster distributions to see where the strongest customer base for the company is.</p>
+<p>Consider the proportion of persons in each cluster for the general population, and the proportions for the customers. If we think the company’s customer base to be universal, then the cluster assignment proportions should be fairly similar between the two. If there are only particular segments of the population that are interested in the company’s products, then we should see a mismatch from one to the other. If there is a higher proportion of persons in a cluster for the customer data compared to the general population (e.g. 5% of persons are assigned to a cluster for the general population, but 15% of the customer data is closest to that cluster’s centroid) then that suggests the people in that cluster to be a target audience for the company. On the other hand, the proportion of the data in a cluster being larger in the general population than the customer data (e.g. only 2% of customers closest to a population centroid that captures 6% of the data) suggests that group of persons to be outside of the target demographics.</p>
+<p>Take a look at the following points in this step:</p>
+<ul>
+<li>Compute the proportion of data points in each cluster for the general population and the customer data. Visualizations will be useful here: both for the individual dataset proportions, but also to visualize the ratios in cluster representation between groups. Seaborn’s <a href="https://seaborn.pydata.org/generated/seaborn.countplot.html" target="_blank" rel="noopener"><code>countplot()</code></a> or <a href="https://seaborn.pydata.org/generated/seaborn.barplot.html" target="_blank" rel="noopener"><code>barplot()</code></a> function could be handy.<ul>
+<li>Recall the analysis you performed in step 1.1.3 of the project, where you separated out certain data points from the dataset if they had more than a specified threshold of missing values. If you found that this group was qualitatively different from the main bulk of the data, you should treat this as an additional data cluster in this analysis. Make sure that you account for the number of data points in this subset, for both the general population and customer datasets, when making your computations!</li>
+</ul>
+</li>
+<li>Which cluster or clusters are overrepresented in the customer dataset compared to the general population? Select at least one such cluster and infer what kind of people might be represented by that cluster. Use the principal component interpretations from step 2.3 or look at additional components to help you make this inference. Alternatively, you can use the <code>.inverse_transform()</code> method of the PCA and StandardScaler objects to transform centroids back to the original data space and interpret the retrieved values directly.</li>
+<li>Perform a similar investigation for the underrepresented clusters. Which cluster or clusters are underrepresented in the customer dataset compared to the general population, and what kinds of people are typified by these clusters?</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Compare the proportion of data in each cluster for the customer data to the</span></span><br><span class="line"><span class="comment"># proportion of data in each cluster for the general population.</span></span><br><span class="line">result_customer = pd.Series(result_customer)</span><br><span class="line">customer_dist = result_customer.value_counts().sort_index()</span><br><span class="line">result = pd.Series(result)</span><br><span class="line">population_dist = result.value_counts().sort_index()</span><br><span class="line">final_df = pd.DataFrame([population_dist,customer_dist]).T</span><br><span class="line">final_df.columns = [<span class="string">'population_count'</span>,<span class="string">'customer_count'</span>]</span><br><span class="line">final_df</span><br></pre></td></tr></table></figure>
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+<pre><code>.dataframe tbody tr th {
+    vertical-align: top;
+}
+
+.dataframe thead th {
+    text-align: right;
+}</code></pre><p></style><p></p>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>population_count</th>
+      <th>customer_count</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>90763</td>
+      <td>4965</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>22018</td>
+      <td>7866</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>42219</td>
+      <td>19958</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>89706</td>
+      <td>12487</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>87209</td>
+      <td>3989</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>53588</td>
+      <td>8490</td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td>54843</td>
+      <td>13308</td>
+    </tr>
+    <tr>
+      <td>7</td>
+      <td>77417</td>
+      <td>14154</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td>69022</td>
+      <td>2203</td>
+    </tr>
+    <tr>
+      <td>9</td>
+      <td>28866</td>
+      <td>10496</td>
+    </tr>
+    <tr>
+      <td>10</td>
+      <td>7558</td>
+      <td>17727</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">fig = plt.figure(figsize=(<span class="number">12</span>,<span class="number">4</span>))</span><br><span class="line">ax1 = fig.add_subplot(<span class="number">1</span>,<span class="number">2</span>,<span class="number">1</span>)</span><br><span class="line">sns.barplot(x=final_df.index,y=<span class="string">'population_count'</span>, data = final_df)</span><br><span class="line">plt.title(<span class="string">"Distribution of General Population"</span>)</span><br><span class="line">ax2 = fig.add_subplot(<span class="number">1</span>,<span class="number">2</span>,<span class="number">2</span>)</span><br><span class="line">sns.barplot(x=final_df.index,y=<span class="string">'customer_count'</span>, data = final_df)</span><br><span class="line">plt.title(<span class="string">"Distribution of Customer data"</span>)</span><br><span class="line">plt.show()</span><br></pre></td></tr></table></figure>
+
+
+<p><img src="/2020/02/05/Identify_Customer_Segments/output_81_0.png" alt="png"></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">temp_po = final_df[<span class="string">'population_count'</span>]/final_df[<span class="string">'population_count'</span>].sum()</span><br><span class="line">temp2_cu = final_df[<span class="string">'customer_count'</span>]/final_df[<span class="string">'customer_count'</span>].sum()</span><br><span class="line">final_df_percent = pd.DataFrame([temp_po,temp2_cu]).T</span><br><span class="line">final_df_percent.columns = [<span class="string">'population_percent'</span>,<span class="string">'customer_percent'</span>]</span><br><span class="line">diff = final_df_percent[<span class="string">'population_percent'</span>]-final_df_percent[<span class="string">'customer_percent'</span>]</span><br><span class="line">diff.sort_values()</span><br></pre></td></tr></table></figure>
+
+
+
+
+<pre><code>10   -0.141163
+2    -0.104838
+9    -0.044444
+1    -0.032690
+6    -0.027077
+7     0.001829
+5     0.012572
+3     0.035963
+8     0.091703
+0     0.102704
+4     0.105441
+dtype: float64</code></pre><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># What kinds of people are part of a cluster that is overrepresented in the</span></span><br><span class="line"><span class="comment"># customer data compared to the general population? Category 10</span></span><br><span class="line">cc10 = kmeans.cluster_centers_[<span class="number">10</span>]</span><br><span class="line">cc10 = pd.Series(cc10)</span><br><span class="line">cc10.sort_values(ascending=<span class="literal">False</span>, inplace=<span class="literal">True</span>)</span><br><span class="line">cc10.head()</span><br></pre></td></tr></table></figure>
+
+
+
+
+<pre><code>2     1.776055
+4     1.090018
+3     0.780223
+10    0.501790
+6     0.247969
+dtype: float64</code></pre><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">feature_select[<span class="number">2</span>].sort_values()</span><br></pre></td></tr></table></figure>
+
+
+
+
+<pre><code>ANREDE_KZ     -0.346752
+SEMIO_KAEM    -0.319185
+SEMIO_DOM     -0.286983
+SEMIO_KRIT    -0.262582
+SEMIO_ERL     -0.199994
+                 ...   
+FINANZTYP_5    0.135987
+SEMIO_KULT     0.246536
+SEMIO_SOZ      0.257146
+SEMIO_FAM      0.260536
+SEMIO_VERT     0.324047
+Name: 2, Length: 189, dtype: float64</code></pre><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">feature_select[<span class="number">4</span>].sort_values()</span><br></pre></td></tr></table></figure>
+
+
+
+
+<pre><code>LP_FAMILIE_FEIN_1.0    -0.327135
+LP_FAMILIE_GROB_1.0    -0.327135
+W_KEIT_KIND_HH         -0.220503
+GREEN_AVANTGARDE       -0.140996
+LP_STATUS_GROB_2.0     -0.136988
+                          ...   
+REGIOTYP                0.155014
+LP_FAMILIE_FEIN_10.0    0.192443
+KKK                     0.204874
+LP_FAMILIE_GROB_5.0     0.253148
+ANZ_PERSONEN            0.285127
+Name: 4, Length: 189, dtype: float64</code></pre><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># What kinds of people are part of a cluster that is underrepresented in the</span></span><br><span class="line"><span class="comment"># customer data compared to the general population? Category 4</span></span><br><span class="line">cc4 = kmeans.cluster_centers_[<span class="number">4</span>]</span><br><span class="line">cc4 = pd.Series(cc4)</span><br><span class="line">cc4.sort_values(ascending=<span class="literal">False</span>, inplace=<span class="literal">True</span>)</span><br><span class="line">cc4.head()</span><br></pre></td></tr></table></figure>
+
+
+
+
+<pre><code>1     6.917713
+6     3.135301
+3     1.403937
+8     1.179948
+22    1.159860
+dtype: float64</code></pre><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">feature_select[<span class="number">1</span>].sort_values()</span><br></pre></td></tr></table></figure>
+
+
+
+
+<pre><code>decade                  -0.228497
+SEMIO_REL               -0.213832
+FINANZ_SPARER           -0.212535
+FINANZ_UNAUFFAELLIGER   -0.207468
+SEMIO_PFLICHT           -0.205000
+                           ...   
+RETOURTYP_BK_S           0.156204
+SEMIO_ERL                0.181138
+ZABEOTYP_3               0.197800
+FINANZ_VORSORGER         0.205081
+ALTERSKATEGORIE_GROB     0.225616
+Name: 1, Length: 189, dtype: float64</code></pre><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">feature_select[<span class="number">6</span>].sort_values()</span><br></pre></td></tr></table></figure>
+
+
+
+
+<pre><code>GEBAEUDETYP_1.0      -0.236870
+GEBAEUDETYP_RASTER   -0.209850
+LP_STATUS_GROB_2.0   -0.195907
+CAMEO_DEUG_2015_6    -0.169896
+KBA05_ANTG3          -0.151434
+                        ...   
+KBA05_ANTG4           0.139343
+LP_STATUS_GROB_4.0    0.145008
+LP_STATUS_FEIN_6.0    0.264746
+GEBAEUDETYP_3.0       0.290512
+LP_STATUS_GROB_3.0    0.295362
+Name: 6, Length: 189, dtype: float64</code></pre><h3 id="Discussion-3-3-Compare-Customer-Data-to-Demographics-Data"><a href="#Discussion-3-3-Compare-Customer-Data-to-Demographics-Data" class="headerlink" title="Discussion 3.3: Compare Customer Data to Demographics Data"></a>Discussion 3.3: Compare Customer Data to Demographics Data</h3><p>Overrepresented: The category 10, which represents females who are dreamful and might be single parent with child of full age.<br>Underrepresented: The category 4, which represents elderly independent workers with age greater than 60, financial typology is ‘be prepared’.</p>
+<blockquote>
+<p>Congratulations on making it this far in the project! Before you finish, make sure to check through the entire notebook from top to bottom to make sure that your analysis follows a logical flow and all of your findings are documented in <strong>Discussion</strong> cells. Once you’ve checked over all of your work, you should export the notebook as an HTML document to submit for evaluation. You can do this from the menu, navigating to <strong>File -&gt; Download as -&gt; HTML (.html)</strong>. You will submit both that document and this notebook for your project submission.</p>
+</blockquote>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+</font>
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div></div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.jpg" alt="Jason 微信支付">
+        <p>微信支付</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/" rel="tag"># 机器学习</a>
+              <a href="/tags/%E6%97%A0%E7%9B%91%E7%9D%A3%E5%AD%A6%E4%B9%A0/" rel="tag"># 无监督学习</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/01/25/Hexo%20%E5%A6%82%E4%BD%95%E4%BC%98%E9%9B%85%E7%9A%84%E5%8A%A0%E5%85%A5Rmarkdown%E7%94%9F%E6%88%90%E7%9A%84html%E6%96%87%E4%BB%B6/" rel="prev" title="Hexo 如何优雅的加入Rmarkdown生成的html/pdf文件">
+      <i class="fa fa-chevron-left"></i> Hexo 如何优雅的加入Rmarkdown生成的html/pdf文件
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC80ODM1Ny8yNDg1MQ=="></div>
+  </div>
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Project-Identify-Customer-Segments"><span class="nav-number">1.</span> <span class="nav-text">Project: Identify Customer Segments</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Step-0-Load-the-Data"><span class="nav-number">1.0.1.</span> <span class="nav-text">Step 0: Load the Data</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Step-1-Preprocessing"><span class="nav-number">1.1.</span> <span class="nav-text">Step 1: Preprocessing</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Step-1-1-Assess-Missing-Data"><span class="nav-number">1.1.1.</span> <span class="nav-text">Step 1.1: Assess Missing Data</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Step-1-1-1-Convert-Missing-Value-Codes-to-NaNs"><span class="nav-number">1.1.1.1.</span> <span class="nav-text">Step 1.1.1: Convert Missing Value Codes to NaNs</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Step-1-1-2-Assess-Missing-Data-in-Each-Column"><span class="nav-number">1.1.1.2.</span> <span class="nav-text">Step 1.1.2: Assess Missing Data in Each Column</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Discussion-1-1-2-Assess-Missing-Data-in-Each-Column"><span class="nav-number">1.1.1.3.</span> <span class="nav-text">Discussion 1.1.2: Assess Missing Data in Each Column</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Step-1-1-3-Assess-Missing-Data-in-Each-Row"><span class="nav-number">1.1.1.4.</span> <span class="nav-text">Step 1.1.3: Assess Missing Data in Each Row</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Discussion-1-1-3-Assess-Missing-Data-in-Each-Row"><span class="nav-number">1.1.1.5.</span> <span class="nav-text">Discussion 1.1.3: Assess Missing Data in Each Row</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Step-1-2-Select-and-Re-Encode-Features"><span class="nav-number">1.1.2.</span> <span class="nav-text">Step 1.2: Select and Re-Encode Features</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Step-1-2-1-Re-Encode-Categorical-Features"><span class="nav-number">1.1.2.1.</span> <span class="nav-text">Step 1.2.1: Re-Encode Categorical Features</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Discussion-1-2-1-Re-Encode-Categorical-Features"><span class="nav-number">1.1.2.2.</span> <span class="nav-text">Discussion 1.2.1: Re-Encode Categorical Features</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Step-1-2-2-Engineer-Mixed-Type-Features"><span class="nav-number">1.1.2.3.</span> <span class="nav-text">Step 1.2.2: Engineer Mixed-Type Features</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Discussion-1-2-2-Engineer-Mixed-Type-Features"><span class="nav-number">1.1.2.4.</span> <span class="nav-text">Discussion 1.2.2: Engineer Mixed-Type Features</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Step-1-2-3-Complete-Feature-Selection"><span class="nav-number">1.1.2.5.</span> <span class="nav-text">Step 1.2.3: Complete Feature Selection</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Step-1-3-Create-a-Cleaning-Function"><span class="nav-number">1.1.3.</span> <span class="nav-text">Step 1.3: Create a Cleaning Function</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Step-2-Feature-Transformation"><span class="nav-number">1.2.</span> <span class="nav-text">Step 2: Feature Transformation</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Step-2-1-Apply-Feature-Scaling"><span class="nav-number">1.2.1.</span> <span class="nav-text">Step 2.1: Apply Feature Scaling</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Discussion-2-1-Apply-Feature-Scaling"><span class="nav-number">1.2.2.</span> <span class="nav-text">Discussion 2.1: Apply Feature Scaling</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Step-2-2-Perform-Dimensionality-Reduction"><span class="nav-number">1.2.3.</span> <span class="nav-text">Step 2.2: Perform Dimensionality Reduction</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Discussion-2-2-Perform-Dimensionality-Reduction"><span class="nav-number">1.2.4.</span> <span class="nav-text">Discussion 2.2: Perform Dimensionality Reduction</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Step-2-3-Interpret-Principal-Components"><span class="nav-number">1.2.5.</span> <span class="nav-text">Step 2.3: Interpret Principal Components</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Discussion-2-3-Interpret-Principal-Components"><span class="nav-number">1.2.6.</span> <span class="nav-text">Discussion 2.3: Interpret Principal Components</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Step-3-Clustering"><span class="nav-number">1.3.</span> <span class="nav-text">Step 3: Clustering</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Step-3-1-Apply-Clustering-to-General-Population"><span class="nav-number">1.3.1.</span> <span class="nav-text">Step 3.1: Apply Clustering to General Population</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Discussion-3-1-Apply-Clustering-to-General-Population"><span class="nav-number">1.3.2.</span> <span class="nav-text">Discussion 3.1: Apply Clustering to General Population</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Step-3-2-Apply-All-Steps-to-the-Customer-Data"><span class="nav-number">1.3.3.</span> <span class="nav-text">Step 3.2: Apply All Steps to the Customer Data</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Step-3-3-Compare-Customer-Data-to-Demographics-Data"><span class="nav-number">1.3.4.</span> <span class="nav-text">Step 3.3: Compare Customer Data to Demographics Data</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Discussion-3-3-Compare-Customer-Data-to-Demographics-Data"><span class="nav-number">1.3.5.</span> <span class="nav-text">Discussion 3.3: Compare Customer Data to Demographics Data</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Jason</p>
+  <div class="site-description" itemprop="description">A free place</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">17</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/JasonVictor17" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;JasonVictor17" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Jason</span>
+</div>
+<!--
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v4.2.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.7.0
+  </div>
+-->
+<div class="powered-by">
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <i class="fa fa-user-md"></i>
+    <span id="busuanzi_container_site_uv">
+        本站访客数:<span id="busuanzi_value_site_uv"></span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span id="busuanzi_container_site_pv">
+        本站访问量<span id="busuanzi_value_site_pv"></span>
+    </span>
+</div>
+<div class="theme-info">
+  <div class="powered-by"></div>
+  <span class="post-count">本博客全站共28.2k字</span>
+</div>
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  
+  <script color='0,0,255' opacity='0.5' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '500px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+
+
+  
+
+  
+
+<script>
+NexT.utils.loadComments(document.querySelector('#lv-container'), () => {
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+});
+</script>
+
+</body>
+</html>
