@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/mouse32.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/mouse16.ico">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('http://yoursite.com').hostname,
+    root: '/',
+    scheme: 'Muse',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="一个自己做的精算python包,实现内推和外推利率,并且画出利率曲线。该篇是使用说明和例子。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="第一个python package -- actupac">
+<meta property="og:url" content="http://yoursite.com/2020/02/20/actupac%20package/index.html">
+<meta property="og:site_name" content="Jingde&#39;s Blog">
+<meta property="og:description" content="一个自己做的精算python包,实现内推和外推利率,并且画出利率曲线。该篇是使用说明和例子。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://yoursite.com/2020/02/20/actupac%20package/output_11_0.png">
+<meta property="og:image" content="http://yoursite.com/2020/02/20/actupac%20package/output_12_1.png">
+<meta property="og:image" content="http://yoursite.com/2020/02/20/actupac%20package/output_13_1.png">
+<meta property="og:image" content="http://yoursite.com/2020/02/20/actupac%20package/output_14_1.png">
+<meta property="og:image" content="http://yoursite.com/2020/02/20/actupac%20package/output_20_0.png">
+<meta property="article:published_time" content="2020-02-20T09:57:35.000Z">
+<meta property="article:modified_time" content="2020-02-20T10:13:41.771Z">
+<meta property="article:author" content="Jason">
+<meta property="article:tag" content="精算">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://yoursite.com/2020/02/20/actupac%20package/output_11_0.png">
+
+<link rel="canonical" href="http://yoursite.com/2020/02/20/actupac%20package/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>第一个python package -- actupac | Jingde's Blog</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?<061f7a05407b07f04642d8ffecfff900>";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Jingde's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/02/20/actupac%20package/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Jason">
+      <meta itemprop="description" content="A free place">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Jingde's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          第一个python package -- actupac
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2020-02-20 10:57:35 / 修改时间：11:13:41" itemprop="dateCreated datePublished" datetime="2020-02-20T10:57:35+01:00">2020-02-20</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Python%E5%AD%A6%E4%B9%A0/" itemprop="url" rel="index">
+                    <span itemprop="name">Python学习</span>
+                  </a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <font size="3">
+一个自己做的精算python包,实现内推和外推利率,并且画出利率曲线。该篇是使用说明和例子。
+
+<a id="more"></a>
+<hr>
+<h2 id="基本介绍"><a href="#基本介绍" class="headerlink" title="基本介绍"></a>基本介绍</h2><p>actupac 是一个精算的python包,目前的功能是内推和外推利率,并且画出利率曲线。</p>
+<h2 id="安装方式"><a href="#安装方式" class="headerlink" title="安装方式"></a>安装方式</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip install actupac</span><br></pre></td></tr></table></figure>
+
+<pre><code>Collecting actupac
+  Downloading https://files.pythonhosted.org/packages/78/6d/100b147d64d2b2653f93818af3da6013f23b53120bdc66e1092133500ff3/actupac-0.1.tar.gz
+Building wheels for collected packages: actupac
+  Building wheel for actupac (setup.py): started
+  Building wheel for actupac (setup.py): finished with status &apos;done&apos;
+  Created wheel for actupac: filename=actupac-0.1-cp37-none-any.whl size=5979 sha256=7eb4984f5edbdd2af0de32a2fb795215bc159ce70f39eb398dead35d5f97950f
+  Stored in directory: C:\Users\jasonguo\AppData\Local\pip\Cache\wheels\83\19\8e\472924dcac472b470f64c7e2fdd5553ea1af6857d213253170
+Successfully built actupac
+Installing collected packages: actupac
+Successfully installed actupac-0.1
+Note: you may need to restart the kernel to use updated packages.</code></pre><h2 id="导入包"><a href="#导入包" class="headerlink" title="导入包"></a>导入包</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> actupac <span class="keyword">import</span> Interpolation</span><br><span class="line"><span class="keyword">from</span> actupac <span class="keyword">import</span> Extrapolation</span><br></pre></td></tr></table></figure>
+
+<h2 id="使用方法"><a href="#使用方法" class="headerlink" title="使用方法"></a>使用方法</h2><h3 id="1-内推"><a href="#1-内推" class="headerlink" title="1. 内推"></a>1. 内推</h3><p>目前有三种方法:piecewise linear, piecewise constant, 以及 cubic spline。 其中 cubic spline 使用两端二次导为零的方法,所以是natural spline。</p>
+<p>数据需要存储在csv格式文件中,第一列为年份,第二列为利率即可,不需要列名等。</p>
+<p>可以改变的参数是内推点的个数,以下以9个点为例子:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Read the dataset</span></span><br><span class="line">sample = Interpolation()</span><br><span class="line">df = sample.read_data(<span class="string">'interest.csv'</span>)</span><br><span class="line">df.head()</span><br></pre></td></tr></table></figure>
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+<pre><code>.dataframe tbody tr th {
+    vertical-align: top;
+}
+
+.dataframe thead th {
+    text-align: right;
+}</code></pre><p></style><p></p>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Years</th>
+      <th>Yields</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>1</td>
+      <td>1.129</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>2</td>
+      <td>1.224</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>3</td>
+      <td>1.364</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>4</td>
+      <td>1.540</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>5</td>
+      <td>1.707</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># calculate means and standard deviation and discount rates</span></span><br><span class="line">print(sample.mean)</span><br><span class="line">print(sample.stdev)</span><br><span class="line">discount = sample.discount_rate()</span><br><span class="line">discount[<span class="number">0</span>:<span class="number">5</span>]</span><br></pre></td></tr></table></figure>
+
+<pre><code>2.3666
+0.492
+
+
+
+
+
+[0.9887734928804884,
+ 0.9758172050673466,
+ 0.9599059193497299,
+ 0.9402589151464628,
+ 0.9181908613542313]</code></pre><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># plot the distribution of the dataset</span></span><br><span class="line">sample.plot_histogram()</span><br></pre></td></tr></table></figure>
+
+
+<p><img src="/2020/02/20/actupac%20package/output_11_0.png" alt="png"></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># interpolate with piecewise linear model with 9 interpolated points between each known year</span></span><br><span class="line">linear = sample.piecewise_linear(<span class="number">9</span>)</span><br><span class="line">print(linear.head())</span><br><span class="line">sample.piecewise_linear_plot()</span><br></pre></td></tr></table></figure>
+
+<pre><code>   Years  Yields        Pt        Ft
+0    1.0  1.1290  0.988773  1.234261
+1    1.1  1.1385  0.987555  1.253285
+2    1.2  1.1480  0.986318  1.272309
+3    1.3  1.1575  0.985065  1.291333
+4    1.4  1.1670  0.983795  1.310358</code></pre><p><img src="/2020/02/20/actupac%20package/output_12_1.png" alt="png"></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># interpolate with piecewise constant model with 9 interpolated points between each known year</span></span><br><span class="line">constant = sample.piecewise_constant(<span class="number">9</span>)</span><br><span class="line">print(constant.head())</span><br><span class="line">sample.piecewise_constant_plot()</span><br></pre></td></tr></table></figure>
+
+<pre><code>   Years    Yields        Pt       Ft
+0    1.0  1.129000  0.988773  1.31987
+1    1.1  1.146273  0.987470  1.31987
+2    1.2  1.160667  0.986169  1.31987
+3    1.3  1.172846  0.984869  1.31987
+4    1.4  1.183286  0.983570  1.31987</code></pre><p><img src="/2020/02/20/actupac%20package/output_13_1.png" alt="png"></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># interpolate with cubic spline (natural spline) model with 9 interpolated points between each known year</span></span><br><span class="line">cubic = sample.cubic(<span class="number">9</span>)</span><br><span class="line">print(cubic.head())</span><br><span class="line">sample.cubic_plot()</span><br></pre></td></tr></table></figure>
+
+<pre><code>   Years    Yields        Pt        Ft
+0    1.0  1.129000  0.988773  1.224226
+1    1.1  1.137589  0.987564  1.242089
+2    1.2  1.146233  0.986339  1.260836
+3    1.3  1.154987  0.985097  1.280690
+4    1.4  1.163908  0.983837  1.301870</code></pre><p><img src="/2020/02/20/actupac%20package/output_14_1.png" alt="png"></p>
+<h3 id="2-外推"><a href="#2-外推" class="headerlink" title="2.  外推"></a>2.  外推</h3><p>目前只有 Smith Wilson 方法进行同时外推和内推, 需要手动输入已知数据创建为列表形式即可。 可变参数有三个,n是步长,0.1代表0.1年为一个步长;max_year是外推的最大年份, UFR 是 Ultimate forward rate 可以根据需要改变。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">a = list([<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>,<span class="number">5</span>,<span class="number">10</span>,<span class="number">15</span>,<span class="number">20</span>,<span class="number">30</span>,<span class="number">50</span>])</span><br><span class="line">b = list([<span class="number">3.2870</span>,<span class="number">3.1280</span>,<span class="number">3.2240</span>,<span class="number">3.3680</span>,<span class="number">3.4710</span>,<span class="number">3.9860</span>,<span class="number">4.2070</span>,<span class="number">4.0540</span>,<span class="number">3.4320</span>,<span class="number">2.9310</span>])</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># read the data and creat a dataframe</span></span><br><span class="line">sample2 = Extrapolation(a,b)</span><br><span class="line">sample2.dataframe()</span><br></pre></td></tr></table></figure>
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+<pre><code>.dataframe tbody tr th {
+    vertical-align: top;
+}
+
+.dataframe thead th {
+    text-align: right;
+}</code></pre><p></style><p></p>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Years</th>
+      <th>Yields</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>1.0</td>
+      <td>3.287</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>2.0</td>
+      <td>3.128</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>3.0</td>
+      <td>3.224</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>4.0</td>
+      <td>3.368</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>5.0</td>
+      <td>3.471</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>10.0</td>
+      <td>3.986</td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td>15.0</td>
+      <td>4.207</td>
+    </tr>
+    <tr>
+      <td>7</td>
+      <td>20.0</td>
+      <td>4.054</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td>30.0</td>
+      <td>3.432</td>
+    </tr>
+    <tr>
+      <td>9</td>
+      <td>50.0</td>
+      <td>2.931</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># results </span></span><br><span class="line">sample2.Smith_Wilson(n=<span class="number">0.1</span>,max_year=<span class="number">70</span>,UFR=<span class="number">4.2</span>)</span><br></pre></td></tr></table></figure>
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+<pre><code>.dataframe tbody tr th {
+    vertical-align: top;
+}
+
+.dataframe thead th {
+    text-align: right;
+}</code></pre><p></style><p></p>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Years</th>
+      <th>Yields</th>
+      <th>Discount rates</th>
+      <th>Forward rates</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>0.0</td>
+      <td>NaN</td>
+      <td>1.000000</td>
+      <td>3.401529</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>0.1</td>
+      <td>3.395757</td>
+      <td>0.996610</td>
+      <td>3.395344</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>0.2</td>
+      <td>3.392675</td>
+      <td>0.993238</td>
+      <td>3.382345</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>0.3</td>
+      <td>3.387329</td>
+      <td>0.989889</td>
+      <td>3.362554</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>0.4</td>
+      <td>3.379725</td>
+      <td>0.986572</td>
+      <td>3.335994</td>
+    </tr>
+    <tr>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <td>696</td>
+      <td>69.6</td>
+      <td>3.151262</td>
+      <td>0.111550</td>
+      <td>4.059759</td>
+    </tr>
+    <tr>
+      <td>697</td>
+      <td>69.7</td>
+      <td>3.152554</td>
+      <td>0.111099</td>
+      <td>4.061264</td>
+    </tr>
+    <tr>
+      <td>698</td>
+      <td>69.8</td>
+      <td>3.153844</td>
+      <td>0.110650</td>
+      <td>4.062754</td>
+    </tr>
+    <tr>
+      <td>699</td>
+      <td>69.9</td>
+      <td>3.155132</td>
+      <td>0.110202</td>
+      <td>4.064228</td>
+    </tr>
+    <tr>
+      <td>700</td>
+      <td>70.0</td>
+      <td>3.156419</td>
+      <td>0.109756</td>
+      <td>NaN</td>
+    </tr>
+  </tbody>
+</table>
+<p>701 rows × 4 columns</p>
+</div>
+
+
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># plots</span></span><br><span class="line">sample2.Smith_Wilson_plot()</span><br></pre></td></tr></table></figure>
+
+
+<p><img src="/2020/02/20/actupac%20package/output_20_0.png" alt="png"></p>
+</font>
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div></div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.jpg" alt="Jason 微信支付">
+        <p>微信支付</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E7%B2%BE%E7%AE%97/" rel="tag"># 精算</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/02/05/Identify_Customer_Segments/" rel="prev" title="Identify Customer Segments">
+      <i class="fa fa-chevron-left"></i> Identify Customer Segments
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/02/20/actupac_package/" rel="next" title="第一个python package -- actupac">
+      第一个python package -- actupac <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC80ODM1Ny8yNDg1MQ=="></div>
+  </div>
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#基本介绍"><span class="nav-number">1.</span> <span class="nav-text">基本介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#安装方式"><span class="nav-number">2.</span> <span class="nav-text">安装方式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#导入包"><span class="nav-number">3.</span> <span class="nav-text">导入包</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用方法"><span class="nav-number">4.</span> <span class="nav-text">使用方法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-内推"><span class="nav-number">4.1.</span> <span class="nav-text">1. 内推</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-外推"><span class="nav-number">4.2.</span> <span class="nav-text">2.  外推</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Jason</p>
+  <div class="site-description" itemprop="description">A free place</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">19</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/JasonVictor17" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;JasonVictor17" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Jason</span>
+</div>
+<!--
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v4.2.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.7.0
+  </div>
+-->
+<div class="powered-by">
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <i class="fa fa-user-md"></i>
+    <span id="busuanzi_container_site_uv">
+        本站访客数:<span id="busuanzi_value_site_uv"></span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span id="busuanzi_container_site_pv">
+        本站访问量<span id="busuanzi_value_site_pv"></span>
+    </span>
+</div>
+<div class="theme-info">
+  <div class="powered-by"></div>
+  <span class="post-count">本博客全站共30k字</span>
+</div>
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  
+  <script color='0,0,255' opacity='0.5' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '500px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+
+
+  
+
+  
+
+<script>
+NexT.utils.loadComments(document.querySelector('#lv-container'), () => {
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+});
+</script>
+
+</body>
+</html>
