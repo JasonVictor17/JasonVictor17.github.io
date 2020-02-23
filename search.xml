@@ -1,6 +1,618 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>Creating a Sentiment Analysis Web App</title>
+    <url>/2020/02/23/SageMakerProject/</url>
+    <content><![CDATA[<p>Creating a Sentiment Analysis Web App by using PyTorch and SageMaker</p>
+<a id="more"></a>
+
+<h1 id="Creating-a-Sentiment-Analysis-Web-App"><a href="#Creating-a-Sentiment-Analysis-Web-App" class="headerlink" title="Creating a Sentiment Analysis Web App"></a>Creating a Sentiment Analysis Web App</h1><h2 id="Using-PyTorch-and-SageMaker"><a href="#Using-PyTorch-and-SageMaker" class="headerlink" title="Using PyTorch and SageMaker"></a>Using PyTorch and SageMaker</h2><p><em>Deep Learning Nanodegree Program | Deployment</em></p>
+<hr>
+<p>Now that we have a basic understanding of how SageMaker works we will try to use it to construct a complete project from end to end. Our goal will be to have a simple web page which a user can use to enter a movie review. The web page will then send the review off to our deployed model which will predict the sentiment of the entered review.</p>
+<h2 id="Instructions"><a href="#Instructions" class="headerlink" title="Instructions"></a>Instructions</h2><p>Some template code has already been provided for you, and you will need to implement additional functionality to successfully complete this notebook. You will not need to modify the included code beyond what is requested. Sections that begin with ‘<strong>TODO</strong>‘ in the header indicate that you need to complete or implement some portion within them. Instructions will be provided for each section and the specifics of the implementation are marked in the code block with a <code># TODO: ...</code> comment. Please be sure to read the instructions carefully!</p>
+<p>In addition to implementing code, there will be questions for you to answer which relate to the task and your implementation. Each section where you will answer a question is preceded by a ‘<strong>Question:</strong>‘ header. Carefully read each question and provide your answer below the ‘<strong>Answer:</strong>‘ header by editing the Markdown cell.</p>
+<blockquote>
+<p><strong>Note</strong>: Code and Markdown cells can be executed using the <strong>Shift+Enter</strong> keyboard shortcut. In addition, a cell can be edited by typically clicking it (double-click for Markdown cells) or by pressing <strong>Enter</strong> while it is highlighted.</p>
+</blockquote>
+<h2 id="General-Outline"><a href="#General-Outline" class="headerlink" title="General Outline"></a>General Outline</h2><p>Recall the general outline for SageMaker projects using a notebook instance.</p>
+<ol>
+<li>Download or otherwise retrieve the data.</li>
+<li>Process / Prepare the data.</li>
+<li>Upload the processed data to S3.</li>
+<li>Train a chosen model.</li>
+<li>Test the trained model (typically using a batch transform job).</li>
+<li>Deploy the trained model.</li>
+<li>Use the deployed model.</li>
+</ol>
+<p>For this project, you will be following the steps in the general outline with some modifications. </p>
+<p>First, you will not be testing the model in its own step. You will still be testing the model, however, you will do it by deploying your model and then using the deployed model by sending the test data to it. One of the reasons for doing this is so that you can make sure that your deployed model is working correctly before moving forward.</p>
+<p>In addition, you will deploy and use your trained model a second time. In the second iteration you will customize the way that your trained model is deployed by including some of your own code. In addition, your newly deployed model will be used in the sentiment analysis web app.</p>
+<h2 id="Step-1-Downloading-the-data"><a href="#Step-1-Downloading-the-data" class="headerlink" title="Step 1: Downloading the data"></a>Step 1: Downloading the data</h2><p>As in the XGBoost in SageMaker notebook, we will be using the <a href="http://ai.stanford.edu/~amaas/data/sentiment/" target="_blank" rel="noopener">IMDb dataset</a></p>
+<blockquote>
+<p>Maas, Andrew L., et al. <a href="http://ai.stanford.edu/~amaas/data/sentiment/" target="_blank" rel="noopener">Learning Word Vectors for Sentiment Analysis</a>. In <em>Proceedings of the 49th Annual Meeting of the Association for Computational Linguistics: Human Language Technologies</em>. Association for Computational Linguistics, 2011.</p>
+</blockquote>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">%mkdir ../data</span><br><span class="line">!wget -O ../data/aclImdb_v1.tar.gz http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz</span><br><span class="line">!tar -zxf ../data/aclImdb_v1.tar.gz -C ../data</span><br></pre></td></tr></table></figure>
+
+<pre><code>mkdir: cannot create directory ‘../data’: File exists
+--2020-02-23 10:05:42--  http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz
+Resolving ai.stanford.edu (ai.stanford.edu)... 171.64.68.10
+Connecting to ai.stanford.edu (ai.stanford.edu)|171.64.68.10|:80... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 84125825 (80M) [application/x-gzip]
+Saving to: ‘../data/aclImdb_v1.tar.gz’
+
+../data/aclImdb_v1. 100%[===================&gt;]  80.23M  21.9MB/s    in 4.5s    
+
+2020-02-23 10:05:47 (17.7 MB/s) - ‘../data/aclImdb_v1.tar.gz’ saved [84125825/84125825]</code></pre><h2 id="Step-2-Preparing-and-Processing-the-data"><a href="#Step-2-Preparing-and-Processing-the-data" class="headerlink" title="Step 2: Preparing and Processing the data"></a>Step 2: Preparing and Processing the data</h2><p>Also, as in the XGBoost notebook, we will be doing some initial data processing. The first few steps are the same as in the XGBoost example. To begin with, we will read in each of the reviews and combine them into a single input structure. Then, we will split the dataset into a training set and a testing set.</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> os</span><br><span class="line"><span class="keyword">import</span> glob</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">read_imdb_data</span><span class="params">(data_dir=<span class="string">'../data/aclImdb'</span>)</span>:</span></span><br><span class="line">    data = &#123;&#125;</span><br><span class="line">    labels = &#123;&#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">for</span> data_type <span class="keyword">in</span> [<span class="string">'train'</span>, <span class="string">'test'</span>]:</span><br><span class="line">        data[data_type] = &#123;&#125;</span><br><span class="line">        labels[data_type] = &#123;&#125;</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">for</span> sentiment <span class="keyword">in</span> [<span class="string">'pos'</span>, <span class="string">'neg'</span>]:</span><br><span class="line">            data[data_type][sentiment] = []</span><br><span class="line">            labels[data_type][sentiment] = []</span><br><span class="line">            </span><br><span class="line">            path = os.path.join(data_dir, data_type, sentiment, <span class="string">'*.txt'</span>)</span><br><span class="line">            files = glob.glob(path)</span><br><span class="line">            </span><br><span class="line">            <span class="keyword">for</span> f <span class="keyword">in</span> files:</span><br><span class="line">                <span class="keyword">with</span> open(f) <span class="keyword">as</span> review:</span><br><span class="line">                    data[data_type][sentiment].append(review.read())</span><br><span class="line">                    <span class="comment"># Here we represent a positive review by '1' and a negative review by '0'</span></span><br><span class="line">                    labels[data_type][sentiment].append(<span class="number">1</span> <span class="keyword">if</span> sentiment == <span class="string">'pos'</span> <span class="keyword">else</span> <span class="number">0</span>)</span><br><span class="line">                    </span><br><span class="line">            <span class="keyword">assert</span> len(data[data_type][sentiment]) == len(labels[data_type][sentiment]), \</span><br><span class="line">                    <span class="string">"&#123;&#125;/&#123;&#125; data size does not match labels size"</span>.format(data_type, sentiment)</span><br><span class="line">                </span><br><span class="line">    <span class="keyword">return</span> data, labels</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">data, labels = read_imdb_data()</span><br><span class="line">print(<span class="string">"IMDB reviews: train = &#123;&#125; pos / &#123;&#125; neg, test = &#123;&#125; pos / &#123;&#125; neg"</span>.format(</span><br><span class="line">            len(data[<span class="string">'train'</span>][<span class="string">'pos'</span>]), len(data[<span class="string">'train'</span>][<span class="string">'neg'</span>]),</span><br><span class="line">            len(data[<span class="string">'test'</span>][<span class="string">'pos'</span>]), len(data[<span class="string">'test'</span>][<span class="string">'neg'</span>])))</span><br></pre></td></tr></table></figure>
+
+<pre><code>IMDB reviews: train = 12500 pos / 12500 neg, test = 12500 pos / 12500 neg</code></pre><p>Now that we’ve read the raw training and testing data from the downloaded dataset, we will combine the positive and negative reviews and shuffle the resulting records.</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> sklearn.utils <span class="keyword">import</span> shuffle</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">prepare_imdb_data</span><span class="params">(data, labels)</span>:</span></span><br><span class="line">    <span class="string">"""Prepare training and test sets from IMDb movie reviews."""</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment">#Combine positive and negative reviews and labels</span></span><br><span class="line">    data_train = data[<span class="string">'train'</span>][<span class="string">'pos'</span>] + data[<span class="string">'train'</span>][<span class="string">'neg'</span>]</span><br><span class="line">    data_test = data[<span class="string">'test'</span>][<span class="string">'pos'</span>] + data[<span class="string">'test'</span>][<span class="string">'neg'</span>]</span><br><span class="line">    labels_train = labels[<span class="string">'train'</span>][<span class="string">'pos'</span>] + labels[<span class="string">'train'</span>][<span class="string">'neg'</span>]</span><br><span class="line">    labels_test = labels[<span class="string">'test'</span>][<span class="string">'pos'</span>] + labels[<span class="string">'test'</span>][<span class="string">'neg'</span>]</span><br><span class="line">    </span><br><span class="line">    <span class="comment">#Shuffle reviews and corresponding labels within training and test sets</span></span><br><span class="line">    data_train, labels_train = shuffle(data_train, labels_train)</span><br><span class="line">    data_test, labels_test = shuffle(data_test, labels_test)</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># Return a unified training data, test data, training labels, test labets</span></span><br><span class="line">    <span class="keyword">return</span> data_train, data_test, labels_train, labels_test</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">train_X, test_X, train_y, test_y = prepare_imdb_data(data, labels)</span><br><span class="line">print(<span class="string">"IMDb reviews (combined): train = &#123;&#125;, test = &#123;&#125;"</span>.format(len(train_X), len(test_X)))</span><br></pre></td></tr></table></figure>
+
+<pre><code>IMDb reviews (combined): train = 25000, test = 25000</code></pre><p>Now that we have our training and testing sets unified and prepared, we should do a quick check and see an example of the data our model will be trained on. This is generally a good idea as it allows you to see how each of the further processing steps affects the reviews and it also ensures that the data has been loaded correctly.</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">print(train_X[<span class="number">100</span>])</span><br><span class="line">print(train_y[<span class="number">100</span>])</span><br></pre></td></tr></table></figure>
+
+<pre><code>Every new fall line-up show deserves, at least, my &quot;3 strikes and you&apos;re out&quot; policy. I give a comedy 3 chances to make me laugh, that is, 3 complete episodes. After Episode 1, I actually said to the TV,&quot;Cancelled tomorrow&quot;. It was that bad. I have now watched the first 4 episodes of &quot;Cavemen&quot; and have yet to manage even a smirk. Not a titter, a guffaw, a chortle, as a matter of fact, no facial movement at all. I will continue to punish myself by watching every future episode because I am convinced that I am clearly missing something in this show. I&apos;m simply not &quot;getting&quot; it, but I believe that a comedy on a major TV network in prime-time, just HAS to be funny; but there are no laughs from me YET. There&apos;s just no way that ABC would put on the least funniest comedy of all time at 8:00 p.m. I KNOW there has got to be an inside joke that just isn&apos;t jiving with my brain. I&apos;ve read each of the previous comments, I &quot;get&quot; the social aspect of it, but, WHERE ARE THE JOKES ???? I shall continue suffering for at least 30 minutes a week, until I have a light-bulb moment and smack myself in the head shouting &quot;Eureka&quot;.
+0</code></pre><p>The first step in processing the reviews is to make sure that any html tags that appear should be removed. In addition we wish to tokenize our input, that way words such as <em>entertained</em> and <em>entertaining</em> are considered the same with regard to sentiment analysis.</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> nltk</span><br><span class="line"><span class="keyword">from</span> nltk.corpus <span class="keyword">import</span> stopwords</span><br><span class="line"><span class="keyword">from</span> nltk.stem.porter <span class="keyword">import</span> *</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> re</span><br><span class="line"><span class="keyword">from</span> bs4 <span class="keyword">import</span> BeautifulSoup</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">review_to_words</span><span class="params">(review)</span>:</span></span><br><span class="line">    nltk.download(<span class="string">"stopwords"</span>, quiet=<span class="literal">True</span>)</span><br><span class="line">    stemmer = PorterStemmer()</span><br><span class="line">    </span><br><span class="line">    text = BeautifulSoup(review, <span class="string">"html.parser"</span>).get_text() <span class="comment"># Remove HTML tags</span></span><br><span class="line">    text = re.sub(<span class="string">r"[^a-zA-Z0-9]"</span>, <span class="string">" "</span>, text.lower()) <span class="comment"># Convert to lower case</span></span><br><span class="line">    words = text.split() <span class="comment"># Split string into words</span></span><br><span class="line">    words = [w <span class="keyword">for</span> w <span class="keyword">in</span> words <span class="keyword">if</span> w <span class="keyword">not</span> <span class="keyword">in</span> stopwords.words(<span class="string">"english"</span>)] <span class="comment"># Remove stopwords</span></span><br><span class="line">    words = [PorterStemmer().stem(w) <span class="keyword">for</span> w <span class="keyword">in</span> words] <span class="comment"># stem</span></span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> words</span><br></pre></td></tr></table></figure>
+
+<p>The <code>review_to_words</code> method defined above uses <code>BeautifulSoup</code> to remove any html tags that appear and uses the <code>nltk</code> package to tokenize the reviews. As a check to ensure we know how everything is working, try applying <code>review_to_words</code> to one of the reviews in the training set.</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># <span class="doctag">TODO:</span> Apply review_to_words to a review (train_X[100] or any other review)</span></span><br><span class="line">print(review_to_words(train_X[<span class="number">100</span>]))</span><br></pre></td></tr></table></figure>
+
+<pre><code>[&apos;everi&apos;, &apos;new&apos;, &apos;fall&apos;, &apos;line&apos;, &apos;show&apos;, &apos;deserv&apos;, &apos;least&apos;, &apos;3&apos;, &apos;strike&apos;, &apos;polici&apos;, &apos;give&apos;, &apos;comedi&apos;, &apos;3&apos;, &apos;chanc&apos;, &apos;make&apos;, &apos;laugh&apos;, &apos;3&apos;, &apos;complet&apos;, &apos;episod&apos;, &apos;episod&apos;, &apos;1&apos;, &apos;actual&apos;, &apos;said&apos;, &apos;tv&apos;, &apos;cancel&apos;, &apos;tomorrow&apos;, &apos;bad&apos;, &apos;watch&apos;, &apos;first&apos;, &apos;4&apos;, &apos;episod&apos;, &apos;cavemen&apos;, &apos;yet&apos;, &apos;manag&apos;, &apos;even&apos;, &apos;smirk&apos;, &apos;titter&apos;, &apos;guffaw&apos;, &apos;chortl&apos;, &apos;matter&apos;, &apos;fact&apos;, &apos;facial&apos;, &apos;movement&apos;, &apos;continu&apos;, &apos;punish&apos;, &apos;watch&apos;, &apos;everi&apos;, &apos;futur&apos;, &apos;episod&apos;, &apos;convinc&apos;, &apos;clearli&apos;, &apos;miss&apos;, &apos;someth&apos;, &apos;show&apos;, &apos;simpli&apos;, &apos;get&apos;, &apos;believ&apos;, &apos;comedi&apos;, &apos;major&apos;, &apos;tv&apos;, &apos;network&apos;, &apos;prime&apos;, &apos;time&apos;, &apos;funni&apos;, &apos;laugh&apos;, &apos;yet&apos;, &apos;way&apos;, &apos;abc&apos;, &apos;would&apos;, &apos;put&apos;, &apos;least&apos;, &apos;funniest&apos;, &apos;comedi&apos;, &apos;time&apos;, &apos;8&apos;, &apos;00&apos;, &apos;p&apos;, &apos;know&apos;, &apos;got&apos;, &apos;insid&apos;, &apos;joke&apos;, &apos;jive&apos;, &apos;brain&apos;, &apos;read&apos;, &apos;previou&apos;, &apos;comment&apos;, &apos;get&apos;, &apos;social&apos;, &apos;aspect&apos;, &apos;joke&apos;, &apos;shall&apos;, &apos;continu&apos;, &apos;suffer&apos;, &apos;least&apos;, &apos;30&apos;, &apos;minut&apos;, &apos;week&apos;, &apos;light&apos;, &apos;bulb&apos;, &apos;moment&apos;, &apos;smack&apos;, &apos;head&apos;, &apos;shout&apos;, &apos;eureka&apos;]</code></pre><p><strong>Question:</strong> Above we mentioned that <code>review_to_words</code> method removes html formatting and allows us to tokenize the words found in a review, for example, converting <em>entertained</em> and <em>entertaining</em> into <em>entertain</em> so that they are treated as though they are the same word. What else, if anything, does this method do to the input?</p>
+<p><strong>Answer:</strong> This method convert all upper case to lower case and all punctuations are removed.</p>
+<p>The method below applies the <code>review_to_words</code> method to each of the reviews in the training and testing datasets. In addition it caches the results. This is because performing this processing step can take a long time. This way if you are unable to complete the notebook in the current session, you can come back without needing to process the data a second time.</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> pickle</span><br><span class="line"></span><br><span class="line">cache_dir = os.path.join(<span class="string">"../cache"</span>, <span class="string">"sentiment_analysis"</span>)  <span class="comment"># where to store cache files</span></span><br><span class="line">os.makedirs(cache_dir, exist_ok=<span class="literal">True</span>)  <span class="comment"># ensure cache directory exists</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">preprocess_data</span><span class="params">(data_train, data_test, labels_train, labels_test,</span></span></span><br><span class="line"><span class="function"><span class="params">                    cache_dir=cache_dir, cache_file=<span class="string">"preprocessed_data.pkl"</span>)</span>:</span></span><br><span class="line">    <span class="string">"""Convert each review to words; read from cache if available."""</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># If cache_file is not None, try to read from it first</span></span><br><span class="line">    cache_data = <span class="literal">None</span></span><br><span class="line">    <span class="keyword">if</span> cache_file <span class="keyword">is</span> <span class="keyword">not</span> <span class="literal">None</span>:</span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            <span class="keyword">with</span> open(os.path.join(cache_dir, cache_file), <span class="string">"rb"</span>) <span class="keyword">as</span> f:</span><br><span class="line">                cache_data = pickle.load(f)</span><br><span class="line">            print(<span class="string">"Read preprocessed data from cache file:"</span>, cache_file)</span><br><span class="line">        <span class="keyword">except</span>:</span><br><span class="line">            <span class="keyword">pass</span>  <span class="comment"># unable to read from cache, but that's okay</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment"># If cache is missing, then do the heavy lifting</span></span><br><span class="line">    <span class="keyword">if</span> cache_data <span class="keyword">is</span> <span class="literal">None</span>:</span><br><span class="line">        <span class="comment"># Preprocess training and test data to obtain words for each review</span></span><br><span class="line">        <span class="comment">#words_train = list(map(review_to_words, data_train))</span></span><br><span class="line">        <span class="comment">#words_test = list(map(review_to_words, data_test))</span></span><br><span class="line">        words_train = [review_to_words(review) <span class="keyword">for</span> review <span class="keyword">in</span> data_train]</span><br><span class="line">        words_test = [review_to_words(review) <span class="keyword">for</span> review <span class="keyword">in</span> data_test]</span><br><span class="line">        </span><br><span class="line">        <span class="comment"># Write to cache file for future runs</span></span><br><span class="line">        <span class="keyword">if</span> cache_file <span class="keyword">is</span> <span class="keyword">not</span> <span class="literal">None</span>:</span><br><span class="line">            cache_data = dict(words_train=words_train, words_test=words_test,</span><br><span class="line">                              labels_train=labels_train, labels_test=labels_test)</span><br><span class="line">            <span class="keyword">with</span> open(os.path.join(cache_dir, cache_file), <span class="string">"wb"</span>) <span class="keyword">as</span> f:</span><br><span class="line">                pickle.dump(cache_data, f)</span><br><span class="line">            print(<span class="string">"Wrote preprocessed data to cache file:"</span>, cache_file)</span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        <span class="comment"># Unpack data loaded from cache file</span></span><br><span class="line">        words_train, words_test, labels_train, labels_test = (cache_data[<span class="string">'words_train'</span>],</span><br><span class="line">                cache_data[<span class="string">'words_test'</span>], cache_data[<span class="string">'labels_train'</span>], cache_data[<span class="string">'labels_test'</span>])</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> words_train, words_test, labels_train, labels_test</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Preprocess data</span></span><br><span class="line">train_X, test_X, train_y, test_y = preprocess_data(train_X, test_X, train_y, test_y)</span><br></pre></td></tr></table></figure>
+
+<pre><code>Read preprocessed data from cache file: preprocessed_data.pkl</code></pre><h2 id="Transform-the-data"><a href="#Transform-the-data" class="headerlink" title="Transform the data"></a>Transform the data</h2><p>In the XGBoost notebook we transformed the data from its word representation to a bag-of-words feature representation. For the model we are going to construct in this notebook we will construct a feature representation which is very similar. To start, we will represent each word as an integer. Of course, some of the words that appear in the reviews occur very infrequently and so likely don’t contain much information for the purposes of sentiment analysis. The way we will deal with this problem is that we will fix the size of our working vocabulary and we will only include the words that appear most frequently. We will then combine all of the infrequent words into a single category and, in our case, we will label it as <code>1</code>.</p>
+<p>Since we will be using a recurrent neural network, it will be convenient if the length of each review is the same. To do this, we will fix a size for our reviews and then pad short reviews with the category ‘no word’ (which we will label <code>0</code>) and truncate long reviews.</p>
+<h3 id="TODO-Create-a-word-dictionary"><a href="#TODO-Create-a-word-dictionary" class="headerlink" title="(TODO) Create a word dictionary"></a>(TODO) Create a word dictionary</h3><p>To begin with, we need to construct a way to map words that appear in the reviews to integers. Here we fix the size of our vocabulary (including the ‘no word’ and ‘infrequent’ categories) to be <code>5000</code> but you may wish to change this to see how it affects the model.</p>
+<blockquote>
+<p><strong>TODO:</strong> Complete the implementation for the <code>build_dict()</code> method below. Note that even though the vocab_size is set to <code>5000</code>, we only want to construct a mapping for the most frequently appearing <code>4998</code> words. This is because we want to reserve the special labels <code>0</code> for ‘no word’ and <code>1</code> for ‘infrequent word’.</p>
+</blockquote>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">build_dict</span><span class="params">(data, vocab_size = <span class="number">5000</span>)</span>:</span></span><br><span class="line">    <span class="string">"""Construct and return a dictionary mapping each of the most frequently appearing words to a unique integer."""</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment"># <span class="doctag">TODO:</span> Determine how often each word appears in `data`. Note that `data` is a list of sentences and that a</span></span><br><span class="line">    <span class="comment">#       sentence is a list of words.</span></span><br><span class="line">    </span><br><span class="line">    word_count = &#123;&#125; <span class="comment"># A dict storing the words that appear in the reviews along with how often they occur</span></span><br><span class="line">    <span class="keyword">for</span> sentence <span class="keyword">in</span> data:</span><br><span class="line">        <span class="keyword">for</span> word <span class="keyword">in</span> sentence:</span><br><span class="line">            <span class="keyword">if</span> word <span class="keyword">in</span> word_count:</span><br><span class="line">                word_count[word] += <span class="number">1</span></span><br><span class="line">            <span class="keyword">else</span>: </span><br><span class="line">                word_count[word] = <span class="number">1</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment"># <span class="doctag">TODO:</span> Sort the words found in `data` so that sorted_words[0] is the most frequently appearing word and</span></span><br><span class="line">    <span class="comment">#       sorted_words[-1] is the least frequently appearing word.</span></span><br><span class="line">    </span><br><span class="line">    sorted_words = sorted(word_count, key=word_count.get, reverse=<span class="literal">True</span>)</span><br><span class="line">    </span><br><span class="line">    word_dict = &#123;&#125; <span class="comment"># This is what we are building, a dictionary that translates words into integers</span></span><br><span class="line">    <span class="keyword">for</span> idx, word <span class="keyword">in</span> enumerate(sorted_words[:vocab_size - <span class="number">2</span>]): <span class="comment"># The -2 is so that we save room for the 'no word'</span></span><br><span class="line">        word_dict[word] = idx + <span class="number">2</span>                              <span class="comment"># 'infrequent' labels</span></span><br><span class="line">        </span><br><span class="line">    <span class="keyword">return</span> word_dict</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">word_dict = build_dict(train_X)</span><br></pre></td></tr></table></figure>
+
+<p><strong>Question:</strong> What are the five most frequently appearing (tokenized) words in the training set? Does it makes sense that these words appear frequently in the training set?</p>
+<p><strong>Answer:</strong></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">print([i <span class="keyword">for</span> i <span class="keyword">in</span> word_dict.keys()][:<span class="number">5</span>])</span><br></pre></td></tr></table></figure>
+
+<pre><code>[&apos;movi&apos;, &apos;film&apos;, &apos;one&apos;, &apos;like&apos;, &apos;time&apos;]</code></pre><p>This makes sense since those words are common in movie reviews</p>
+<h3 id="Save-word-dict"><a href="#Save-word-dict" class="headerlink" title="Save word_dict"></a>Save <code>word_dict</code></h3><p>Later on when we construct an endpoint which processes a submitted review we will need to make use of the <code>word_dict</code> which we have created. As such, we will save it to a file now for future use.</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">data_dir = <span class="string">'../data/pytorch'</span> <span class="comment"># The folder we will use for storing data</span></span><br><span class="line"><span class="keyword">if</span> <span class="keyword">not</span> os.path.exists(data_dir): <span class="comment"># Make sure that the folder exists</span></span><br><span class="line">    os.makedirs(data_dir)</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">with</span> open(os.path.join(data_dir, <span class="string">'word_dict.pkl'</span>), <span class="string">"wb"</span>) <span class="keyword">as</span> f:</span><br><span class="line">    pickle.dump(word_dict, f)</span><br></pre></td></tr></table></figure>
+
+<h3 id="Transform-the-reviews"><a href="#Transform-the-reviews" class="headerlink" title="Transform the reviews"></a>Transform the reviews</h3><p>Now that we have our word dictionary which allows us to transform the words appearing in the reviews into integers, it is time to make use of it and convert our reviews to their integer sequence representation, making sure to pad or truncate to a fixed length, which in our case is <code>500</code>.</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">convert_and_pad</span><span class="params">(word_dict, sentence, pad=<span class="number">500</span>)</span>:</span></span><br><span class="line">    NOWORD = <span class="number">0</span> <span class="comment"># We will use 0 to represent the 'no word' category</span></span><br><span class="line">    INFREQ = <span class="number">1</span> <span class="comment"># and we use 1 to represent the infrequent words, i.e., words not appearing in word_dict</span></span><br><span class="line">    </span><br><span class="line">    working_sentence = [NOWORD] * pad</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">for</span> word_index, word <span class="keyword">in</span> enumerate(sentence[:pad]):</span><br><span class="line">        <span class="keyword">if</span> word <span class="keyword">in</span> word_dict:</span><br><span class="line">            working_sentence[word_index] = word_dict[word]</span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            working_sentence[word_index] = INFREQ</span><br><span class="line">            </span><br><span class="line">    <span class="keyword">return</span> working_sentence, min(len(sentence), pad)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">convert_and_pad_data</span><span class="params">(word_dict, data, pad=<span class="number">500</span>)</span>:</span></span><br><span class="line">    result = []</span><br><span class="line">    lengths = []</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">for</span> sentence <span class="keyword">in</span> data:</span><br><span class="line">        converted, leng = convert_and_pad(word_dict, sentence, pad)</span><br><span class="line">        result.append(converted)</span><br><span class="line">        lengths.append(leng)</span><br><span class="line">        </span><br><span class="line">    <span class="keyword">return</span> np.array(result), np.array(lengths)</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">train_X, train_X_len = convert_and_pad_data(word_dict, train_X)</span><br><span class="line">test_X, test_X_len = convert_and_pad_data(word_dict, test_X)</span><br></pre></td></tr></table></figure>
+
+<p>As a quick check to make sure that things are working as intended, check to see what one of the reviews in the training set looks like after having been processeed. Does this look reasonable? What is the length of a review in the training set?</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Use this cell to examine one of the processed reviews to make sure everything is working as intended.</span></span><br><span class="line">print(<span class="string">'The processed review is:\n&#123;&#125;.'</span>.format(train_X[<span class="number">7</span>]))</span><br><span class="line">print(<span class="string">'The length of the review is:\n&#123;&#125;.'</span>.format(train_X_len[<span class="number">7</span>]))</span><br></pre></td></tr></table></figure>
+
+<pre><code>The processed review is:
+[ 135    3   28   31  272 1280    1    1  669 1663    1 3417    3   94
+   96  813  147    3   23    8   59   30 1477    1    4    1   43  110
+  709    3   33 2437  230 4095  358    1   50  575    1   55   75 3439
+    1 1770   43  260   43   68    1  331   94 1549  419   42  601  283
+ 1477   50  255 1310    1   55  420   50   40   33   75   29   50   22
+  147  580   74   59   30    4  395    2  119  324 1053  232    0    0
+    0    0    0    0    0    0    0    0    0    0    0    0    0    0
+    0    0    0    0    0    0    0    0    0    0    0    0    0    0
+    0    0    0    0    0    0    0    0    0    0    0    0    0    0
+    0    0    0    0    0    0    0    0    0    0    0    0    0    0
+    0    0    0    0    0    0    0    0    0    0    0    0    0    0
+    0    0    0    0    0    0    0    0    0    0    0    0    0    0
+    0    0    0    0    0    0    0    0    0    0    0    0    0    0
+    0    0    0    0    0    0    0    0    0    0    0    0    0    0
+    0    0    0    0    0    0    0    0    0    0    0    0    0    0
+    0    0    0    0    0    0    0    0    0    0    0    0    0    0
+    0    0    0    0    0    0    0    0    0    0    0    0    0    0
+    0    0    0    0    0    0    0    0    0    0    0    0    0    0
+    0    0    0    0    0    0    0    0    0    0    0    0    0    0
+    0    0    0    0    0    0    0    0    0    0    0    0    0    0
+    0    0    0    0    0    0    0    0    0    0    0    0    0    0
+    0    0    0    0    0    0    0    0    0    0    0    0    0    0
+    0    0    0    0    0    0    0    0    0    0    0    0    0    0
+    0    0    0    0    0    0    0    0    0    0    0    0    0    0
+    0    0    0    0    0    0    0    0    0    0    0    0    0    0
+    0    0    0    0    0    0    0    0    0    0    0    0    0    0
+    0    0    0    0    0    0    0    0    0    0    0    0    0    0
+    0    0    0    0    0    0    0    0    0    0    0    0    0    0
+    0    0    0    0    0    0    0    0    0    0    0    0    0    0
+    0    0    0    0    0    0    0    0    0    0    0    0    0    0
+    0    0    0    0    0    0    0    0    0    0    0    0    0    0
+    0    0    0    0    0    0    0    0    0    0    0    0    0    0
+    0    0    0    0    0    0    0    0    0    0    0    0    0    0
+    0    0    0    0    0    0    0    0    0    0    0    0    0    0
+    0    0    0    0    0    0    0    0    0    0    0    0    0    0
+    0    0    0    0    0    0    0    0    0    0].
+The length of the review is:
+82.</code></pre><p>It looks reasonable, and the length of the review is 82.</p>
+<p><strong>Question:</strong> In the cells above we use the <code>preprocess_data</code> and <code>convert_and_pad_data</code> methods to process both the training and testing set. Why or why not might this be a problem?</p>
+<p><strong>Answer:</strong> It might not be a problem for training the model since all reviews are converted into the same length. However, it might require more memory since shorter reviews are converted into longer format.</p>
+<h2 id="Step-3-Upload-the-data-to-S3"><a href="#Step-3-Upload-the-data-to-S3" class="headerlink" title="Step 3: Upload the data to S3"></a>Step 3: Upload the data to S3</h2><p>As in the XGBoost notebook, we will need to upload the training dataset to S3 in order for our training code to access it. For now we will save it locally and we will upload to S3 later on.</p>
+<h3 id="Save-the-processed-training-dataset-locally"><a href="#Save-the-processed-training-dataset-locally" class="headerlink" title="Save the processed training dataset locally"></a>Save the processed training dataset locally</h3><p>It is important to note the format of the data that we are saving as we will need to know it when we write the training code. In our case, each row of the dataset has the form <code>label</code>, <code>length</code>, <code>review[500]</code> where <code>review[500]</code> is a sequence of <code>500</code> integers representing the words in the review.</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> pandas <span class="keyword">as</span> pd</span><br><span class="line">    </span><br><span class="line">pd.concat([pd.DataFrame(train_y), pd.DataFrame(train_X_len), pd.DataFrame(train_X)], axis=<span class="number">1</span>) \</span><br><span class="line">        .to_csv(os.path.join(data_dir, <span class="string">'train.csv'</span>), header=<span class="literal">False</span>, index=<span class="literal">False</span>)</span><br></pre></td></tr></table></figure>
+
+<h3 id="Uploading-the-training-data"><a href="#Uploading-the-training-data" class="headerlink" title="Uploading the training data"></a>Uploading the training data</h3><p>Next, we need to upload the training data to the SageMaker default S3 bucket so that we can provide access to it while training our model.</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> sagemaker</span><br><span class="line"></span><br><span class="line">sagemaker_session = sagemaker.Session()</span><br><span class="line"></span><br><span class="line">bucket = sagemaker_session.default_bucket()</span><br><span class="line">prefix = <span class="string">'sagemaker/sentiment_rnn'</span></span><br><span class="line"></span><br><span class="line">role = sagemaker.get_execution_role()</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">input_data = sagemaker_session.upload_data(path=data_dir, bucket=bucket, key_prefix=prefix)</span><br></pre></td></tr></table></figure>
+
+<p><strong>NOTE:</strong> The cell above uploads the entire contents of our data directory. This includes the <code>word_dict.pkl</code> file. This is fortunate as we will need this later on when we create an endpoint that accepts an arbitrary review. For now, we will just take note of the fact that it resides in the data directory (and so also in the S3 training bucket) and that we will need to make sure it gets saved in the model directory.</p>
+<h2 id="Step-4-Build-and-Train-the-PyTorch-Model"><a href="#Step-4-Build-and-Train-the-PyTorch-Model" class="headerlink" title="Step 4: Build and Train the PyTorch Model"></a>Step 4: Build and Train the PyTorch Model</h2><p>In the XGBoost notebook we discussed what a model is in the SageMaker framework. In particular, a model comprises three objects</p>
+<ul>
+<li>Model Artifacts,</li>
+<li>Training Code, and</li>
+<li>Inference Code,</li>
+</ul>
+<p>each of which interact with one another. In the XGBoost example we used training and inference code that was provided by Amazon. Here we will still be using containers provided by Amazon with the added benefit of being able to include our own custom code.</p>
+<p>We will start by implementing our own neural network in PyTorch along with a training script. For the purposes of this project we have provided the necessary model object in the <code>model.py</code> file, inside of the <code>train</code> folder. You can see the provided implementation by running the cell below.</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">!pygmentize train/model.py</span><br></pre></td></tr></table></figure>
+
+<pre><code>[34mimport[39;49;00m [04m[36mtorch.nn[39;49;00m [34mas[39;49;00m [04m[36mnn[39;49;00m
+
+[34mclass[39;49;00m [04m[32mLSTMClassifier[39;49;00m(nn.Module):
+    [33m&quot;&quot;&quot;[39;49;00m
+[33m    This is the simple RNN model we will be using to perform Sentiment Analysis.[39;49;00m
+[33m    &quot;&quot;&quot;[39;49;00m
+
+    [34mdef[39;49;00m [32m__init__[39;49;00m([36mself[39;49;00m, embedding_dim, hidden_dim, vocab_size):
+        [33m&quot;&quot;&quot;[39;49;00m
+[33m        Initialize the model by settingg up the various layers.[39;49;00m
+[33m        &quot;&quot;&quot;[39;49;00m
+        [36msuper[39;49;00m(LSTMClassifier, [36mself[39;49;00m).[32m__init__[39;49;00m()
+
+        [36mself[39;49;00m.embedding = nn.Embedding(vocab_size, embedding_dim, padding_idx=[34m0[39;49;00m)
+        [36mself[39;49;00m.lstm = nn.LSTM(embedding_dim, hidden_dim)
+        [36mself[39;49;00m.dense = nn.Linear(in_features=hidden_dim, out_features=[34m1[39;49;00m)
+        [36mself[39;49;00m.sig = nn.Sigmoid()
+
+        [36mself[39;49;00m.word_dict = [36mNone[39;49;00m
+
+    [34mdef[39;49;00m [32mforward[39;49;00m([36mself[39;49;00m, x):
+        [33m&quot;&quot;&quot;[39;49;00m
+[33m        Perform a forward pass of our model on some input.[39;49;00m
+[33m        &quot;&quot;&quot;[39;49;00m
+        x = x.t()
+        lengths = x[[34m0[39;49;00m,:]
+        reviews = x[[34m1[39;49;00m:,:]
+        embeds = [36mself[39;49;00m.embedding(reviews)
+        lstm_out, _ = [36mself[39;49;00m.lstm(embeds)
+        out = [36mself[39;49;00m.dense(lstm_out)
+        out = out[lengths - [34m1[39;49;00m, [36mrange[39;49;00m([36mlen[39;49;00m(lengths))]
+        [34mreturn[39;49;00m [36mself[39;49;00m.sig(out.squeeze())</code></pre><p>The important takeaway from the implementation provided is that there are three parameters that we may wish to tweak to improve the performance of our model. These are the embedding dimension, the hidden dimension and the size of the vocabulary. We will likely want to make these parameters configurable in the training script so that if we wish to modify them we do not need to modify the script itself. We will see how to do this later on. To start we will write some of the training code in the notebook so that we can more easily diagnose any issues that arise.</p>
+<p>First we will load a small portion of the training data set to use as a sample. It would be very time consuming to try and train the model completely in the notebook as we do not have access to a gpu and the compute instance that we are using is not particularly powerful. However, we can work on a small bit of the data to get a feel for how our training script is behaving.</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"><span class="keyword">import</span> torch.utils.data</span><br><span class="line"></span><br><span class="line"><span class="comment"># Read in only the first 250 rows</span></span><br><span class="line">train_sample = pd.read_csv(os.path.join(data_dir, <span class="string">'train.csv'</span>), header=<span class="literal">None</span>, names=<span class="literal">None</span>, nrows=<span class="number">250</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># Turn the input pandas dataframe into tensors</span></span><br><span class="line">train_sample_y = torch.from_numpy(train_sample[[<span class="number">0</span>]].values).float().squeeze()</span><br><span class="line">train_sample_X = torch.from_numpy(train_sample.drop([<span class="number">0</span>], axis=<span class="number">1</span>).values).long()</span><br><span class="line"></span><br><span class="line"><span class="comment"># Build the dataset</span></span><br><span class="line">train_sample_ds = torch.utils.data.TensorDataset(train_sample_X, train_sample_y)</span><br><span class="line"><span class="comment"># Build the dataloader</span></span><br><span class="line">train_sample_dl = torch.utils.data.DataLoader(train_sample_ds, batch_size=<span class="number">50</span>)</span><br></pre></td></tr></table></figure>
+
+<h3 id="TODO-Writing-the-training-method"><a href="#TODO-Writing-the-training-method" class="headerlink" title="(TODO) Writing the training method"></a>(TODO) Writing the training method</h3><p>Next we need to write the training code itself. This should be very similar to training methods that you have written before to train PyTorch models. We will leave any difficult aspects such as model saving / loading and parameter loading until a little later.</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">train</span><span class="params">(model, train_loader, epochs, optimizer, loss_fn, device)</span>:</span></span><br><span class="line">    <span class="keyword">for</span> epoch <span class="keyword">in</span> range(<span class="number">1</span>, epochs + <span class="number">1</span>):</span><br><span class="line">        model.train()</span><br><span class="line">        total_loss = <span class="number">0</span></span><br><span class="line">        <span class="keyword">for</span> batch <span class="keyword">in</span> train_loader:         </span><br><span class="line">            batch_X, batch_y = batch</span><br><span class="line">            </span><br><span class="line">            batch_X = batch_X.to(device)</span><br><span class="line">            batch_y = batch_y.to(device)</span><br><span class="line">            </span><br><span class="line">            <span class="comment"># <span class="doctag">TODO:</span> Complete this train method to train the model provided.</span></span><br><span class="line">            optimizer.zero_grad()</span><br><span class="line">            output = model.forward(batch_X)</span><br><span class="line">            loss = loss_fn(output, batch_y)</span><br><span class="line">            loss.backward()</span><br><span class="line">            optimizer.step()</span><br><span class="line">            </span><br><span class="line">            total_loss += loss.data.item()</span><br><span class="line">        print(<span class="string">"Epoch: &#123;&#125;, BCELoss: &#123;&#125;"</span>.format(epoch, total_loss / len(train_loader)))</span><br></pre></td></tr></table></figure>
+
+<p>Supposing we have the training method above, we will test that it is working by writing a bit of code in the notebook that executes our training method on the small sample training set that we loaded earlier. The reason for doing this in the notebook is so that we have an opportunity to fix any errors that arise early when they are easier to diagnose.</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> torch.optim <span class="keyword">as</span> optim</span><br><span class="line"><span class="keyword">from</span> train.model <span class="keyword">import</span> LSTMClassifier</span><br><span class="line"></span><br><span class="line">device = torch.device(<span class="string">"cuda"</span> <span class="keyword">if</span> torch.cuda.is_available() <span class="keyword">else</span> <span class="string">"cpu"</span>)</span><br><span class="line">model = LSTMClassifier(<span class="number">32</span>, <span class="number">100</span>, <span class="number">5000</span>).to(device)</span><br><span class="line">optimizer = optim.Adam(model.parameters())</span><br><span class="line">loss_fn = torch.nn.BCELoss()</span><br><span class="line"></span><br><span class="line">train(model, train_sample_dl, <span class="number">5</span>, optimizer, loss_fn, device)</span><br></pre></td></tr></table></figure>
+
+<pre><code>Epoch: 1, BCELoss: 0.6931784152984619
+Epoch: 2, BCELoss: 0.683626139163971
+Epoch: 3, BCELoss: 0.6755886435508728
+Epoch: 4, BCELoss: 0.6667218565940857
+Epoch: 5, BCELoss: 0.6559338450431824</code></pre><p>In order to construct a PyTorch model using SageMaker we must provide SageMaker with a training script. We may optionally include a directory which will be copied to the container and from which our training code will be run. When the training container is executed it will check the uploaded directory (if there is one) for a <code>requirements.txt</code> file and install any required Python libraries, after which the training script will be run.</p>
+<h3 id="TODO-Training-the-model"><a href="#TODO-Training-the-model" class="headerlink" title="(TODO) Training the model"></a>(TODO) Training the model</h3><p>When a PyTorch model is constructed in SageMaker, an entry point must be specified. This is the Python file which will be executed when the model is trained. Inside of the <code>train</code> directory is a file called <code>train.py</code> which has been provided and which contains most of the necessary code to train our model. The only thing that is missing is the implementation of the <code>train()</code> method which you wrote earlier in this notebook.</p>
+<p><strong>TODO</strong>: Copy the <code>train()</code> method written above and paste it into the <code>train/train.py</code> file where required.</p>
+<p>The way that SageMaker passes hyperparameters to the training script is by way of arguments. These arguments can then be parsed and used in the training script. To see how this is done take a look at the provided <code>train/train.py</code> file.</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> sagemaker.pytorch <span class="keyword">import</span> PyTorch</span><br><span class="line"></span><br><span class="line">estimator = PyTorch(entry_point=<span class="string">"train.py"</span>,</span><br><span class="line">                    source_dir=<span class="string">"train"</span>,</span><br><span class="line">                    role=role,</span><br><span class="line">                    framework_version=<span class="string">'0.4.0'</span>,</span><br><span class="line">                    train_instance_count=<span class="number">1</span>,</span><br><span class="line">                    train_instance_type=<span class="string">'ml.p2.xlarge'</span>,</span><br><span class="line">                    hyperparameters=&#123;</span><br><span class="line">                        <span class="string">'epochs'</span>: <span class="number">10</span>,</span><br><span class="line">                        <span class="string">'hidden_dim'</span>: <span class="number">200</span>,</span><br><span class="line">                    &#125;)</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">estimator.fit(&#123;<span class="string">'training'</span>: input_data&#125;)</span><br></pre></td></tr></table></figure>
+
+<pre><code>2020-02-23 10:29:09 Starting - Starting the training job...
+2020-02-23 10:29:11 Starting - Launching requested ML instances......
+2020-02-23 10:30:10 Starting - Preparing the instances for training......
+2020-02-23 10:31:12 Downloading - Downloading input data...
+2020-02-23 10:31:56 Training - Downloading the training image..[34mbash: cannot set terminal process group (-1): Inappropriate ioctl for device[0m
+[34mbash: no job control in this shell[0m
+[34m2020-02-23 10:32:19,999 sagemaker-containers INFO     Imported framework sagemaker_pytorch_container.training[0m
+[34m2020-02-23 10:32:20,024 sagemaker_pytorch_container.training INFO     Block until all host DNS lookups succeed.[0m
+
+2020-02-23 10:32:19 Training - Training image download completed. Training in progress.[34m2020-02-23 10:32:26,248 sagemaker_pytorch_container.training INFO     Invoking user training script.[0m
+[34m2020-02-23 10:32:26,469 sagemaker-containers INFO     Module train does not provide a setup.py. [0m
+[34mGenerating setup.py[0m
+[34m2020-02-23 10:32:26,470 sagemaker-containers INFO     Generating setup.cfg[0m
+[34m2020-02-23 10:32:26,470 sagemaker-containers INFO     Generating MANIFEST.in[0m
+[34m2020-02-23 10:32:26,470 sagemaker-containers INFO     Installing module with the following command:[0m
+[34m/usr/bin/python -m pip install -U . -r requirements.txt[0m
+[34mProcessing /opt/ml/code[0m
+[34mCollecting pandas (from -r requirements.txt (line 1))[0m
+[34m  Downloading https://files.pythonhosted.org/packages/74/24/0cdbf8907e1e3bc5a8da03345c23cbed7044330bb8f73bb12e711a640a00/pandas-0.24.2-cp35-cp35m-manylinux1_x86_64.whl (10.0MB)[0m
+[34mCollecting numpy (from -r requirements.txt (line 2))
+  Downloading https://files.pythonhosted.org/packages/52/e6/1715e592ef47f28f3f50065322423bb75619ed2f7c24be86380ecc93503c/numpy-1.18.1-cp35-cp35m-manylinux1_x86_64.whl (19.9MB)[0m
+[34mCollecting nltk (from -r requirements.txt (line 3))
+  Downloading https://files.pythonhosted.org/packages/f6/1d/d925cfb4f324ede997f6d47bea4d9babba51b49e87a767c170b77005889d/nltk-3.4.5.zip (1.5MB)[0m
+[34mCollecting beautifulsoup4 (from -r requirements.txt (line 4))[0m
+[34m  Downloading https://files.pythonhosted.org/packages/cb/a1/c698cf319e9cfed6b17376281bd0efc6bfc8465698f54170ef60a485ab5d/beautifulsoup4-4.8.2-py3-none-any.whl (106kB)[0m
+[34mCollecting html5lib (from -r requirements.txt (line 5))
+  Downloading https://files.pythonhosted.org/packages/a5/62/bbd2be0e7943ec8504b517e62bab011b4946e1258842bc159e5dfde15b96/html5lib-1.0.1-py2.py3-none-any.whl (117kB)[0m
+[34mRequirement already satisfied, skipping upgrade: python-dateutil&gt;=2.5.0 in /usr/local/lib/python3.5/dist-packages (from pandas-&gt;-r requirements.txt (line 1)) (2.7.5)[0m
+[34mCollecting pytz&gt;=2011k (from pandas-&gt;-r requirements.txt (line 1))
+  Downloading https://files.pythonhosted.org/packages/e7/f9/f0b53f88060247251bf481fa6ea62cd0d25bf1b11a87888e53ce5b7c8ad2/pytz-2019.3-py2.py3-none-any.whl (509kB)[0m
+[34mRequirement already satisfied, skipping upgrade: six in /usr/local/lib/python3.5/dist-packages (from nltk-&gt;-r requirements.txt (line 3)) (1.11.0)[0m
+[34mCollecting soupsieve&gt;=1.2 (from beautifulsoup4-&gt;-r requirements.txt (line 4))
+  Downloading https://files.pythonhosted.org/packages/05/cf/ea245e52f55823f19992447b008bcbb7f78efc5960d77f6c34b5b45b36dd/soupsieve-2.0-py2.py3-none-any.whl[0m
+[34mCollecting webencodings (from html5lib-&gt;-r requirements.txt (line 5))
+  Downloading https://files.pythonhosted.org/packages/f4/24/2a3e3df732393fed8b3ebf2ec078f05546de641fe1b667ee316ec1dcf3b7/webencodings-0.5.1-py2.py3-none-any.whl[0m
+[34mBuilding wheels for collected packages: nltk, train
+  Running setup.py bdist_wheel for nltk: started[0m
+[34m  Running setup.py bdist_wheel for nltk: finished with status &apos;done&apos;
+  Stored in directory: /root/.cache/pip/wheels/96/86/f6/68ab24c23f207c0077381a5e3904b2815136b879538a24b483
+  Running setup.py bdist_wheel for train: started
+  Running setup.py bdist_wheel for train: finished with status &apos;done&apos;
+  Stored in directory: /tmp/pip-ephem-wheel-cache-1z_fwhiw/wheels/35/24/16/37574d11bf9bde50616c67372a334f94fa8356bc7164af8ca3[0m
+[34mSuccessfully built nltk train[0m
+[34mInstalling collected packages: pytz, numpy, pandas, nltk, soupsieve, beautifulsoup4, webencodings, html5lib, train[0m
+[34m  Found existing installation: numpy 1.15.4
+    Uninstalling numpy-1.15.4:
+      Successfully uninstalled numpy-1.15.4[0m
+[34mSuccessfully installed beautifulsoup4-4.8.2 html5lib-1.0.1 nltk-3.4.5 numpy-1.18.1 pandas-0.24.2 pytz-2019.3 soupsieve-2.0 train-1.0.0 webencodings-0.5.1[0m
+[34mYou are using pip version 18.1, however version 20.0.2 is available.[0m
+[34mYou should consider upgrading via the &apos;pip install --upgrade pip&apos; command.[0m
+[34m2020-02-23 10:32:39,087 sagemaker-containers INFO     Invoking user script
+[0m
+[34mTraining Env:
+[0m
+[34m{
+    &quot;channel_input_dirs&quot;: {
+        &quot;training&quot;: &quot;/opt/ml/input/data/training&quot;
+    },
+    &quot;current_host&quot;: &quot;algo-1&quot;,
+    &quot;module_dir&quot;: &quot;s3://sagemaker-us-east-2-621192006701/sagemaker-pytorch-2020-02-23-10-29-09-269/source/sourcedir.tar.gz&quot;,
+    &quot;user_entry_point&quot;: &quot;train.py&quot;,
+    &quot;output_intermediate_dir&quot;: &quot;/opt/ml/output/intermediate&quot;,
+    &quot;model_dir&quot;: &quot;/opt/ml/model&quot;,
+    &quot;output_data_dir&quot;: &quot;/opt/ml/output/data&quot;,
+    &quot;hyperparameters&quot;: {
+        &quot;hidden_dim&quot;: 200,
+        &quot;epochs&quot;: 10
+    },
+    &quot;framework_module&quot;: &quot;sagemaker_pytorch_container.training:main&quot;,
+    &quot;resource_config&quot;: {
+        &quot;network_interface_name&quot;: &quot;eth0&quot;,
+        &quot;current_host&quot;: &quot;algo-1&quot;,
+        &quot;hosts&quot;: [
+            &quot;algo-1&quot;
+        ]
+    },
+    &quot;num_gpus&quot;: 1,
+    &quot;output_dir&quot;: &quot;/opt/ml/output&quot;,
+    &quot;num_cpus&quot;: 4,
+    &quot;log_level&quot;: 20,
+    &quot;network_interface_name&quot;: &quot;eth0&quot;,
+    &quot;input_config_dir&quot;: &quot;/opt/ml/input/config&quot;,
+    &quot;additional_framework_parameters&quot;: {},
+    &quot;job_name&quot;: &quot;sagemaker-pytorch-2020-02-23-10-29-09-269&quot;,
+    &quot;input_data_config&quot;: {
+        &quot;training&quot;: {
+            &quot;TrainingInputMode&quot;: &quot;File&quot;,
+            &quot;S3DistributionType&quot;: &quot;FullyReplicated&quot;,
+            &quot;RecordWrapperType&quot;: &quot;None&quot;
+        }
+    },
+    &quot;module_name&quot;: &quot;train&quot;,
+    &quot;hosts&quot;: [
+        &quot;algo-1&quot;
+    ],
+    &quot;input_dir&quot;: &quot;/opt/ml/input&quot;[0m
+[34m}
+[0m
+[34mEnvironment variables:
+[0m
+[34mSM_NUM_CPUS=4[0m
+[34mSM_HP_EPOCHS=10[0m
+[34mSM_TRAINING_ENV={&quot;additional_framework_parameters&quot;:{},&quot;channel_input_dirs&quot;:{&quot;training&quot;:&quot;/opt/ml/input/data/training&quot;},&quot;current_host&quot;:&quot;algo-1&quot;,&quot;framework_module&quot;:&quot;sagemaker_pytorch_container.training:main&quot;,&quot;hosts&quot;:[&quot;algo-1&quot;],&quot;hyperparameters&quot;:{&quot;epochs&quot;:10,&quot;hidden_dim&quot;:200},&quot;input_config_dir&quot;:&quot;/opt/ml/input/config&quot;,&quot;input_data_config&quot;:{&quot;training&quot;:{&quot;RecordWrapperType&quot;:&quot;None&quot;,&quot;S3DistributionType&quot;:&quot;FullyReplicated&quot;,&quot;TrainingInputMode&quot;:&quot;File&quot;}},&quot;input_dir&quot;:&quot;/opt/ml/input&quot;,&quot;job_name&quot;:&quot;sagemaker-pytorch-2020-02-23-10-29-09-269&quot;,&quot;log_level&quot;:20,&quot;model_dir&quot;:&quot;/opt/ml/model&quot;,&quot;module_dir&quot;:&quot;s3://sagemaker-us-east-2-621192006701/sagemaker-pytorch-2020-02-23-10-29-09-269/source/sourcedir.tar.gz&quot;,&quot;module_name&quot;:&quot;train&quot;,&quot;network_interface_name&quot;:&quot;eth0&quot;,&quot;num_cpus&quot;:4,&quot;num_gpus&quot;:1,&quot;output_data_dir&quot;:&quot;/opt/ml/output/data&quot;,&quot;output_dir&quot;:&quot;/opt/ml/output&quot;,&quot;output_intermediate_dir&quot;:&quot;/opt/ml/output/intermediate&quot;,&quot;resource_config&quot;:{&quot;current_host&quot;:&quot;algo-1&quot;,&quot;hosts&quot;:[&quot;algo-1&quot;],&quot;network_interface_name&quot;:&quot;eth0&quot;},&quot;user_entry_point&quot;:&quot;train.py&quot;}[0m
+[34mSM_MODULE_NAME=train[0m
+[34mSM_MODEL_DIR=/opt/ml/model[0m
+[34mSM_INPUT_DATA_CONFIG={&quot;training&quot;:{&quot;RecordWrapperType&quot;:&quot;None&quot;,&quot;S3DistributionType&quot;:&quot;FullyReplicated&quot;,&quot;TrainingInputMode&quot;:&quot;File&quot;}}[0m
+[34mSM_NUM_GPUS=1[0m
+[34mSM_NETWORK_INTERFACE_NAME=eth0[0m
+[34mSM_HPS={&quot;epochs&quot;:10,&quot;hidden_dim&quot;:200}[0m
+[34mSM_FRAMEWORK_MODULE=sagemaker_pytorch_container.training:main[0m
+[34mSM_OUTPUT_DIR=/opt/ml/output[0m
+[34mSM_OUTPUT_INTERMEDIATE_DIR=/opt/ml/output/intermediate[0m
+[34mSM_FRAMEWORK_PARAMS={}[0m
+[34mSM_MODULE_DIR=s3://sagemaker-us-east-2-621192006701/sagemaker-pytorch-2020-02-23-10-29-09-269/source/sourcedir.tar.gz[0m
+[34mPYTHONPATH=/usr/local/bin:/usr/lib/python35.zip:/usr/lib/python3.5:/usr/lib/python3.5/plat-x86_64-linux-gnu:/usr/lib/python3.5/lib-dynload:/usr/local/lib/python3.5/dist-packages:/usr/lib/python3/dist-packages[0m
+[34mSM_CHANNELS=[&quot;training&quot;][0m
+[34mSM_USER_ARGS=[&quot;--epochs&quot;,&quot;10&quot;,&quot;--hidden_dim&quot;,&quot;200&quot;][0m
+[34mSM_CHANNEL_TRAINING=/opt/ml/input/data/training[0m
+[34mSM_INPUT_CONFIG_DIR=/opt/ml/input/config[0m
+[34mSM_HOSTS=[&quot;algo-1&quot;][0m
+[34mSM_RESOURCE_CONFIG={&quot;current_host&quot;:&quot;algo-1&quot;,&quot;hosts&quot;:[&quot;algo-1&quot;],&quot;network_interface_name&quot;:&quot;eth0&quot;}[0m
+[34mSM_USER_ENTRY_POINT=train.py[0m
+[34mSM_HP_HIDDEN_DIM=200[0m
+[34mSM_INPUT_DIR=/opt/ml/input[0m
+[34mSM_CURRENT_HOST=algo-1[0m
+[34mSM_OUTPUT_DATA_DIR=/opt/ml/output/data[0m
+[34mSM_LOG_LEVEL=20
+[0m
+[34mInvoking script with the following command:
+[0m
+[34m/usr/bin/python -m train --epochs 10 --hidden_dim 200
+
+[0m
+[34mUsing device cuda.[0m
+[34mGet train data loader.[0m
+[34mModel loaded with embedding_dim 32, hidden_dim 200, vocab_size 5000.[0m
+[34mEpoch: 1, BCELoss: 0.6749516141657926[0m
+[34mEpoch: 2, BCELoss: 0.5924099878389009[0m
+[34mEpoch: 3, BCELoss: 0.50403351017407[0m
+[34mEpoch: 4, BCELoss: 0.4240985257284982[0m
+[34mEpoch: 5, BCELoss: 0.38010544862066[0m
+[34mEpoch: 6, BCELoss: 0.3434085663484067[0m
+[34mEpoch: 7, BCELoss: 0.319852275811896[0m
+[34mEpoch: 8, BCELoss: 0.32171173728242214[0m
+[34mEpoch: 9, BCELoss: 0.29324838214991045[0m
+
+2020-02-23 10:35:41 Uploading - Uploading generated training model[34mEpoch: 10, BCELoss: 0.2656841928861579[0m
+[34m2020-02-23 10:35:40,457 sagemaker-containers INFO     Reporting training SUCCESS[0m
+
+2020-02-23 10:35:48 Completed - Training job completed
+Training seconds: 276
+Billable seconds: 276</code></pre><h2 id="Step-5-Testing-the-model"><a href="#Step-5-Testing-the-model" class="headerlink" title="Step 5: Testing the model"></a>Step 5: Testing the model</h2><p>As mentioned at the top of this notebook, we will be testing this model by first deploying it and then sending the testing data to the deployed endpoint. We will do this so that we can make sure that the deployed model is working correctly.</p>
+<h2 id="Step-6-Deploy-the-model-for-testing"><a href="#Step-6-Deploy-the-model-for-testing" class="headerlink" title="Step 6: Deploy the model for testing"></a>Step 6: Deploy the model for testing</h2><p>Now that we have trained our model, we would like to test it to see how it performs. Currently our model takes input of the form <code>review_length, review[500]</code> where <code>review[500]</code> is a sequence of <code>500</code> integers which describe the words present in the review, encoded using <code>word_dict</code>. Fortunately for us, SageMaker provides built-in inference code for models with simple inputs such as this.</p>
+<p>There is one thing that we need to provide, however, and that is a function which loads the saved model. This function must be called <code>model_fn()</code> and takes as its only parameter a path to the directory where the model artifacts are stored. This function must also be present in the python file which we specified as the entry point. In our case the model loading function has been provided and so no changes need to be made.</p>
+<p><strong>NOTE</strong>: When the built-in inference code is run it must import the <code>model_fn()</code> method from the <code>train.py</code> file. This is why the training code is wrapped in a main guard ( ie, <code>if __name__ == &#39;__main__&#39;:</code> )</p>
+<p>Since we don’t need to change anything in the code that was uploaded during training, we can simply deploy the current model as-is.</p>
+<p><strong>NOTE:</strong> When deploying a model you are asking SageMaker to launch an compute instance that will wait for data to be sent to it. As a result, this compute instance will continue to run until <em>you</em> shut it down. This is important to know since the cost of a deployed endpoint depends on how long it has been running for.</p>
+<p>In other words <strong>If you are no longer using a deployed endpoint, shut it down!</strong></p>
+<p><strong>TODO:</strong> Deploy the trained model.</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># <span class="doctag">TODO:</span> Deploy the trained model</span></span><br><span class="line">predictor = estimator.deploy(initial_instance_count=<span class="number">1</span>, instance_type=<span class="string">'ml.m4.xlarge'</span>)</span><br></pre></td></tr></table></figure>
+
+<pre><code>-----------!</code></pre><h2 id="Step-7-Use-the-model-for-testing"><a href="#Step-7-Use-the-model-for-testing" class="headerlink" title="Step 7 - Use the model for testing"></a>Step 7 - Use the model for testing</h2><p>Once deployed, we can read in the test data and send it off to our deployed model to get some results. Once we collect all of the results we can determine how accurate our model is.</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">test_X = pd.concat([pd.DataFrame(test_X_len), pd.DataFrame(test_X)], axis=<span class="number">1</span>)</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># We split the data into chunks and send each chunk seperately, accumulating the results.</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">predict</span><span class="params">(data, rows=<span class="number">512</span>)</span>:</span></span><br><span class="line">    split_array = np.array_split(data, int(data.shape[<span class="number">0</span>] / float(rows) + <span class="number">1</span>))</span><br><span class="line">    predictions = np.array([])</span><br><span class="line">    <span class="keyword">for</span> array <span class="keyword">in</span> split_array:</span><br><span class="line">        predictions = np.append(predictions, predictor.predict(array))</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> predictions</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">predictions = predict(test_X.values)</span><br><span class="line">predictions = [round(num) <span class="keyword">for</span> num <span class="keyword">in</span> predictions]</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> sklearn.metrics <span class="keyword">import</span> accuracy_score</span><br><span class="line">accuracy_score(test_y, predictions)</span><br></pre></td></tr></table></figure>
+
+
+
+
+<pre><code>0.8506</code></pre><p><strong>Question:</strong> How does this model compare to the XGBoost model you created earlier? Why might these two models perform differently on this dataset? Which do <em>you</em> think is better for sentiment analysis?</p>
+<p><strong>Answer:</strong> The result from the RNN model is quite similar to the XGBoost model. Therefore, both models are preferred in sentiment analysis.</p>
+<h3 id="TODO-More-testing"><a href="#TODO-More-testing" class="headerlink" title="(TODO) More testing"></a>(TODO) More testing</h3><p>We now have a trained model which has been deployed and which we can send processed reviews to and which returns the predicted sentiment. However, ultimately we would like to be able to send our model an unprocessed review. That is, we would like to send the review itself as a string. For example, suppose we wish to send the following review to our model.</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">test_review = <span class="string">'The simplest pleasures in life are the best, and this film is one of them. Combining a rather basic storyline of love and adventure this movie transcends the usual weekend fair with wit and unmitigated charm.'</span></span><br></pre></td></tr></table></figure>
+
+<p>The question we now need to answer is, how do we send this review to our model?</p>
+<p>Recall in the first section of this notebook we did a bunch of data processing to the IMDb dataset. In particular, we did two specific things to the provided reviews.</p>
+<ul>
+<li>Removed any html tags and stemmed the input</li>
+<li>Encoded the review as a sequence of integers using <code>word_dict</code></li>
+</ul>
+<p>In order process the review we will need to repeat these two steps.</p>
+<p><strong>TODO</strong>: Using the <code>review_to_words</code> and <code>convert_and_pad</code> methods from section one, convert <code>test_review</code> into a numpy array <code>test_data</code> suitable to send to our model. Remember that our model expects input of the form <code>review_length, review[500]</code>.</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># <span class="doctag">TODO:</span> Convert test_review into a form usable by the model and save the results in test_data</span></span><br><span class="line">test_data = review_to_words(test_review)</span><br><span class="line">test_data = [np.array(convert_and_pad(word_dict, test_data)[<span class="number">0</span>])]</span><br></pre></td></tr></table></figure>
+
+<p>Now that we have processed the review, we can send the resulting array to our model to predict the sentiment of the review.</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">predictor.predict(test_data)</span><br></pre></td></tr></table></figure>
+
+
+
+
+<pre><code>array(0.6213178, dtype=float32)</code></pre><p>Since the return value of our model is close to <code>1</code>, we can be certain that the review we submitted is positive.</p>
+<h3 id="Delete-the-endpoint"><a href="#Delete-the-endpoint" class="headerlink" title="Delete the endpoint"></a>Delete the endpoint</h3><p>Of course, just like in the XGBoost notebook, once we’ve deployed an endpoint it continues to run until we tell it to shut down. Since we are done using our endpoint for now, we can delete it.</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">estimator.delete_endpoint()</span><br></pre></td></tr></table></figure>
+
+<h2 id="Step-6-again-Deploy-the-model-for-the-web-app"><a href="#Step-6-again-Deploy-the-model-for-the-web-app" class="headerlink" title="Step 6 (again) - Deploy the model for the web app"></a>Step 6 (again) - Deploy the model for the web app</h2><p>Now that we know that our model is working, it’s time to create some custom inference code so that we can send the model a review which has not been processed and have it determine the sentiment of the review.</p>
+<p>As we saw above, by default the estimator which we created, when deployed, will use the entry script and directory which we provided when creating the model. However, since we now wish to accept a string as input and our model expects a processed review, we need to write some custom inference code.</p>
+<p>We will store the code that we write in the <code>serve</code> directory. Provided in this directory is the <code>model.py</code> file that we used to construct our model, a <code>utils.py</code> file which contains the <code>review_to_words</code> and <code>convert_and_pad</code> pre-processing functions which we used during the initial data processing, and <code>predict.py</code>, the file which will contain our custom inference code. Note also that <code>requirements.txt</code> is present which will tell SageMaker what Python libraries are required by our custom inference code.</p>
+<p>When deploying a PyTorch model in SageMaker, you are expected to provide four functions which the SageMaker inference container will use.</p>
+<ul>
+<li><code>model_fn</code>: This function is the same function that we used in the training script and it tells SageMaker how to load our model.</li>
+<li><code>input_fn</code>: This function receives the raw serialized input that has been sent to the model’s endpoint and its job is to de-serialize and make the input available for the inference code.</li>
+<li><code>output_fn</code>: This function takes the output of the inference code and its job is to serialize this output and return it to the caller of the model’s endpoint.</li>
+<li><code>predict_fn</code>: The heart of the inference script, this is where the actual prediction is done and is the function which you will need to complete.</li>
+</ul>
+<p>For the simple website that we are constructing during this project, the <code>input_fn</code> and <code>output_fn</code> methods are relatively straightforward. We only require being able to accept a string as input and we expect to return a single value as output. You might imagine though that in a more complex application the input or output may be image data or some other binary data which would require some effort to serialize.</p>
+<h3 id="TODO-Writing-inference-code"><a href="#TODO-Writing-inference-code" class="headerlink" title="(TODO) Writing inference code"></a>(TODO) Writing inference code</h3><p>Before writing our custom inference code, we will begin by taking a look at the code which has been provided.</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">!pygmentize serve/predict.py</span><br></pre></td></tr></table></figure>
+
+<pre><code>[34mimport[39;49;00m [04m[36margparse[39;49;00m
+[34mimport[39;49;00m [04m[36mjson[39;49;00m
+[34mimport[39;49;00m [04m[36mos[39;49;00m
+[34mimport[39;49;00m [04m[36mpickle[39;49;00m
+[34mimport[39;49;00m [04m[36msys[39;49;00m
+[34mimport[39;49;00m [04m[36msagemaker_containers[39;49;00m
+[34mimport[39;49;00m [04m[36mpandas[39;49;00m [34mas[39;49;00m [04m[36mpd[39;49;00m
+[34mimport[39;49;00m [04m[36mnumpy[39;49;00m [34mas[39;49;00m [04m[36mnp[39;49;00m
+[34mimport[39;49;00m [04m[36mtorch[39;49;00m
+[34mimport[39;49;00m [04m[36mtorch.nn[39;49;00m [34mas[39;49;00m [04m[36mnn[39;49;00m
+[34mimport[39;49;00m [04m[36mtorch.optim[39;49;00m [34mas[39;49;00m [04m[36moptim[39;49;00m
+[34mimport[39;49;00m [04m[36mtorch.utils.data[39;49;00m
+
+[34mfrom[39;49;00m [04m[36mmodel[39;49;00m [34mimport[39;49;00m LSTMClassifier
+
+[34mfrom[39;49;00m [04m[36mutils[39;49;00m [34mimport[39;49;00m review_to_words, convert_and_pad
+
+[34mdef[39;49;00m [32mmodel_fn[39;49;00m(model_dir):
+    [33m&quot;&quot;&quot;Load the PyTorch model from the `model_dir` directory.&quot;&quot;&quot;[39;49;00m
+    [34mprint[39;49;00m([33m&quot;[39;49;00m[33mLoading model.[39;49;00m[33m&quot;[39;49;00m)
+
+    [37m# First, load the parameters used to create the model.[39;49;00m
+    model_info = {}
+    model_info_path = os.path.join(model_dir, [33m&apos;[39;49;00m[33mmodel_info.pth[39;49;00m[33m&apos;[39;49;00m)
+    [34mwith[39;49;00m [36mopen[39;49;00m(model_info_path, [33m&apos;[39;49;00m[33mrb[39;49;00m[33m&apos;[39;49;00m) [34mas[39;49;00m f:
+        model_info = torch.load(f)
+
+    [34mprint[39;49;00m([33m&quot;[39;49;00m[33mmodel_info: {}[39;49;00m[33m&quot;[39;49;00m.format(model_info))
+
+    [37m# Determine the device and construct the model.[39;49;00m
+    device = torch.device([33m&quot;[39;49;00m[33mcuda[39;49;00m[33m&quot;[39;49;00m [34mif[39;49;00m torch.cuda.is_available() [34melse[39;49;00m [33m&quot;[39;49;00m[33mcpu[39;49;00m[33m&quot;[39;49;00m)
+    model = LSTMClassifier(model_info[[33m&apos;[39;49;00m[33membedding_dim[39;49;00m[33m&apos;[39;49;00m], model_info[[33m&apos;[39;49;00m[33mhidden_dim[39;49;00m[33m&apos;[39;49;00m], model_info[[33m&apos;[39;49;00m[33mvocab_size[39;49;00m[33m&apos;[39;49;00m])
+
+    [37m# Load the store model parameters.[39;49;00m
+    model_path = os.path.join(model_dir, [33m&apos;[39;49;00m[33mmodel.pth[39;49;00m[33m&apos;[39;49;00m)
+    [34mwith[39;49;00m [36mopen[39;49;00m(model_path, [33m&apos;[39;49;00m[33mrb[39;49;00m[33m&apos;[39;49;00m) [34mas[39;49;00m f:
+        model.load_state_dict(torch.load(f))
+
+    [37m# Load the saved word_dict.[39;49;00m
+    word_dict_path = os.path.join(model_dir, [33m&apos;[39;49;00m[33mword_dict.pkl[39;49;00m[33m&apos;[39;49;00m)
+    [34mwith[39;49;00m [36mopen[39;49;00m(word_dict_path, [33m&apos;[39;49;00m[33mrb[39;49;00m[33m&apos;[39;49;00m) [34mas[39;49;00m f:
+        model.word_dict = pickle.load(f)
+
+    model.to(device).eval()
+
+    [34mprint[39;49;00m([33m&quot;[39;49;00m[33mDone loading model.[39;49;00m[33m&quot;[39;49;00m)
+    [34mreturn[39;49;00m model
+
+[34mdef[39;49;00m [32minput_fn[39;49;00m(serialized_input_data, content_type):
+    [34mprint[39;49;00m([33m&apos;[39;49;00m[33mDeserializing the input data.[39;49;00m[33m&apos;[39;49;00m)
+    [34mif[39;49;00m content_type == [33m&apos;[39;49;00m[33mtext/plain[39;49;00m[33m&apos;[39;49;00m:
+        data = serialized_input_data.decode([33m&apos;[39;49;00m[33mutf-8[39;49;00m[33m&apos;[39;49;00m)
+        [34mreturn[39;49;00m data
+    [34mraise[39;49;00m [36mException[39;49;00m([33m&apos;[39;49;00m[33mRequested unsupported ContentType in content_type: [39;49;00m[33m&apos;[39;49;00m + content_type)
+
+[34mdef[39;49;00m [32moutput_fn[39;49;00m(prediction_output, accept):
+    [34mprint[39;49;00m([33m&apos;[39;49;00m[33mSerializing the generated output.[39;49;00m[33m&apos;[39;49;00m)
+    [34mreturn[39;49;00m [36mstr[39;49;00m(prediction_output)
+
+[34mdef[39;49;00m [32mpredict_fn[39;49;00m(input_data, model):
+    [34mprint[39;49;00m([33m&apos;[39;49;00m[33mInferring sentiment of input data.[39;49;00m[33m&apos;[39;49;00m)
+
+    device = torch.device([33m&quot;[39;49;00m[33mcuda[39;49;00m[33m&quot;[39;49;00m [34mif[39;49;00m torch.cuda.is_available() [34melse[39;49;00m [33m&quot;[39;49;00m[33mcpu[39;49;00m[33m&quot;[39;49;00m)
+
+    [34mif[39;49;00m model.word_dict [35mis[39;49;00m [36mNone[39;49;00m:
+        [34mraise[39;49;00m [36mException[39;49;00m([33m&apos;[39;49;00m[33mModel has not been loaded properly, no word_dict.[39;49;00m[33m&apos;[39;49;00m)
+
+    [37m# TODO: Process input_data so that it is ready to be sent to our model.[39;49;00m
+    [37m#       You should produce two variables:[39;49;00m
+    [37m#         data_X   - A sequence of length 500 which represents the converted review[39;49;00m
+    [37m#         data_len - The length of the review[39;49;00m
+
+    data_X = [36mNone[39;49;00m
+    data_len = [36mNone[39;49;00m
+
+    [37m# Using data_X and data_len we construct an appropriate input tensor. Remember[39;49;00m
+    [37m# that our model expects input data of the form &apos;len, review[500]&apos;.[39;49;00m
+    data_pack = np.hstack((data_len, data_X))
+    data_pack = data_pack.reshape([34m1[39;49;00m, -[34m1[39;49;00m)
+
+    data = torch.from_numpy(data_pack)
+    data = data.to(device)
+
+    [37m# Make sure to put the model into evaluation mode[39;49;00m
+    model.eval()
+
+    [37m# TODO: Compute the result of applying the model to the input data. The variable `result` should[39;49;00m
+    [37m#       be a numpy array which contains a single integer which is either 1 or 0[39;49;00m
+
+    result = [36mNone[39;49;00m
+
+    [34mreturn[39;49;00m result</code></pre><p>As mentioned earlier, the <code>model_fn</code> method is the same as the one provided in the training code and the <code>input_fn</code> and <code>output_fn</code> methods are very simple and your task will be to complete the <code>predict_fn</code> method. Make sure that you save the completed file as <code>predict.py</code> in the <code>serve</code> directory.</p>
+<p><strong>TODO</strong>: Complete the <code>predict_fn()</code> method in the <code>serve/predict.py</code> file.</p>
+<h3 id="Deploying-the-model"><a href="#Deploying-the-model" class="headerlink" title="Deploying the model"></a>Deploying the model</h3><p>Now that the custom inference code has been written, we will create and deploy our model. To begin with, we need to construct a new PyTorchModel object which points to the model artifacts created during training and also points to the inference code that we wish to use. Then we can call the deploy method to launch the deployment container.</p>
+<p><strong>NOTE</strong>: The default behaviour for a deployed PyTorch model is to assume that any input passed to the predictor is a <code>numpy</code> array. In our case we want to send a string so we need to construct a simple wrapper around the <code>RealTimePredictor</code> class to accomodate simple strings. In a more complicated situation you may want to provide a serialization object, for example if you wanted to sent image data.</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> sagemaker.predictor <span class="keyword">import</span> RealTimePredictor</span><br><span class="line"><span class="keyword">from</span> sagemaker.pytorch <span class="keyword">import</span> PyTorchModel</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">StringPredictor</span><span class="params">(RealTimePredictor)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self, endpoint_name, sagemaker_session)</span>:</span></span><br><span class="line">        super(StringPredictor, self).__init__(endpoint_name, sagemaker_session, content_type=<span class="string">'text/plain'</span>)</span><br><span class="line"></span><br><span class="line">model = PyTorchModel(model_data=estimator.model_data,</span><br><span class="line">                     role = role,</span><br><span class="line">                     framework_version=<span class="string">'0.4.0'</span>,</span><br><span class="line">                     entry_point=<span class="string">'predict.py'</span>,</span><br><span class="line">                     source_dir=<span class="string">'serve'</span>,</span><br><span class="line">                     predictor_cls=StringPredictor)</span><br><span class="line">predictor = model.deploy(initial_instance_count=<span class="number">1</span>, instance_type=<span class="string">'ml.m4.xlarge'</span>)</span><br></pre></td></tr></table></figure>
+
+<pre><code>-----------!</code></pre><h3 id="Testing-the-model"><a href="#Testing-the-model" class="headerlink" title="Testing the model"></a>Testing the model</h3><p>Now that we have deployed our model with the custom inference code, we should test to see if everything is working. Here we test our model by loading the first <code>250</code> positive and negative reviews and send them to the endpoint, then collect the results. The reason for only sending some of the data is that the amount of time it takes for our model to process the input and then perform inference is quite long and so testing the entire data set would be prohibitive.</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> glob</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">test_reviews</span><span class="params">(data_dir=<span class="string">'../data/aclImdb'</span>, stop=<span class="number">250</span>)</span>:</span></span><br><span class="line">    </span><br><span class="line">    results = []</span><br><span class="line">    ground = []</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># We make sure to test both positive and negative reviews    </span></span><br><span class="line">    <span class="keyword">for</span> sentiment <span class="keyword">in</span> [<span class="string">'pos'</span>, <span class="string">'neg'</span>]:</span><br><span class="line">        </span><br><span class="line">        path = os.path.join(data_dir, <span class="string">'test'</span>, sentiment, <span class="string">'*.txt'</span>)</span><br><span class="line">        files = glob.glob(path)</span><br><span class="line">        </span><br><span class="line">        files_read = <span class="number">0</span></span><br><span class="line">        </span><br><span class="line">        print(<span class="string">'Starting '</span>, sentiment, <span class="string">' files'</span>)</span><br><span class="line">        </span><br><span class="line">        <span class="comment"># Iterate through the files and send them to the predictor</span></span><br><span class="line">        <span class="keyword">for</span> f <span class="keyword">in</span> files:</span><br><span class="line">            <span class="keyword">with</span> open(f) <span class="keyword">as</span> review:</span><br><span class="line">                <span class="comment"># First, we store the ground truth (was the review positive or negative)</span></span><br><span class="line">                <span class="keyword">if</span> sentiment == <span class="string">'pos'</span>:</span><br><span class="line">                    ground.append(<span class="number">1</span>)</span><br><span class="line">                <span class="keyword">else</span>:</span><br><span class="line">                    ground.append(<span class="number">0</span>)</span><br><span class="line">                <span class="comment"># Read in the review and convert to 'utf-8' for transmission via HTTP</span></span><br><span class="line">                review_input = review.read().encode(<span class="string">'utf-8'</span>)</span><br><span class="line">                <span class="comment"># Send the review to the predictor and store the results</span></span><br><span class="line">                results.append(float(predictor.predict(review_input)))</span><br><span class="line">                </span><br><span class="line">            <span class="comment"># Sending reviews to our endpoint one at a time takes a while so we</span></span><br><span class="line">            <span class="comment"># only send a small number of reviews</span></span><br><span class="line">            files_read += <span class="number">1</span></span><br><span class="line">            <span class="keyword">if</span> files_read == stop:</span><br><span class="line">                <span class="keyword">break</span></span><br><span class="line">            </span><br><span class="line">    <span class="keyword">return</span> ground, results</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">ground, results = test_reviews()</span><br></pre></td></tr></table></figure>
+
+<pre><code>Starting  pos  files
+Starting  neg  files</code></pre><figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> sklearn.metrics <span class="keyword">import</span> accuracy_score</span><br><span class="line">accuracy_score(ground, results)</span><br></pre></td></tr></table></figure>
+
+
+
+
+<pre><code>0.854</code></pre><p>As an additional test, we can try sending the <code>test_review</code> that we looked at earlier.</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">predictor.predict(test_review)</span><br></pre></td></tr></table></figure>
+
+
+
+
+<pre><code>b&apos;1.0&apos;</code></pre><p>Now that we know our endpoint is working as expected, we can set up the web page that will interact with it. If you don’t have time to finish the project now, make sure to skip down to the end of this notebook and shut down your endpoint. You can deploy it again when you come back.</p>
+<h2 id="Step-7-again-Use-the-model-for-the-web-app"><a href="#Step-7-again-Use-the-model-for-the-web-app" class="headerlink" title="Step 7 (again): Use the model for the web app"></a>Step 7 (again): Use the model for the web app</h2><blockquote>
+<p><strong>TODO:</strong> This entire section and the next contain tasks for you to complete, mostly using the AWS console.</p>
+</blockquote>
+<p>So far we have been accessing our model endpoint by constructing a predictor object which uses the endpoint and then just using the predictor object to perform inference. What if we wanted to create a web app which accessed our model? The way things are set up currently makes that not possible since in order to access a SageMaker endpoint the app would first have to authenticate with AWS using an IAM role which included access to SageMaker endpoints. However, there is an easier way! We just need to use some additional AWS services.</p>
+<img src="/2020/02/23/SageMakerProject/Web App Diagram.svg">
+
+<p>The diagram above gives an overview of how the various services will work together. On the far right is the model which we trained above and which is deployed using SageMaker. On the far left is our web app that collects a user’s movie review, sends it off and expects a positive or negative sentiment in return.</p>
+<p>In the middle is where some of the magic happens. We will construct a Lambda function, which you can think of as a straightforward Python function that can be executed whenever a specified event occurs. We will give this function permission to send and recieve data from a SageMaker endpoint.</p>
+<p>Lastly, the method we will use to execute the Lambda function is a new endpoint that we will create using API Gateway. This endpoint will be a url that listens for data to be sent to it. Once it gets some data it will pass that data on to the Lambda function and then return whatever the Lambda function returns. Essentially it will act as an interface that lets our web app communicate with the Lambda function.</p>
+<h3 id="Setting-up-a-Lambda-function"><a href="#Setting-up-a-Lambda-function" class="headerlink" title="Setting up a Lambda function"></a>Setting up a Lambda function</h3><p>The first thing we are going to do is set up a Lambda function. This Lambda function will be executed whenever our public API has data sent to it. When it is executed it will receive the data, perform any sort of processing that is required, send the data (the review) to the SageMaker endpoint we’ve created and then return the result.</p>
+<h4 id="Part-A-Create-an-IAM-Role-for-the-Lambda-function"><a href="#Part-A-Create-an-IAM-Role-for-the-Lambda-function" class="headerlink" title="Part A: Create an IAM Role for the Lambda function"></a>Part A: Create an IAM Role for the Lambda function</h4><p>Since we want the Lambda function to call a SageMaker endpoint, we need to make sure that it has permission to do so. To do this, we will construct a role that we can later give the Lambda function.</p>
+<p>Using the AWS Console, navigate to the <strong>IAM</strong> page and click on <strong>Roles</strong>. Then, click on <strong>Create role</strong>. Make sure that the <strong>AWS service</strong> is the type of trusted entity selected and choose <strong>Lambda</strong> as the service that will use this role, then click <strong>Next: Permissions</strong>.</p>
+<p>In the search box type <code>sagemaker</code> and select the check box next to the <strong>AmazonSageMakerFullAccess</strong> policy. Then, click on <strong>Next: Review</strong>.</p>
+<p>Lastly, give this role a name. Make sure you use a name that you will remember later on, for example <code>LambdaSageMakerRole</code>. Then, click on <strong>Create role</strong>.</p>
+<h4 id="Part-B-Create-a-Lambda-function"><a href="#Part-B-Create-a-Lambda-function" class="headerlink" title="Part B: Create a Lambda function"></a>Part B: Create a Lambda function</h4><p>Now it is time to actually create the Lambda function.</p>
+<p>Using the AWS Console, navigate to the AWS Lambda page and click on <strong>Create a function</strong>. When you get to the next page, make sure that <strong>Author from scratch</strong> is selected. Now, name your Lambda function, using a name that you will remember later on, for example <code>sentiment_analysis_func</code>. Make sure that the <strong>Python 3.6</strong> runtime is selected and then choose the role that you created in the previous part. Then, click on <strong>Create Function</strong>.</p>
+<p>On the next page you will see some information about the Lambda function you’ve just created. If you scroll down you should see an editor in which you can write the code that will be executed when your Lambda function is triggered. In our example, we will use the code below. </p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># We need to use the low-level library to interact with SageMaker since the SageMaker API</span></span><br><span class="line"><span class="comment"># is not available natively through Lambda.</span></span><br><span class="line"><span class="keyword">import</span> boto3</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">lambda_handler</span><span class="params">(event, context)</span>:</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># The SageMaker runtime is what allows us to invoke the endpoint that we've created.</span></span><br><span class="line">    runtime = boto3.Session().client(<span class="string">'sagemaker-runtime'</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># Now we use the SageMaker runtime to invoke our endpoint, sending the review we were given</span></span><br><span class="line">    response = runtime.invoke_endpoint(EndpointName = <span class="string">'**ENDPOINT NAME HERE**'</span>,    <span class="comment"># The name of the endpoint we created</span></span><br><span class="line">                                       ContentType = <span class="string">'text/plain'</span>,                 <span class="comment"># The data format that is expected</span></span><br><span class="line">                                       Body = event[<span class="string">'body'</span>])                       <span class="comment"># The actual review</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># The response is an HTTP response whose body contains the result of our inference</span></span><br><span class="line">    result = response[<span class="string">'Body'</span>].read().decode(<span class="string">'utf-8'</span>)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> &#123;</span><br><span class="line">        <span class="string">'statusCode'</span> : <span class="number">200</span>,</span><br><span class="line">        <span class="string">'headers'</span> : &#123; <span class="string">'Content-Type'</span> : <span class="string">'text/plain'</span>, <span class="string">'Access-Control-Allow-Origin'</span> : <span class="string">'*'</span> &#125;,</span><br><span class="line">        <span class="string">'body'</span> : result</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>Once you have copy and pasted the code above into the Lambda code editor, replace the <code>**ENDPOINT NAME HERE**</code> portion with the name of the endpoint that we deployed earlier. You can determine the name of the endpoint using the code cell below.</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">predictor.endpoint</span><br></pre></td></tr></table></figure>
+
+
+
+
+<pre><code>&apos;sagemaker-pytorch-2020-02-23-11-11-09-175&apos;</code></pre><p>Once you have added the endpoint name to the Lambda function, click on <strong>Save</strong>. Your Lambda function is now up and running. Next we need to create a way for our web app to execute the Lambda function.</p>
+<h3 id="Setting-up-API-Gateway"><a href="#Setting-up-API-Gateway" class="headerlink" title="Setting up API Gateway"></a>Setting up API Gateway</h3><p>Now that our Lambda function is set up, it is time to create a new API using API Gateway that will trigger the Lambda function we have just created.</p>
+<p>Using AWS Console, navigate to <strong>Amazon API Gateway</strong> and then click on <strong>Get started</strong>.</p>
+<p>On the next page, make sure that <strong>New API</strong> is selected and give the new api a name, for example, <code>sentiment_analysis_api</code>. Then, click on <strong>Create API</strong>.</p>
+<p>Now we have created an API, however it doesn’t currently do anything. What we want it to do is to trigger the Lambda function that we created earlier.</p>
+<p>Select the <strong>Actions</strong> dropdown menu and click <strong>Create Method</strong>. A new blank method will be created, select its dropdown menu and select <strong>POST</strong>, then click on the check mark beside it.</p>
+<p>For the integration point, make sure that <strong>Lambda Function</strong> is selected and click on the <strong>Use Lambda Proxy integration</strong>. This option makes sure that the data that is sent to the API is then sent directly to the Lambda function with no processing. It also means that the return value must be a proper response object as it will also not be processed by API Gateway.</p>
+<p>Type the name of the Lambda function you created earlier into the <strong>Lambda Function</strong> text entry box and then click on <strong>Save</strong>. Click on <strong>OK</strong> in the pop-up box that then appears, giving permission to API Gateway to invoke the Lambda function you created.</p>
+<p>The last step in creating the API Gateway is to select the <strong>Actions</strong> dropdown and click on <strong>Deploy API</strong>. You will need to create a new Deployment stage and name it anything you like, for example <code>prod</code>.</p>
+<p>You have now successfully set up a public API to access your SageMaker model. Make sure to copy or write down the URL provided to invoke your newly created public API as this will be needed in the next step. This URL can be found at the top of the page, highlighted in blue next to the text <strong>Invoke URL</strong>.</p>
+<h2 id="Step-4-Deploying-our-web-app"><a href="#Step-4-Deploying-our-web-app" class="headerlink" title="Step 4: Deploying our web app"></a>Step 4: Deploying our web app</h2><p>Now that we have a publicly available API, we can start using it in a web app. For our purposes, we have provided a simple static html file which can make use of the public api you created earlier.</p>
+<p>In the <code>website</code> folder there should be a file called <code>index.html</code>. Download the file to your computer and open that file up in a text editor of your choice. There should be a line which contains <strong>**REPLACE WITH PUBLIC API URL**</strong>. Replace this string with the url that you wrote down in the last step and then save the file.</p>
+<p>Now, if you open <code>index.html</code> on your local computer, your browser will behave as a local web server and you can use the provided site to interact with your SageMaker model.</p>
+<p>If you’d like to go further, you can host this html file anywhere you’d like, for example using github or hosting a static site on Amazon’s S3. Once you have done this you can share the link with anyone you’d like and have them play with it too!</p>
+<blockquote>
+<p><strong>Important Note</strong> In order for the web app to communicate with the SageMaker endpoint, the endpoint has to actually be deployed and running. This means that you are paying for it. Make sure that the endpoint is running when you want to use the web app but that you shut it down when you don’t need it, otherwise you will end up with a surprisingly large AWS bill.</p>
+</blockquote>
+<p><strong>TODO:</strong> Make sure that you include the edited <code>index.html</code> file in your project submission.</p>
+<p>Now that your web app is working, trying playing around with it and see how well it works.</p>
+<p><strong>Question</strong>: Give an example of a review that you entered into your web app. What was the predicted sentiment of your example review?</p>
+<p><strong>Answer:</strong> I tried to use real reviews based on the movie ‘1917’, the performance is good.</p>
+<p><img src="/2020/02/23/SageMakerProject/reviews1.JPG" alt="review"></p>
+<p><img src="/2020/02/23/SageMakerProject/reviews2.JPG" alt="review"></p>
+<h3 id="Delete-the-endpoint-1"><a href="#Delete-the-endpoint-1" class="headerlink" title="Delete the endpoint"></a>Delete the endpoint</h3><p>Remember to always shut down your endpoint if you are no longer using it. You are charged for the length of time that the endpoint is running so if you forget and leave it on you could end up with an unexpectedly large bill.</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">predictor.delete_endpoint()</span><br></pre></td></tr></table></figure>
+
+
+]]></content>
+      <categories>
+        <category>Python学习</category>
+      </categories>
+      <tags>
+        <tag>机器学习</tag>
+        <tag>深度学习</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>第一个python package -- actupac</title>
     <url>/2020/02/20/actupac_package/</url>
     <content><![CDATA[<font size="3">
