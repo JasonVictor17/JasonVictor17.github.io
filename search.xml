@@ -619,7 +619,7 @@ Starting  neg  files</code></pre><figure class="highlight python"><table><tr><td
 
 <a id="more"></a>
 <hr>
-<h2 id="基本介绍"><a href="#基本介绍" class="headerlink" title="基本介绍"></a>基本介绍</h2><p>actupac 是一个精算的python包,目前的功能是内推和外推利率,并且画出利率曲线。</p>
+<h2 id="基本介绍"><a href="#基本介绍" class="headerlink" title="基本介绍"></a>基本介绍</h2><p>actupac 是一个精算的python包,目前的功能是内推和外推利率,并且画出利率曲线。<br>代码地址:<a href="https://github.com/JasonVictor17/actupac" target="_blank" rel="noopener">https://github.com/JasonVictor17/actupac</a></p>
 <h2 id="安装方式"><a href="#安装方式" class="headerlink" title="安装方式"></a>安装方式</h2><figure class="highlight python"><table><tr><td class="code"><pre><span class="line">pip install actupac</span><br></pre></td></tr></table></figure>
 
 <pre><code>Collecting actupac
