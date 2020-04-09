@@ -1,7 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>Image Classifier with Deep learning</title>
+    <title>Classifying Chest X-ray Images with Deep Learning By Using Sagemaker (Report)</title>
+    <url>/2020/04/09/Pneumonia_detect_report/</url>
+    <content><![CDATA[<p>Deep learning is one of the family members of the machine learning based on artificial neural networks.  With the neural networks, images can be classified well.In medical image science deep learning can be used to classify the X-ray images.In this project Chest X-rays are used to classify whether Pneumonia exists.  With the model that can classify whether the patient has Pneumonia, doctors can reducetime to read X-ray images.  The model will give the possibility of the existence of Pneumonia, which can be used as a auxiliary diagnosis.</p>
+<a id="more"></a>
+
+
+
+<div class="pdf" target="./Udacity_final_project.pdf" height></div>
+]]></content>
+      <categories>
+        <category>Python学习</category>
+      </categories>
+      <tags>
+        <tag>机器学习</tag>
+        <tag>深度学习</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Classifying Chest X-ray Images with Deep Learning By Using Sagemaker (Notebook)</title>
     <url>/2020/04/09/Pneumonia_detect/</url>
     <content><![CDATA[<p>Deep learning is one of the family members of the machine learning based on artificial neural networks.  With the neural networks, images can be classified well.In medical image science deep learning can be used to classify the X-ray images.In this project Chest X-rays are used to classify whether Pneumonia exists.  With the model that can classify whether the patient has Pneumonia, doctors can reducetime to read X-ray images.  The model will give the possibility of the existence of Pneumonia, which can be used as a auxiliary diagnosis.</p>
 <a id="more"></a>
