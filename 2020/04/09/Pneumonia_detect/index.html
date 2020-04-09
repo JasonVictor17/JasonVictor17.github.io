@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/mouse32.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/mouse16.ico">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('http://yoursite.com').hostname,
+    root: '/',
+    scheme: 'Muse',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="Deep learning is one of the family members of the machine learning based on artificial neural networks.  With the neural networks, images can be classified well.In medical image science deep learning">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Image Classifier with Deep learning">
+<meta property="og:url" content="http://yoursite.com/2020/04/09/Pneumonia_detect/index.html">
+<meta property="og:site_name" content="Jingde&#39;s Blog">
+<meta property="og:description" content="Deep learning is one of the family members of the machine learning based on artificial neural networks.  With the neural networks, images can be classified well.In medical image science deep learning">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://yoursite.com/2020/04/09/Pneumonia_detect/output_14_1.png">
+<meta property="og:image" content="http://yoursite.com/2020/04/09/Pneumonia_detect/output_15_0.png">
+<meta property="og:image" content="http://yoursite.com/2020/04/09/Pneumonia_detect/output_46_0.png">
+<meta property="og:image" content="http://yoursite.com/2020/04/09/Pneumonia_detect/output_49_0.png">
+<meta property="og:image" content="http://yoursite.com/2020/04/09/Pneumonia_detect/output_52_0.png">
+<meta property="og:image" content="http://yoursite.com/2020/04/09/Pneumonia_detect/output_54_0.png">
+<meta property="article:published_time" content="2020-04-09T00:50:00.000Z">
+<meta property="article:modified_time" content="2020-04-09T00:53:16.517Z">
+<meta property="article:author" content="Jason">
+<meta property="article:tag" content="机器学习">
+<meta property="article:tag" content="深度学习">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://yoursite.com/2020/04/09/Pneumonia_detect/output_14_1.png">
+
+<link rel="canonical" href="http://yoursite.com/2020/04/09/Pneumonia_detect/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>Image Classifier with Deep learning | Jingde's Blog</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?<061f7a05407b07f04642d8ffecfff900>";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Jingde's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/04/09/Pneumonia_detect/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Jason">
+      <meta itemprop="description" content="A free place">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Jingde's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Image Classifier with Deep learning
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2020-04-09 08:50:00 / 修改时间：08:53:16" itemprop="dateCreated datePublished" datetime="2020-04-09T08:50:00+08:00">2020-04-09</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Python%E5%AD%A6%E4%B9%A0/" itemprop="url" rel="index">
+                    <span itemprop="name">Python学习</span>
+                  </a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>Deep learning is one of the family members of the machine learning based on artificial neural networks.  With the neural networks, images can be classified well.In medical image science deep learning can be used to classify the X-ray images.In this project Chest X-rays are used to classify whether Pneumonia exists.  With the model that can classify whether the patient has Pneumonia, doctors can reducetime to read X-ray images.  The model will give the possibility of the existence of Pneumonia, which can be used as a auxiliary diagnosis.</p>
+<a id="more"></a>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt</span><br><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"><span class="keyword">from</span> torchvision <span class="keyword">import</span> datasets,transforms, models</span><br><span class="line"><span class="keyword">from</span> collections <span class="keyword">import</span> OrderedDict</span><br><span class="line"><span class="keyword">import</span> json</span><br><span class="line"><span class="keyword">import</span> shutil</span><br><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"><span class="keyword">import</span> pandas <span class="keyword">as</span> pd</span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line"><span class="keyword">from</span> torch <span class="keyword">import</span> nn</span><br><span class="line"><span class="keyword">from</span> torch <span class="keyword">import</span> optim</span><br><span class="line"><span class="keyword">import</span> seaborn <span class="keyword">as</span> sns</span><br><span class="line"><span class="keyword">from</span> PIL <span class="keyword">import</span> Image</span><br><span class="line"><span class="keyword">from</span> tqdm <span class="keyword">import</span> tqdm</span><br><span class="line"><span class="keyword">import</span> glob</span><br><span class="line"><span class="keyword">import</span> boto3</span><br><span class="line"><span class="keyword">import</span> sagemaker</span><br><span class="line"><span class="keyword">from</span> sagemaker.amazon.amazon_estimator <span class="keyword">import</span> get_image_uri</span><br><span class="line"><span class="keyword">import</span> os</span><br></pre></td></tr></table></figure>
+
+<h3 id="Introduction"><a href="#Introduction" class="headerlink" title="Introduction"></a>Introduction</h3><p>Deep learning is one of the family members of the machine learning based on artificial neural networks.  With the neural networks, images can be classified well.In medical image science deep learning can be used to classify the X-ray images.In this project Chest X-rays are used to classify whether Pneumonia exists.  With the model that can classify whether the patient has Pneumonia, doctors can reducetime to read X-ray images.  The model will give the possibility of the existence of Pneumonia, which can be used as a auxiliary diagnosis.</p>
+<p>The problem is to create a model that can classify the chest x-ray image in termsof whether Pneumonia exists.  A deep learning method will be used, and AmazonSageMaker will be utilized.  A high level method for SageMaker training will bedeployed in building the model</p>
+<p>The dataset is retrieved from Kaggle: <a href="https://www.kaggle.com/paultimothymooney/chest-xray-pneumonia" target="_blank" rel="noopener">https://www.kaggle.com/paultimothymooney/chest-xray-pneumonia</a>.</p>
+<p>The dataset is organized into 3 folders (train, test, val) and contains subfolders foreach image category (0/1). 0 represents Normal and 1 represents Pneumonia. Thereare 5,863 X-Ray images (JPEG).</p>
+<p>The benchmark model can be found in Kaggle. The best model in Kaggle Kernelsright now has recall ratio 0.98 and precision ratio 0.79. My goal is to get the similarresult based on the same test dataset.</p>
+<p>Accuracy ratio, recall ratio and precision ratio can be used to evaluate the modelperformance.  In this case recall ratio should be focused on since the number ofFalse Negatives should be as low as possible but accuracy ratio should also be considered. Thus the trade off between recall and precision ratio will be considered.</p>
+<h3 id="1-Explore-the-dataset-and-data-preprocessing"><a href="#1-Explore-the-dataset-and-data-preprocessing" class="headerlink" title="1. Explore the dataset and data preprocessing"></a>1. Explore the dataset and data preprocessing</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Load the data</span></span><br><span class="line">data_dir = <span class="string">'chest_xray'</span></span><br><span class="line">train_dir = data_dir + <span class="string">'/train'</span></span><br><span class="line">valid_dir = data_dir + <span class="string">'/valid'</span></span><br><span class="line">test_dir = data_dir + <span class="string">'/test'</span></span><br></pre></td></tr></table></figure>
+
+<p>First we should get the list of the picture names and label the pictures</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># File route</span></span><br><span class="line">train_normal = train_dir + <span class="string">'/0'</span></span><br><span class="line">train_pneumonia = train_dir + <span class="string">'/1'</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Get the list of all the images</span></span><br><span class="line">train_normal_list = glob.glob(train_normal + <span class="string">'/*.jpeg'</span>)</span><br><span class="line">train_pneumonia_list = glob.glob(train_pneumonia + <span class="string">'/*.jpeg'</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># label the train data</span></span><br><span class="line">df1 = pd.DataFrame(train_normal_list)</span><br><span class="line">df1[<span class="string">'pneumonia'</span>] = np.zeros(len(df1))</span><br><span class="line">df2 = pd.DataFrame(train_pneumonia_list)</span><br><span class="line">df2[<span class="string">'pneumonia'</span>] = np.ones(len(df2))</span><br><span class="line">df_train = df1.append(df2).reset_index(drop = <span class="literal">True</span>)</span><br><span class="line">df_train.columns = (<span class="string">'Pic'</span>,<span class="string">'pneumonia'</span>)</span><br><span class="line">df_train = df_train.sample(frac=<span class="number">1</span>, random_state=<span class="number">2020</span>).reset_index(drop=<span class="literal">True</span>) <span class="comment"># shuffle the dataset</span></span><br><span class="line">df_train.head()</span><br></pre></td></tr></table></figure>
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+<pre><code>.dataframe tbody tr th {
+    vertical-align: top;
+}
+
+.dataframe thead th {
+    text-align: right;
+}</code></pre><p></style><p></p>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Pic</th>
+      <th>pneumonia</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>chest_xray/train/1/person1079_bacteria_3019.jpeg</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>chest_xray/train/1/person586_bacteria_2420.jpeg</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>chest_xray/train/0/NORMAL2-IM-1008-0001.jpeg</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>chest_xray/train/1/person1604_virus_2782.jpeg</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>chest_xray/train/1/person28_bacteria_143.jpeg</td>
+      <td>1.0</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Do the same thing to the validation and the test dataset</span></span><br><span class="line"><span class="comment"># File route</span></span><br><span class="line">valid_normal = valid_dir + <span class="string">'/0'</span></span><br><span class="line">valid_pneumonia = valid_dir + <span class="string">'/1'</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Get the list of all the images</span></span><br><span class="line">valid_normal_list = glob.glob(valid_normal + <span class="string">'/*.jpeg'</span>)</span><br><span class="line">valid_pneumonia_list = glob.glob(valid_pneumonia + <span class="string">'/*.jpeg'</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># label the train data</span></span><br><span class="line">df1 = pd.DataFrame(valid_normal_list)</span><br><span class="line">df1[<span class="string">'pneumonia'</span>] = np.zeros(len(df1))</span><br><span class="line">df2 = pd.DataFrame(valid_pneumonia_list)</span><br><span class="line">df2[<span class="string">'pneumonia'</span>] = np.ones(len(df2))</span><br><span class="line">df_valid = df1.append(df2).reset_index(drop = <span class="literal">True</span>)</span><br><span class="line">df_valid.columns = (<span class="string">'Pic'</span>,<span class="string">'pneumonia'</span>)</span><br><span class="line">df_valid = df_valid.sample(frac=<span class="number">1</span>, random_state=<span class="number">20</span>).reset_index(drop=<span class="literal">True</span>) <span class="comment"># shuffle the dataset</span></span><br><span class="line">df_valid.head()</span><br></pre></td></tr></table></figure>
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+<pre><code>.dataframe tbody tr th {
+    vertical-align: top;
+}
+
+.dataframe thead th {
+    text-align: right;
+}</code></pre><p></style><p></p>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Pic</th>
+      <th>pneumonia</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>chest_xray/valid/0/IM-0129-0001.jpeg</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>chest_xray/valid/0/IM-0156-0001.jpeg</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>chest_xray/valid/0/IM-0127-0001.jpeg</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>chest_xray/valid/1/person124_virus_238.jpeg</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>chest_xray/valid/1/person122_virus_229.jpeg</td>
+      <td>1.0</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># File route</span></span><br><span class="line">test_normal = test_dir + <span class="string">'/0'</span></span><br><span class="line">test_pneumonia = test_dir + <span class="string">'/1'</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Get the list of all the images</span></span><br><span class="line">test_normal_list = glob.glob(test_normal + <span class="string">'/*.jpeg'</span>)</span><br><span class="line">test_pneumonia_list = glob.glob(test_pneumonia + <span class="string">'/*.jpeg'</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># label the train data</span></span><br><span class="line">df1 = pd.DataFrame(test_normal_list)</span><br><span class="line">df1[<span class="string">'pneumonia'</span>] = np.zeros(len(df1))</span><br><span class="line">df2 = pd.DataFrame(test_pneumonia_list)</span><br><span class="line">df2[<span class="string">'pneumonia'</span>] = np.ones(len(df2))</span><br><span class="line">df_test = df1.append(df2).reset_index(drop = <span class="literal">True</span>)</span><br><span class="line">df_test.columns = (<span class="string">'Pic'</span>,<span class="string">'pneumonia'</span>)</span><br><span class="line">df_test = df_test.sample(frac=<span class="number">1</span>, random_state=<span class="number">20</span>).reset_index(drop=<span class="literal">True</span>) <span class="comment"># shuffle the dataset</span></span><br><span class="line">df_test.head()</span><br></pre></td></tr></table></figure>
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+<pre><code>.dataframe tbody tr th {
+    vertical-align: top;
+}
+
+.dataframe thead th {
+    text-align: right;
+}</code></pre><p></style><p></p>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Pic</th>
+      <th>pneumonia</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>chest_xray/test/1/person103_bacteria_489.jpeg</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>chest_xray/test/0/NORMAL2-IM-0030-0001.jpeg</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>chest_xray/test/1/person83_bacteria_412.jpeg</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>chest_xray/test/1/person57_virus_113.jpeg</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>chest_xray/test/0/IM-0017-0001.jpeg</td>
+      <td>0.0</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Then we can see the distribution of our train dataset</span></span><br><span class="line">counts = df_train.pneumonia.value_counts()</span><br><span class="line">sns.barplot(x=counts.index, y= counts.values)</span><br><span class="line">plt.title(<span class="string">'The distribution of the dataset'</span>)</span><br><span class="line">plt.xlabel(<span class="string">'Pneumonia or not'</span>) </span><br><span class="line">plt.ylabel(<span class="string">'Counts'</span>) </span><br><span class="line">plt.text(<span class="number">0</span>,counts.values[<span class="number">1</span>], <span class="string">'%.0f'</span> % counts.values[<span class="number">1</span>], ha=<span class="string">'center'</span>, va= <span class="string">'bottom'</span>,fontsize=<span class="number">11</span>)  </span><br><span class="line">plt.text(<span class="number">1</span>,counts.values[<span class="number">0</span>], <span class="string">'%.0f'</span> % counts.values[<span class="number">0</span>], ha=<span class="string">'center'</span>, va= <span class="string">'bottom'</span>,fontsize=<span class="number">11</span>)</span><br></pre></td></tr></table></figure>
+
+
+
+
+<pre><code>Text(1, 3861, &apos;3861&apos;)</code></pre><p><img src="/2020/04/09/Pneumonia_detect/output_14_1.png" alt="png"></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># It is also a good idea to look some examples of the X-ray pictures.</span></span><br><span class="line"></span><br><span class="line">pic_list = df_train[df_train[<span class="string">'pneumonia'</span>]==<span class="number">0</span>].head()[<span class="string">'Pic'</span>]</span><br><span class="line">pic_list = pic_list.append(df_train[df_train[<span class="string">'pneumonia'</span>]==<span class="number">1</span>].head()[<span class="string">'Pic'</span>])</span><br><span class="line">pic_list = pic_list.reset_index(drop=<span class="literal">True</span>)</span><br><span class="line"></span><br><span class="line">fig, ax = plt.subplots(<span class="number">2</span>,<span class="number">5</span>, figsize=(<span class="number">60</span>,<span class="number">20</span>))</span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> range(<span class="number">1</span>,<span class="number">11</span>):</span><br><span class="line">    img = Image.open(pic_list[i<span class="number">-1</span>])</span><br><span class="line">    <span class="keyword">if</span> i &lt;= <span class="number">5</span>:</span><br><span class="line">        ax[<span class="number">0</span>,i<span class="number">-1</span>].imshow(img, cmap=<span class="string">'gray'</span>)</span><br><span class="line">        ax[<span class="number">0</span>,i<span class="number">-1</span>].set_title(<span class="string">'Normal'</span>,fontsize=<span class="number">40</span>)</span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        ax[<span class="number">1</span>,i<span class="number">-6</span>].imshow(img, cmap=<span class="string">'gray'</span>)</span><br><span class="line">        ax[<span class="number">1</span>,i<span class="number">-6</span>].set_title(<span class="string">'Pneumonia'</span>,fontsize=<span class="number">40</span>)</span><br><span class="line">    plt.xticks([])</span><br><span class="line">    plt.yticks([])</span><br><span class="line">fig.suptitle(<span class="string">'Example of X-ray pictures'</span>, fontsize=<span class="number">80</span>)</span><br><span class="line">plt.show()</span><br></pre></td></tr></table></figure>
+
+
+<p><img src="/2020/04/09/Pneumonia_detect/output_15_0.png" alt="png"></p>
+<p>Next we should preprocessing our dataset in order to fit the requirements of the model. In this case, we should create dictionaries such that each file name corresponds to the correct label.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># create annotations for train </span></span><br><span class="line">train_annotations = []</span><br><span class="line"><span class="keyword">for</span> each <span class="keyword">in</span> df_train[<span class="string">'Pic'</span>]:</span><br><span class="line">    each = each.strip(<span class="string">'chest_xray/train/1/'</span>)</span><br><span class="line">    each = each.strip(<span class="string">'chest_xray/train/0/'</span>)</span><br><span class="line">    train_annotations.append(each)</span><br><span class="line">train_annotations = pd.DataFrame([train_annotations,df_train[<span class="string">'pneumonia'</span>]]).T</span><br><span class="line">train_annotations = dict(train_annotations.values.tolist())</span><br><span class="line">len(train_annotations)</span><br></pre></td></tr></table></figure>
+
+
+
+
+<pre><code>5186</code></pre><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># create annotations for validation</span></span><br><span class="line">valid_annotations = []</span><br><span class="line"><span class="keyword">for</span> each <span class="keyword">in</span> df_valid[<span class="string">'Pic'</span>]:</span><br><span class="line">    each = each.strip(<span class="string">'chest_xray/valid/1/'</span>)</span><br><span class="line">    each = each.strip(<span class="string">'chest_xray/valid/0/'</span>)</span><br><span class="line">    valid_annotations.append(each)</span><br><span class="line">valid_annotations = pd.DataFrame([valid_annotations,df_valid[<span class="string">'pneumonia'</span>]]).T</span><br><span class="line">valid_annotations = dict(valid_annotations.values.tolist())</span><br><span class="line">len(valid_annotations)</span><br></pre></td></tr></table></figure>
+
+
+
+
+<pre><code>46</code></pre><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">all_annotations = &#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> key, value <span class="keyword">in</span> train_annotations.items():</span><br><span class="line">    all_annotations[key] = value</span><br><span class="line"><span class="keyword">for</span> key, value <span class="keyword">in</span> valid_annotations.items():</span><br><span class="line">    all_annotations[key] = value</span><br><span class="line">len(all_annotations)</span><br></pre></td></tr></table></figure>
+
+
+
+
+<pre><code>5232</code></pre><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">classes = list(all_annotations.values())</span><br><span class="line"></span><br><span class="line">classes = list(set(classes))</span><br><span class="line"></span><br><span class="line">print(classes)</span><br><span class="line">print(<span class="string">'\nNum of classes:'</span>, len(classes))</span><br></pre></td></tr></table></figure>
+
+<pre><code>[0.0, 1.0]
+
+Num of classes: 2</code></pre><p>We have 5232 training images and 46 validation images with two classes.</p>
+<h3 id="2-Upload-the-training-data-to-S3"><a href="#2-Upload-the-training-data-to-S3" class="headerlink" title="2. Upload the training data to S3"></a>2. Upload the training data to S3</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># session and role</span></span><br><span class="line">sess = sagemaker.Session()</span><br><span class="line">role = sagemaker.get_execution_role()</span><br><span class="line">bucket = sess.default_bucket()</span><br><span class="line">container = get_image_uri(boto3.Session().region_name, <span class="string">'image-classification'</span>)</span><br><span class="line">print(container)</span><br></pre></td></tr></table></figure>
+
+<pre><code>825641698319.dkr.ecr.us-east-2.amazonaws.com/image-classification:1</code></pre><p>Then we should prepare the dataset in specific folders so that these data can be uploaded to S3</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">folders = [<span class="string">'train'</span>, <span class="string">'train_lst'</span>, <span class="string">'validation'</span>, <span class="string">'validation_lst'</span>]</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> folder <span class="keyword">in</span> folders:</span><br><span class="line">    <span class="keyword">if</span> os.path.isdir(folder):</span><br><span class="line">        shutil.rmtree(folder)</span><br><span class="line">    os.mkdir(folder)</span><br></pre></td></tr></table></figure>
+
+<p>After four folders are created we should transfer data in each folder and create annotation files with .lst</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> re </span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">prepare_data_train</span><span class="params">(annotations, key=<span class="string">'train'</span>)</span>:</span></span><br><span class="line">    images = list(annotations.keys())</span><br><span class="line">    f = open(os.path.join(key + <span class="string">'_lst'</span>, key + <span class="string">'.lst'</span>), <span class="string">'w'</span>)</span><br><span class="line">    <span class="keyword">with</span> tqdm(total=len(images)) <span class="keyword">as</span> pbar:</span><br><span class="line">        <span class="keyword">for</span> i, image <span class="keyword">in</span> enumerate(images):</span><br><span class="line">            match = re.match(<span class="string">r'person'</span>, image)</span><br><span class="line">            <span class="keyword">if</span> match:</span><br><span class="line">                shutil.copy(os.path.join(<span class="string">'chest_xray/train/1/'</span>, image), os.path.join(key, image))</span><br><span class="line">            <span class="keyword">else</span>:</span><br><span class="line">                shutil.copy(os.path.join(<span class="string">'chest_xray/train/0/'</span>, image), os.path.join(key, image))</span><br><span class="line">            class_id = classes.index(annotations[image])</span><br><span class="line">            f.write(<span class="string">'&#123;&#125;\t&#123;&#125;\t&#123;&#125;\n'</span>.format(i, class_id, image))</span><br><span class="line">            pbar.update(<span class="number">1</span>)</span><br><span class="line">    f.close()</span><br><span class="line">    </span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">prepare_data_valid</span><span class="params">(annotations, key=<span class="string">'validation'</span>)</span>:</span></span><br><span class="line">    images = list(annotations.keys())</span><br><span class="line">    f = open(os.path.join(key + <span class="string">'_lst'</span>, key + <span class="string">'.lst'</span>), <span class="string">'w'</span>)</span><br><span class="line">    <span class="keyword">with</span> tqdm(total=len(images)) <span class="keyword">as</span> pbar:</span><br><span class="line">        <span class="keyword">for</span> i, image <span class="keyword">in</span> enumerate(images):</span><br><span class="line">            match = re.match(<span class="string">r'person'</span>, image)</span><br><span class="line">            <span class="keyword">if</span> match:</span><br><span class="line">                shutil.copy(os.path.join(<span class="string">'chest_xray/valid/1/'</span>, image), os.path.join(key, image))</span><br><span class="line">            <span class="keyword">else</span>:</span><br><span class="line">                shutil.copy(os.path.join(<span class="string">'chest_xray/valid/0/'</span>, image), os.path.join(key, image))</span><br><span class="line">            class_id = classes.index(annotations[image])</span><br><span class="line">            f.write(<span class="string">'&#123;&#125;\t&#123;&#125;\t&#123;&#125;\n'</span>.format(i, class_id, image))</span><br><span class="line">            pbar.update(<span class="number">1</span>)</span><br><span class="line">    f.close()</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">prepare_data_train(train_annotations, <span class="string">'train'</span>)</span><br></pre></td></tr></table></figure>
+
+<pre><code>100%|██████████| 5186/5186 [03:01&lt;00:00, 28.63it/s] </code></pre><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">prepare_data_valid(valid_annotations, <span class="string">'validation'</span>)</span><br></pre></td></tr></table></figure>
+
+<pre><code>100%|██████████| 46/46 [00:02&lt;00:00, 22.23it/s]</code></pre><p>Finally we can upload our prepared files to the S3.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">%%time</span><br><span class="line"></span><br><span class="line">s3_train_path = sess.upload_data(path=<span class="string">'train'</span>,bucket=bucket, key_prefix=<span class="string">'train'</span>)</span><br><span class="line">print(<span class="string">'Training images uploaded'</span>)</span><br><span class="line">s3_train_lst_path = sess.upload_data(path=<span class="string">'train_lst'</span>,bucket=bucket, key_prefix=<span class="string">'train_lst'</span>)</span><br><span class="line">print(<span class="string">'Training list uploaded'</span>)</span><br><span class="line">s3_validation_path = sess.upload_data(path=<span class="string">'validation'</span>,bucket=bucket, key_prefix=<span class="string">'validation'</span>)</span><br><span class="line">print(<span class="string">'validation images uploaded'</span>)</span><br><span class="line">s3_validation_lst_path = sess.upload_data(path=<span class="string">'validation_lst'</span>,bucket=bucket, key_prefix=<span class="string">'validation_lst'</span>)</span><br><span class="line">print(<span class="string">'Validation list uploaded'</span>)</span><br></pre></td></tr></table></figure>
+
+<pre><code>Training images uploaded
+Training list uploaded
+validation images uploaded
+Validation list uploaded
+CPU times: user 36.4 s, sys: 3.31 s, total: 39.7 s
+Wall time: 5min 10s</code></pre><h3 id="SageMaker-Estimator"><a href="#SageMaker-Estimator" class="headerlink" title="SageMaker Estimator"></a>SageMaker Estimator</h3><p>Then we should set up our model with parameters and hyperparameters.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">prefix = <span class="string">'output'</span></span><br><span class="line">output_path = <span class="string">'s3://&#123;&#125;/&#123;&#125;'</span>.format(bucket, prefix)</span><br><span class="line">model = sagemaker.estimator.Estimator(</span><br><span class="line">    container,</span><br><span class="line">    role=role,</span><br><span class="line">    train_instance_count=<span class="number">1</span>,</span><br><span class="line">    train_instance_type=<span class="string">'ml.p2.xlarge'</span>,</span><br><span class="line">    train_max_run=<span class="number">36000</span>,</span><br><span class="line">    input_mode=<span class="string">'File'</span>,</span><br><span class="line">    output_path=output_path,</span><br><span class="line">    sagemaker_session=sess</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Hyperparameters</span></span><br><span class="line">model.set_hyperparameters(</span><br><span class="line">    num_layers=<span class="number">18</span>,</span><br><span class="line">    use_pretrained_model=<span class="number">1</span>,</span><br><span class="line">    image_shape=<span class="string">'3,224,224'</span>,</span><br><span class="line">    num_classes=<span class="number">2</span>,</span><br><span class="line">    mini_batch_size=<span class="number">32</span>,</span><br><span class="line">    resize=<span class="number">224</span>,</span><br><span class="line">    epochs=<span class="number">10</span>,</span><br><span class="line">    learning_rate=<span class="number">0.001</span>,</span><br><span class="line">    num_training_samples=<span class="number">5186</span>,</span><br><span class="line">    augmentation_type=<span class="string">'crop_color_transform'</span></span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Data channels</span></span><br><span class="line">train_data = sagemaker.session.s3_input(s3_train_path, distribution=<span class="string">'FullyReplicated'</span>,</span><br><span class="line">                                       content_type=<span class="string">'application/x-image'</span>,s3_data_type=<span class="string">'S3Prefix'</span>)</span><br><span class="line">validation_data = sagemaker.session.s3_input(s3_validation_path, distribution=<span class="string">'FullyReplicated'</span>,</span><br><span class="line">                                       content_type=<span class="string">'application/x-image'</span>,s3_data_type=<span class="string">'S3Prefix'</span>)</span><br><span class="line">train_lst_data = sagemaker.session.s3_input(s3_train_lst_path, distribution=<span class="string">'FullyReplicated'</span>,</span><br><span class="line">                                       content_type=<span class="string">'application/x-image'</span>,s3_data_type=<span class="string">'S3Prefix'</span>)</span><br><span class="line">validation_lst_data = sagemaker.session.s3_input(s3_validation_lst_path, distribution=<span class="string">'FullyReplicated'</span>,</span><br><span class="line">                                       content_type=<span class="string">'application/x-image'</span>,s3_data_type=<span class="string">'S3Prefix'</span>)</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">data_channels = &#123;</span><br><span class="line">    <span class="string">'train'</span>: train_data,</span><br><span class="line">    <span class="string">'train_lst'</span>: train_lst_data,</span><br><span class="line">    <span class="string">'validation'</span>: validation_data,</span><br><span class="line">    <span class="string">'validation_lst'</span>: validation_lst_data</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Model-training"><a href="#Model-training" class="headerlink" title="Model training"></a>Model training</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">model.fit(inputs=data_channels,logs=<span class="literal">True</span>)</span><br></pre></td></tr></table></figure>
+
+<pre><code>2020-03-19 21:39:31 Starting - Starting the training job...
+2020-03-19 21:39:32 Starting - Launching requested ML instances...
+2020-03-19 21:40:27 Starting - Preparing the instances for training...............
+2020-03-19 21:42:38 Downloading - Downloading input data......
+2020-03-19 21:43:52 Training - Downloading the training image..[34mDocker entrypoint called with argument(s): train[0m
+[34m[03/19/2020 21:44:16 INFO 139731408856896] Reading default configuration from /opt/amazon/lib/python2.7/site-packages/image_classification/default-input.json: {u&apos;beta_1&apos;: 0.9, u&apos;gamma&apos;: 0.9, u&apos;beta_2&apos;: 0.999, u&apos;optimizer&apos;: u&apos;sgd&apos;, u&apos;use_pretrained_model&apos;: 0, u&apos;eps&apos;: 1e-08, u&apos;epochs&apos;: 30, u&apos;lr_scheduler_factor&apos;: 0.1, u&apos;num_layers&apos;: 152, u&apos;image_shape&apos;: u&apos;3,224,224&apos;, u&apos;precision_dtype&apos;: u&apos;float32&apos;, u&apos;mini_batch_size&apos;: 32, u&apos;weight_decay&apos;: 0.0001, u&apos;learning_rate&apos;: 0.1, u&apos;momentum&apos;: 0}[0m
+[34m[03/19/2020 21:44:16 INFO 139731408856896] Merging with provided configuration from /opt/ml/input/config/hyperparameters.json: {u&apos;learning_rate&apos;: u&apos;0.001&apos;, u&apos;epochs&apos;: u&apos;10&apos;, u&apos;use_pretrained_model&apos;: u&apos;1&apos;, u&apos;augmentation_type&apos;: u&apos;crop_color_transform&apos;, u&apos;num_classes&apos;: u&apos;2&apos;, u&apos;num_layers&apos;: u&apos;18&apos;, u&apos;mini_batch_size&apos;: u&apos;32&apos;, u&apos;image_shape&apos;: u&apos;3,224,224&apos;, u&apos;resize&apos;: u&apos;224&apos;, u&apos;num_training_samples&apos;: u&apos;5186&apos;}[0m
+[34m[03/19/2020 21:44:16 INFO 139731408856896] Final configuration: {u&apos;optimizer&apos;: u&apos;sgd&apos;, u&apos;learning_rate&apos;: u&apos;0.001&apos;, u&apos;epochs&apos;: u&apos;10&apos;, u&apos;resize&apos;: u&apos;224&apos;, u&apos;lr_scheduler_factor&apos;: 0.1, u&apos;num_layers&apos;: u&apos;18&apos;, u&apos;num_classes&apos;: u&apos;2&apos;, u&apos;precision_dtype&apos;: u&apos;float32&apos;, u&apos;mini_batch_size&apos;: u&apos;32&apos;, u&apos;augmentation_type&apos;: u&apos;crop_color_transform&apos;, u&apos;beta_1&apos;: 0.9, u&apos;beta_2&apos;: 0.999, u&apos;use_pretrained_model&apos;: u&apos;1&apos;, u&apos;eps&apos;: 1e-08, u&apos;weight_decay&apos;: 0.0001, u&apos;momentum&apos;: 0, u&apos;image_shape&apos;: u&apos;3,224,224&apos;, u&apos;gamma&apos;: 0.9, u&apos;num_training_samples&apos;: u&apos;5186&apos;}[0m
+[34m[03/19/2020 21:44:16 INFO 139731408856896] Searching for .lst files in /opt/ml/input/data/train_lst.[0m
+[34m[03/19/2020 21:44:16 INFO 139731408856896] Creating record files for train.lst[0m
+
+2020-03-19 21:44:13 Training - Training image download completed. Training in progress.[34m[03/19/2020 21:45:18 INFO 139731408856896] Done creating record files...[0m
+[34m[03/19/2020 21:45:18 INFO 139731408856896] Searching for .lst files in /opt/ml/input/data/validation_lst.[0m
+[34m[03/19/2020 21:45:18 INFO 139731408856896] Creating record files for validation.lst[0m
+[34m[03/19/2020 21:45:18 INFO 139731408856896] Done creating record files...[0m
+[34m[03/19/2020 21:45:18 INFO 139731408856896] use_pretrained_model: 1[0m
+[34m[03/19/2020 21:45:18 INFO 139731408856896] multi_label: 0[0m
+[34m[03/19/2020 21:45:18 INFO 139731408856896] Using pretrained model for initializing weights and transfer learning.[0m
+[34m[03/19/2020 21:45:18 INFO 139731408856896] ---- Parameters ----[0m
+[34m[03/19/2020 21:45:18 INFO 139731408856896] num_layers: 18[0m
+[34m[03/19/2020 21:45:18 INFO 139731408856896] data type: &lt;type &apos;numpy.float32&apos;&gt;[0m
+[34m[03/19/2020 21:45:18 INFO 139731408856896] epochs: 10[0m
+[34m[03/19/2020 21:45:18 INFO 139731408856896] image resize size: 224[0m
+[34m[03/19/2020 21:45:18 INFO 139731408856896] optimizer: sgd[0m
+[34m[03/19/2020 21:45:18 INFO 139731408856896] momentum: 0.9[0m
+[34m[03/19/2020 21:45:18 INFO 139731408856896] weight_decay: 0.0001[0m
+[34m[03/19/2020 21:45:18 INFO 139731408856896] learning_rate: 0.001[0m
+[34m[03/19/2020 21:45:18 INFO 139731408856896] num_training_samples: 5186[0m
+[34m[03/19/2020 21:45:18 INFO 139731408856896] mini_batch_size: 32[0m
+[34m[03/19/2020 21:45:18 INFO 139731408856896] image_shape: 3,224,224[0m
+[34m[03/19/2020 21:45:18 INFO 139731408856896] num_classes: 2[0m
+[34m[03/19/2020 21:45:18 INFO 139731408856896] augmentation_type: crop_color_transform[0m
+[34m[03/19/2020 21:45:18 INFO 139731408856896] kv_store: device[0m
+[34m[03/19/2020 21:45:18 INFO 139731408856896] checkpoint_frequency not set, will store the best model[0m
+[34m[03/19/2020 21:45:18 INFO 139731408856896] --------------------[0m
+[34m[21:45:18] /opt/brazil-pkg-cache/packages/AIAlgorithmsMXNet/AIAlgorithmsMXNet-1.3.x_ecl_Cuda_10.1.x.2564.0/AL2012/generic-flavor/src/src/nnvm/legacy_json_util.cc:209: Loading symbol saved by previous version v0.8.0. Attempting to upgrade...[0m
+[34m[21:45:18] /opt/brazil-pkg-cache/packages/AIAlgorithmsMXNet/AIAlgorithmsMXNet-1.3.x_ecl_Cuda_10.1.x.2564.0/AL2012/generic-flavor/src/src/nnvm/legacy_json_util.cc:217: Symbol successfully upgraded![0m
+[34m[03/19/2020 21:45:19 INFO 139731408856896] Setting number of threads: 3[0m
+[34m[21:45:27] /opt/brazil-pkg-cache/packages/AIAlgorithmsMXNet/AIAlgorithmsMXNet-1.3.x_ecl_Cuda_10.1.x.2564.0/AL2012/generic-flavor/src/src/operator/nn/./cudnn/./cudnn_algoreg-inl.h:97: Running performance tests to find the best convolution algorithm, this can take a while... (setting env variable MXNET_CUDNN_AUTOTUNE_DEFAULT to 0 to disable)[0m
+[34m[03/19/2020 21:45:33 INFO 139731408856896] Epoch[0] Batch [20]#011Speed: 87.326 samples/sec#011accuracy=0.787202[0m
+[34m[03/19/2020 21:45:37 INFO 139731408856896] Epoch[0] Batch [40]#011Speed: 113.065 samples/sec#011accuracy=0.844512[0m
+[34m[03/19/2020 21:45:41 INFO 139731408856896] Epoch[0] Batch [60]#011Speed: 125.234 samples/sec#011accuracy=0.877561[0m
+[34m[03/19/2020 21:45:45 INFO 139731408856896] Epoch[0] Batch [80]#011Speed: 132.430 samples/sec#011accuracy=0.889660[0m
+[34m[03/19/2020 21:45:49 INFO 139731408856896] Epoch[0] Batch [100]#011Speed: 137.065 samples/sec#011accuracy=0.902228[0m
+[34m[03/19/2020 21:45:53 INFO 139731408856896] Epoch[0] Batch [120]#011Speed: 140.315 samples/sec#011accuracy=0.912448[0m
+[34m[03/19/2020 21:45:57 INFO 139731408856896] Epoch[0] Batch [140]#011Speed: 142.653 samples/sec#011accuracy=0.918883[0m
+[34m[03/19/2020 21:46:01 INFO 139731408856896] Epoch[0] Batch [160]#011Speed: 144.469 samples/sec#011accuracy=0.921196[0m
+[34m[03/19/2020 21:46:02 INFO 139731408856896] Epoch[0] Train-accuracy=0.921682[0m
+[34m[03/19/2020 21:46:02 INFO 139731408856896] Epoch[0] Time cost=35.642[0m
+[34m[03/19/2020 21:46:02 INFO 139731408856896] Epoch[0] Validation-accuracy=1.000000[0m
+[34m[03/19/2020 21:46:02 INFO 139731408856896] Storing the best model with validation accuracy: 1.000000[0m
+[34m[03/19/2020 21:46:02 INFO 139731408856896] Saved checkpoint to &quot;/opt/ml/model/image-classification-0001.params&quot;[0m
+[34m[03/19/2020 21:46:06 INFO 139731408856896] Epoch[1] Batch [20]#011Speed: 154.748 samples/sec#011accuracy=0.944940[0m
+[34m[03/19/2020 21:46:10 INFO 139731408856896] Epoch[1] Batch [40]#011Speed: 156.555 samples/sec#011accuracy=0.947409[0m
+[34m[03/19/2020 21:46:14 INFO 139731408856896] Epoch[1] Batch [60]#011Speed: 157.096 samples/sec#011accuracy=0.953381[0m
+[34m[03/19/2020 21:46:18 INFO 139731408856896] Epoch[1] Batch [80]#011Speed: 157.231 samples/sec#011accuracy=0.960262[0m
+[34m[03/19/2020 21:46:22 INFO 139731408856896] Epoch[1] Batch [100]#011Speed: 157.317 samples/sec#011accuracy=0.954517[0m
+[34m[03/19/2020 21:46:26 INFO 139731408856896] Epoch[1] Batch [120]#011Speed: 157.328 samples/sec#011accuracy=0.958161[0m
+[34m[03/19/2020 21:46:31 INFO 139731408856896] Epoch[1] Batch [140]#011Speed: 157.330 samples/sec#011accuracy=0.959663[0m
+[34m[03/19/2020 21:46:35 INFO 139731408856896] Epoch[1] Batch [160]#011Speed: 157.375 samples/sec#011accuracy=0.960792[0m
+[34m[03/19/2020 21:46:35 INFO 139731408856896] Epoch[1] Train-accuracy=0.960648[0m
+[34m[03/19/2020 21:46:35 INFO 139731408856896] Epoch[1] Time cost=32.738[0m
+[34m[03/19/2020 21:46:35 INFO 139731408856896] Epoch[1] Validation-accuracy=0.968750[0m
+[34m[03/19/2020 21:46:39 INFO 139731408856896] Epoch[2] Batch [20]#011Speed: 154.851 samples/sec#011accuracy=0.968750[0m
+[34m[03/19/2020 21:46:43 INFO 139731408856896] Epoch[2] Batch [40]#011Speed: 156.146 samples/sec#011accuracy=0.963415[0m
+[34m[03/19/2020 21:46:48 INFO 139731408856896] Epoch[2] Batch [60]#011Speed: 156.423 samples/sec#011accuracy=0.969262[0m
+[34m[03/19/2020 21:46:52 INFO 139731408856896] Epoch[2] Batch [80]#011Speed: 156.532 samples/sec#011accuracy=0.968750[0m
+[34m[03/19/2020 21:46:56 INFO 139731408856896] Epoch[2] Batch [100]#011Speed: 156.637 samples/sec#011accuracy=0.968750[0m
+[34m[03/19/2020 21:47:00 INFO 139731408856896] Epoch[2] Batch [120]#011Speed: 156.685 samples/sec#011accuracy=0.968750[0m
+[34m[03/19/2020 21:47:04 INFO 139731408856896] Epoch[2] Batch [140]#011Speed: 156.680 samples/sec#011accuracy=0.968972[0m
+[34m[03/19/2020 21:47:08 INFO 139731408856896] Epoch[2] Batch [160]#011Speed: 156.667 samples/sec#011accuracy=0.968750[0m
+[34m[03/19/2020 21:47:08 INFO 139731408856896] Epoch[2] Train-accuracy=0.968943[0m
+[34m[03/19/2020 21:47:08 INFO 139731408856896] Epoch[2] Time cost=32.884[0m
+[34m[03/19/2020 21:47:08 INFO 139731408856896] Epoch[2] Validation-accuracy=1.000000[0m
+[34m[03/19/2020 21:47:13 INFO 139731408856896] Epoch[3] Batch [20]#011Speed: 153.472 samples/sec#011accuracy=0.964286[0m
+[34m[03/19/2020 21:47:17 INFO 139731408856896] Epoch[3] Batch [40]#011Speed: 155.076 samples/sec#011accuracy=0.971037[0m
+[34m[03/19/2020 21:47:21 INFO 139731408856896] Epoch[3] Batch [60]#011Speed: 155.574 samples/sec#011accuracy=0.973361[0m
+[34m[03/19/2020 21:47:25 INFO 139731408856896] Epoch[3] Batch [80]#011Speed: 155.840 samples/sec#011accuracy=0.966435[0m
+[34m[03/19/2020 21:47:29 INFO 139731408856896] Epoch[3] Batch [100]#011Speed: 155.884 samples/sec#011accuracy=0.966584[0m
+[34m[03/19/2020 21:47:33 INFO 139731408856896] Epoch[3] Batch [120]#011Speed: 155.888 samples/sec#011accuracy=0.967717[0m
+[34m[03/19/2020 21:47:37 INFO 139731408856896] Epoch[3] Batch [140]#011Speed: 155.917 samples/sec#011accuracy=0.969193[0m
+[34m[03/19/2020 21:47:41 INFO 139731408856896] Epoch[3] Batch [160]#011Speed: 156.010 samples/sec#011accuracy=0.970885[0m
+[34m[03/19/2020 21:47:42 INFO 139731408856896] Epoch[3] Train-accuracy=0.970872[0m
+[34m[03/19/2020 21:47:42 INFO 139731408856896] Epoch[3] Time cost=33.022[0m
+[34m[03/19/2020 21:47:42 INFO 139731408856896] Epoch[3] Validation-accuracy=0.968750[0m
+[34m[03/19/2020 21:47:46 INFO 139731408856896] Epoch[4] Batch [20]#011Speed: 153.395 samples/sec#011accuracy=0.979167[0m
+[34m[03/19/2020 21:47:50 INFO 139731408856896] Epoch[4] Batch [40]#011Speed: 154.704 samples/sec#011accuracy=0.977896[0m
+[34m[03/19/2020 21:47:55 INFO 139731408856896] Epoch[4] Batch [60]#011Speed: 155.226 samples/sec#011accuracy=0.979508[0m
+[34m[03/19/2020 21:47:59 INFO 139731408856896] Epoch[4] Batch [80]#011Speed: 155.545 samples/sec#011accuracy=0.978395[0m
+[34m[03/19/2020 21:48:03 INFO 139731408856896] Epoch[4] Batch [100]#011Speed: 155.689 samples/sec#011accuracy=0.979579[0m
+[34m[03/19/2020 21:48:07 INFO 139731408856896] Epoch[4] Batch [120]#011Speed: 155.736 samples/sec#011accuracy=0.978822[0m
+[34m[03/19/2020 21:48:11 INFO 139731408856896] Epoch[4] Batch [140]#011Speed: 155.788 samples/sec#011accuracy=0.980496[0m
+[34m[03/19/2020 21:48:15 INFO 139731408856896] Epoch[4] Batch [160]#011Speed: 155.848 samples/sec#011accuracy=0.979425[0m
+[34m[03/19/2020 21:48:15 INFO 139731408856896] Epoch[4] Train-accuracy=0.979360[0m
+[34m[03/19/2020 21:48:15 INFO 139731408856896] Epoch[4] Time cost=33.056[0m
+[34m[03/19/2020 21:48:15 INFO 139731408856896] Epoch[4] Validation-accuracy=1.000000[0m
+[34m[03/19/2020 21:48:20 INFO 139731408856896] Epoch[5] Batch [20]#011Speed: 152.767 samples/sec#011accuracy=0.973214[0m
+[34m[03/19/2020 21:48:24 INFO 139731408856896] Epoch[5] Batch [40]#011Speed: 154.224 samples/sec#011accuracy=0.972561[0m
+[34m[03/19/2020 21:48:28 INFO 139731408856896] Epoch[5] Batch [60]#011Speed: 154.832 samples/sec#011accuracy=0.976434[0m
+[34m[03/19/2020 21:48:32 INFO 139731408856896] Epoch[5] Batch [80]#011Speed: 155.123 samples/sec#011accuracy=0.974923[0m
+[34m[03/19/2020 21:48:36 INFO 139731408856896] Epoch[5] Batch [100]#011Speed: 155.217 samples/sec#011accuracy=0.974319[0m
+[34m[03/19/2020 21:48:40 INFO 139731408856896] Epoch[5] Batch [120]#011Speed: 155.293 samples/sec#011accuracy=0.975465[0m
+[34m[03/19/2020 21:48:44 INFO 139731408856896] Epoch[5] Batch [140]#011Speed: 155.389 samples/sec#011accuracy=0.976285[0m
+[34m[03/19/2020 21:48:49 INFO 139731408856896] Epoch[5] Batch [160]#011Speed: 155.443 samples/sec#011accuracy=0.975543[0m
+[34m[03/19/2020 21:48:49 INFO 139731408856896] Epoch[5] Train-accuracy=0.975502[0m
+[34m[03/19/2020 21:48:49 INFO 139731408856896] Epoch[5] Time cost=33.144[0m
+[34m[03/19/2020 21:48:49 INFO 139731408856896] Epoch[5] Validation-accuracy=0.968750[0m
+[34m[03/19/2020 21:48:53 INFO 139731408856896] Epoch[6] Batch [20]#011Speed: 152.969 samples/sec#011accuracy=0.973214[0m
+[34m[03/19/2020 21:48:58 INFO 139731408856896] Epoch[6] Batch [40]#011Speed: 154.372 samples/sec#011accuracy=0.976372[0m
+[34m[03/19/2020 21:49:02 INFO 139731408856896] Epoch[6] Batch [60]#011Speed: 154.792 samples/sec#011accuracy=0.973361[0m
+[34m[03/19/2020 21:49:06 INFO 139731408856896] Epoch[6] Batch [80]#011Speed: 155.024 samples/sec#011accuracy=0.975694[0m
+[34m[03/19/2020 21:49:10 INFO 139731408856896] Epoch[6] Batch [100]#011Speed: 155.127 samples/sec#011accuracy=0.975557[0m
+[34m[03/19/2020 21:49:14 INFO 139731408856896] Epoch[6] Batch [120]#011Speed: 155.212 samples/sec#011accuracy=0.977531[0m
+[34m[03/19/2020 21:49:18 INFO 139731408856896] Epoch[6] Batch [140]#011Speed: 155.250 samples/sec#011accuracy=0.977615[0m
+[34m[03/19/2020 21:49:22 INFO 139731408856896] Epoch[6] Batch [160]#011Speed: 155.251 samples/sec#011accuracy=0.977873[0m
+[34m[03/19/2020 21:49:22 INFO 139731408856896] Epoch[6] Train-accuracy=0.978009[0m
+[34m[03/19/2020 21:49:22 INFO 139731408856896] Epoch[6] Time cost=33.185[0m
+[34m[03/19/2020 21:49:23 INFO 139731408856896] Epoch[6] Validation-accuracy=1.000000[0m
+[34m[03/19/2020 21:49:27 INFO 139731408856896] Epoch[7] Batch [20]#011Speed: 152.235 samples/sec#011accuracy=0.979167[0m
+[34m[03/19/2020 21:49:31 INFO 139731408856896] Epoch[7] Batch [40]#011Speed: 153.754 samples/sec#011accuracy=0.980183[0m
+[34m[03/19/2020 21:49:35 INFO 139731408856896] Epoch[7] Batch [60]#011Speed: 154.330 samples/sec#011accuracy=0.983094[0m
+[34m[03/19/2020 21:49:39 INFO 139731408856896] Epoch[7] Batch [80]#011Speed: 154.580 samples/sec#011accuracy=0.983410[0m
+[34m[03/19/2020 21:49:44 INFO 139731408856896] Epoch[7] Batch [100]#011Speed: 154.669 samples/sec#011accuracy=0.980507[0m
+[34m[03/19/2020 21:49:48 INFO 139731408856896] Epoch[7] Batch [120]#011Speed: 154.828 samples/sec#011accuracy=0.979081[0m
+[34m[03/19/2020 21:49:52 INFO 139731408856896] Epoch[7] Batch [140]#011Speed: 154.877 samples/sec#011accuracy=0.980053[0m
+[34m[03/19/2020 21:49:56 INFO 139731408856896] Epoch[7] Batch [160]#011Speed: 154.953 samples/sec#011accuracy=0.980590[0m
+[34m[03/19/2020 21:49:56 INFO 139731408856896] Epoch[7] Train-accuracy=0.980710[0m
+[34m[03/19/2020 21:49:56 INFO 139731408856896] Epoch[7] Time cost=33.247[0m
+[34m[03/19/2020 21:49:56 INFO 139731408856896] Epoch[7] Validation-accuracy=0.968750[0m
+[34m[03/19/2020 21:50:01 INFO 139731408856896] Epoch[8] Batch [20]#011Speed: 152.881 samples/sec#011accuracy=0.985119[0m
+[34m[03/19/2020 21:50:05 INFO 139731408856896] Epoch[8] Batch [40]#011Speed: 154.101 samples/sec#011accuracy=0.986280[0m
+[34m[03/19/2020 21:50:09 INFO 139731408856896] Epoch[8] Batch [60]#011Speed: 154.410 samples/sec#011accuracy=0.985143[0m
+[34m[03/19/2020 21:50:13 INFO 139731408856896] Epoch[8] Batch [80]#011Speed: 154.530 samples/sec#011accuracy=0.983796[0m
+[34m[03/19/2020 21:50:17 INFO 139731408856896] Epoch[8] Batch [100]#011Speed: 154.613 samples/sec#011accuracy=0.983911[0m
+[34m[03/19/2020 21:50:21 INFO 139731408856896] Epoch[8] Batch [120]#011Speed: 154.723 samples/sec#011accuracy=0.983471[0m
+[34m[03/19/2020 21:50:26 INFO 139731408856896] Epoch[8] Batch [140]#011Speed: 154.797 samples/sec#011accuracy=0.983156[0m
+[34m[03/19/2020 21:50:30 INFO 139731408856896] Epoch[8] Batch [160]#011Speed: 154.821 samples/sec#011accuracy=0.983307[0m
+[34m[03/19/2020 21:50:30 INFO 139731408856896] Epoch[8] Train-accuracy=0.983410[0m
+[34m[03/19/2020 21:50:30 INFO 139731408856896] Epoch[8] Time cost=33.277[0m
+[34m[03/19/2020 21:50:30 INFO 139731408856896] Epoch[8] Validation-accuracy=0.968750[0m
+[34m[03/19/2020 21:50:35 INFO 139731408856896] Epoch[9] Batch [20]#011Speed: 152.028 samples/sec#011accuracy=0.980655[0m
+[34m[03/19/2020 21:50:39 INFO 139731408856896] Epoch[9] Batch [40]#011Speed: 153.382 samples/sec#011accuracy=0.977896[0m
+[34m[03/19/2020 21:50:43 INFO 139731408856896] Epoch[9] Batch [60]#011Speed: 154.004 samples/sec#011accuracy=0.983094[0m
+[34m[03/19/2020 21:50:47 INFO 139731408856896] Epoch[9] Batch [80]#011Speed: 154.290 samples/sec#011accuracy=0.984954[0m
+[34m[03/19/2020 21:50:51 INFO 139731408856896] Epoch[9] Batch [100]#011Speed: 154.418 samples/sec#011accuracy=0.984839[0m
+[34m[03/19/2020 21:50:55 INFO 139731408856896] Epoch[9] Batch [120]#011Speed: 154.560 samples/sec#011accuracy=0.985279[0m
+[34m[03/19/2020 21:50:59 INFO 139731408856896] Epoch[9] Batch [140]#011Speed: 154.655 samples/sec#011accuracy=0.985594[0m
+[34m[03/19/2020 21:51:03 INFO 139731408856896] Epoch[9] Batch [160]#011Speed: 154.721 samples/sec#011accuracy=0.986219[0m
+[34m[03/19/2020 21:51:04 INFO 139731408856896] Epoch[9] Train-accuracy=0.986111[0m
+[34m[03/19/2020 21:51:04 INFO 139731408856896] Epoch[9] Time cost=33.299[0m
+[34m[03/19/2020 21:51:04 INFO 139731408856896] Epoch[9] Validation-accuracy=1.000000[0m
+
+2020-03-19 21:51:19 Uploading - Uploading generated training model
+2020-03-19 21:51:19 Completed - Training job completed
+Training seconds: 521
+Billable seconds: 521</code></pre><h3 id="Deploy-the-model"><a href="#Deploy-the-model" class="headerlink" title="Deploy the model"></a>Deploy the model</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">deployed_model = model.deploy(initial_instance_count=<span class="number">1</span>,instance_type=<span class="string">'ml.t2.medium'</span>)</span><br><span class="line">print(<span class="string">'\nModel deployed!'</span>)</span><br></pre></td></tr></table></figure>
+
+<pre><code>-----------------!
+Model deployed!</code></pre><h3 id="Predictions"><a href="#Predictions" class="headerlink" title="Predictions"></a>Predictions</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">image_dir = <span class="string">'chest_xray/test/0'</span></span><br><span class="line">images = [x <span class="keyword">for</span> x <span class="keyword">in</span> os.listdir(image_dir)  <span class="keyword">if</span> x[<span class="number">-4</span>:] == <span class="string">'jpeg'</span>]</span><br><span class="line">print(len(images))</span><br></pre></td></tr></table></figure>
+
+<pre><code>234</code></pre><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">deployed_model.content_type = <span class="string">'image/jpeg'</span></span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">index = <span class="number">233</span></span><br><span class="line"></span><br><span class="line">image_path = os.path.join(image_dir, images[index])</span><br><span class="line"><span class="keyword">with</span> open(image_path, <span class="string">'rb'</span>) <span class="keyword">as</span> f:</span><br><span class="line">    b = bytearray(f.read())</span><br><span class="line">    </span><br><span class="line">result = deployed_model.predict(b)</span><br><span class="line">result = json.loads(result)</span><br><span class="line">print(result)</span><br></pre></td></tr></table></figure>
+
+<pre><code>[0.9960546493530273, 0.003945335745811462]</code></pre><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">fig = plt.figure()</span><br><span class="line">ax = fig.add_axes([<span class="number">0</span>,<span class="number">0</span>,<span class="number">1</span>,<span class="number">1</span>])</span><br><span class="line">langs = [<span class="string">'0'</span>,<span class="string">'1'</span>]</span><br><span class="line">ax.bar(langs,result)</span><br><span class="line">plt.text(<span class="number">0</span>,result[<span class="number">0</span>], <span class="string">'%f'</span> % result[<span class="number">0</span>], ha=<span class="string">'center'</span>, va= <span class="string">'bottom'</span>,fontsize=<span class="number">11</span>)  </span><br><span class="line">plt.text(<span class="number">1</span>,result[<span class="number">1</span>], <span class="string">'%f'</span> % result[<span class="number">1</span>], ha=<span class="string">'center'</span>, va= <span class="string">'bottom'</span>,fontsize=<span class="number">11</span>) </span><br><span class="line">plt.show()</span><br></pre></td></tr></table></figure>
+
+
+<p><img src="/2020/04/09/Pneumonia_detect/output_46_0.png" alt="png"></p>
+<p>The result above returns a possibility distribution of zero and one we can simply choose the highest one as the predicted result.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">classes[np.argmax(result)]</span><br></pre></td></tr></table></figure>
+
+
+
+
+<pre><code>0.0</code></pre><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">plt.imshow(plt.imread(image_path), cmap=<span class="string">'gray'</span>)</span><br><span class="line">plt.xlabel(images[index])</span><br><span class="line">plt.show()</span><br></pre></td></tr></table></figure>
+
+
+<p><img src="/2020/04/09/Pneumonia_detect/output_49_0.png" alt="png"></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Also try a pneumonia</span></span><br><span class="line">image_dir = <span class="string">'chest_xray/test/1'</span></span><br><span class="line">images = [x <span class="keyword">for</span> x <span class="keyword">in</span> os.listdir(image_dir)  <span class="keyword">if</span> x[<span class="number">-4</span>:] == <span class="string">'jpeg'</span>]</span><br><span class="line">print(len(images))</span><br></pre></td></tr></table></figure>
+
+<pre><code>390</code></pre><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">deployed_model.content_type = <span class="string">'image/jpeg'</span></span><br><span class="line">index = <span class="number">1</span></span><br><span class="line">image_path = os.path.join(image_dir, images[index])</span><br><span class="line"><span class="keyword">with</span> open(image_path, <span class="string">'rb'</span>) <span class="keyword">as</span> f:</span><br><span class="line">    b = bytearray(f.read())</span><br><span class="line">    </span><br><span class="line">result = deployed_model.predict(b)</span><br><span class="line">result = json.loads(result)</span><br><span class="line">print(result)</span><br></pre></td></tr></table></figure>
+
+<pre><code>[0.023419998586177826, 0.9765799641609192]</code></pre><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">fig = plt.figure()</span><br><span class="line">ax = fig.add_axes([<span class="number">0</span>,<span class="number">0</span>,<span class="number">1</span>,<span class="number">1</span>])</span><br><span class="line">langs = [<span class="string">'0'</span>,<span class="string">'1'</span>]</span><br><span class="line">ax.bar(langs,result)</span><br><span class="line">plt.text(<span class="number">0</span>,result[<span class="number">0</span>], <span class="string">'%f'</span> % result[<span class="number">0</span>], ha=<span class="string">'center'</span>, va= <span class="string">'bottom'</span>,fontsize=<span class="number">11</span>)  </span><br><span class="line">plt.text(<span class="number">1</span>,result[<span class="number">1</span>], <span class="string">'%f'</span> % result[<span class="number">1</span>], ha=<span class="string">'center'</span>, va= <span class="string">'bottom'</span>,fontsize=<span class="number">11</span>) </span><br><span class="line">plt.show()</span><br></pre></td></tr></table></figure>
+
+
+<p><img src="/2020/04/09/Pneumonia_detect/output_52_0.png" alt="png"></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">classes[np.argmax(result)]</span><br></pre></td></tr></table></figure>
+
+
+
+
+<pre><code>1.0</code></pre><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">plt.imshow(plt.imread(image_path), cmap=<span class="string">'gray'</span>)</span><br><span class="line">plt.xlabel(images[index])</span><br><span class="line">plt.show()</span><br></pre></td></tr></table></figure>
+
+
+<p><img src="/2020/04/09/Pneumonia_detect/output_54_0.png" alt="png"></p>
+<p>The estimates of those examples are correct but we still need to use the remainder test set to calculate the recall and accuracy ratios in order to test our model performence.</p>
+<h3 id="Assess-the-performance"><a href="#Assess-the-performance" class="headerlink" title="Assess the performance"></a>Assess the performance</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># All should be zeros, which means normal</span></span><br><span class="line">image_dir = <span class="string">'chest_xray/test/0'</span></span><br><span class="line">images = [x <span class="keyword">for</span> x <span class="keyword">in</span> os.listdir(image_dir)  <span class="keyword">if</span> x[<span class="number">-4</span>:] == <span class="string">'jpeg'</span>]</span><br><span class="line">deployed_model.content_type = <span class="string">'image/jpeg'</span></span><br><span class="line">normals = []</span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> range(<span class="number">0</span>,<span class="number">233</span>):</span><br><span class="line">    index = i</span><br><span class="line">    image_path = os.path.join(image_dir, images[index])</span><br><span class="line">    <span class="keyword">with</span> open(image_path, <span class="string">'rb'</span>) <span class="keyword">as</span> f:</span><br><span class="line">        b = bytearray(f.read())</span><br><span class="line">    result = deployed_model.predict(b)</span><br><span class="line">    result = json.loads(result)</span><br><span class="line">    normals.append(classes[np.argmax(result)])</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">false_pos = sum(normals) </span><br><span class="line">true_neg = len(normals) - false_pos</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># All should be ones, which means pneumonia</span></span><br><span class="line">image_dir = <span class="string">'chest_xray/test/1'</span></span><br><span class="line">images = [x <span class="keyword">for</span> x <span class="keyword">in</span> os.listdir(image_dir)  <span class="keyword">if</span> x[<span class="number">-4</span>:] == <span class="string">'jpeg'</span>]</span><br><span class="line">deployed_model.content_type = <span class="string">'image/jpeg'</span></span><br><span class="line">pneumonia = []</span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> range(<span class="number">0</span>,<span class="number">389</span>):</span><br><span class="line">    index = i</span><br><span class="line">    image_path = os.path.join(image_dir, images[index])</span><br><span class="line">    <span class="keyword">with</span> open(image_path, <span class="string">'rb'</span>) <span class="keyword">as</span> f:</span><br><span class="line">        b = bytearray(f.read())</span><br><span class="line">    result = deployed_model.predict(b)</span><br><span class="line">    result = json.loads(result)</span><br><span class="line">    pneumonia.append(classes[np.argmax(result)])</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">true_pos = sum(pneumonia) </span><br><span class="line">false_neg = len(pneumonia) - true_pos</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">df = pd.DataFrame(&#123;<span class="string">'predict 0'</span>: [true_neg, false_neg],</span><br><span class="line">                   <span class="string">'predict 1'</span>: [false_pos, true_pos],&#125;,</span><br><span class="line">                  index=[<span class="string">'true 0'</span>,<span class="string">'true 1'</span>])</span><br><span class="line">df</span><br></pre></td></tr></table></figure>
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+<pre><code>.dataframe tbody tr th {
+    vertical-align: top;
+}
+
+.dataframe thead th {
+    text-align: right;
+}</code></pre><p></style><p></p>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>predict 0</th>
+      <th>predict 1</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>true 0</th>
+      <td>216.0</td>
+      <td>17.0</td>
+    </tr>
+    <tr>
+      <th>true 1</th>
+      <td>64.0</td>
+      <td>325.0</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># ratios</span></span><br><span class="line">accuracy = (true_pos+true_neg)/(true_pos+true_neg+false_pos+false_neg)</span><br><span class="line">recall = true_pos/(true_pos+false_neg)</span><br><span class="line">precision = true_pos/(true_pos+false_pos)</span><br><span class="line">print(<span class="string">"&#123;:&lt;11&#125; &#123;:.3f&#125;"</span>.format(<span class="string">'Accuracy:'</span>, accuracy))</span><br><span class="line">print(<span class="string">"&#123;:&lt;11&#125; &#123;:.3f&#125;"</span>.format(<span class="string">'Recall:'</span>, recall))</span><br><span class="line">print(<span class="string">"&#123;:&lt;11&#125; &#123;:.3f&#125;"</span>.format(<span class="string">'Precision:'</span>, precision))</span><br></pre></td></tr></table></figure>
+
+<pre><code>Accuracy:   0.870
+Recall:     0.835
+Precision:  0.950</code></pre><p>In this task, recall ratio should be as higher as possible. Based on our model predictions, the recall ratio is nearly 83.5%, which is pretty good. However, if the model will be used in reality the recall ratio should be improved such that number of the miss diagnosis will decrease. Because miss diagnosis will do harm to the patients but false postive can be double checked by the doctor. Next we should improve the recall ratio based on the cutoff values.</p>
+<h3 id="Improve-the-performance-of-the-model"><a href="#Improve-the-performance-of-the-model" class="headerlink" title="Improve the performance of the model"></a>Improve the performance of the model</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">cutoff = <span class="number">0.1</span> <span class="comment"># set the cutoff value</span></span><br><span class="line"><span class="comment"># All should be zeros, which means normal</span></span><br><span class="line">image_dir = <span class="string">'chest_xray/test/0'</span></span><br><span class="line">images = [x <span class="keyword">for</span> x <span class="keyword">in</span> os.listdir(image_dir)  <span class="keyword">if</span> x[<span class="number">-4</span>:] == <span class="string">'jpeg'</span>]</span><br><span class="line">deployed_model.content_type = <span class="string">'image/jpeg'</span></span><br><span class="line">normals = []</span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> range(<span class="number">0</span>,<span class="number">233</span>):</span><br><span class="line">    index = i</span><br><span class="line">    image_path = os.path.join(image_dir, images[index])</span><br><span class="line">    <span class="keyword">with</span> open(image_path, <span class="string">'rb'</span>) <span class="keyword">as</span> f:</span><br><span class="line">        b = bytearray(f.read())</span><br><span class="line">    result = deployed_model.predict(b)</span><br><span class="line">    result = json.loads(result)</span><br><span class="line">    <span class="keyword">if</span> result[<span class="number">1</span>] &gt; cutoff:</span><br><span class="line">        normals.append(<span class="number">1</span>)</span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        normals.append(<span class="number">0</span>)</span><br><span class="line">false_pos = sum(normals) </span><br><span class="line">true_neg = len(normals) - false_pos</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># All should be ones, which means pneumonia</span></span><br><span class="line">image_dir = <span class="string">'chest_xray/test/1'</span></span><br><span class="line">images = [x <span class="keyword">for</span> x <span class="keyword">in</span> os.listdir(image_dir)  <span class="keyword">if</span> x[<span class="number">-4</span>:] == <span class="string">'jpeg'</span>]</span><br><span class="line">deployed_model.content_type = <span class="string">'image/jpeg'</span></span><br><span class="line">pneumonia = []</span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> range(<span class="number">0</span>,<span class="number">389</span>):</span><br><span class="line">    index = i</span><br><span class="line">    image_path = os.path.join(image_dir, images[index])</span><br><span class="line">    <span class="keyword">with</span> open(image_path, <span class="string">'rb'</span>) <span class="keyword">as</span> f:</span><br><span class="line">        b = bytearray(f.read())</span><br><span class="line">    result = deployed_model.predict(b)</span><br><span class="line">    result = json.loads(result)</span><br><span class="line">    <span class="keyword">if</span> result[<span class="number">1</span>] &gt; cutoff:</span><br><span class="line">        pneumonia.append(<span class="number">1</span>)</span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        pneumonia.append(<span class="number">0</span>)</span><br><span class="line">true_pos = sum(pneumonia) </span><br><span class="line">false_neg = len(pneumonia) - true_pos</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">df = pd.DataFrame(&#123;<span class="string">'predict 0'</span>: [true_neg, false_neg],</span><br><span class="line">                   <span class="string">'predict 1'</span>: [false_pos, true_pos],&#125;,</span><br><span class="line">                  index=[<span class="string">'true 0'</span>,<span class="string">'true 1'</span>])</span><br><span class="line">df</span><br></pre></td></tr></table></figure>
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+<pre><code>.dataframe tbody tr th {
+    vertical-align: top;
+}
+
+.dataframe thead th {
+    text-align: right;
+}</code></pre><p></style><p></p>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>predict 0</th>
+      <th>predict 1</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>true 0</th>
+      <td>182</td>
+      <td>51</td>
+    </tr>
+    <tr>
+      <th>true 1</th>
+      <td>12</td>
+      <td>377</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># ratios</span></span><br><span class="line">accuracy = (true_pos+true_neg)/(true_pos+true_neg+false_pos+false_neg)</span><br><span class="line">recall = true_pos/(true_pos+false_neg)</span><br><span class="line">precision = true_pos/(true_pos+false_pos)</span><br><span class="line">print(<span class="string">"&#123;:&lt;11&#125; &#123;:.3f&#125;"</span>.format(<span class="string">'Accuracy:'</span>, accuracy))</span><br><span class="line">print(<span class="string">"&#123;:&lt;11&#125; &#123;:.3f&#125;"</span>.format(<span class="string">'Recall:'</span>, recall))</span><br><span class="line">print(<span class="string">"&#123;:&lt;11&#125; &#123;:.3f&#125;"</span>.format(<span class="string">'Precision:'</span>, precision))</span><br></pre></td></tr></table></figure>
+
+<pre><code>Accuracy:   0.899
+Recall:     0.969
+Precision:  0.881</code></pre><p>When we set the cutoff value equals 0.2, the recall ratio improves to nearly 96.9%. What is worth to mention is that the precision ratio only decreased a little bit to 88.1%. Therefore, the overall accuracy ratio improves. It is good to choose a relatively lower cutoff value. The usual cutoff value is 0.5 but in this diagnostic problem we should choose relatively lower cutoff value in order to decrease the number of false negatives.</p>
+<p>Compared with benchmark model in Kaggle, we have relatively simliar results.</p>
+<p>The limitation in this analysis will be the small dataset. This dataset only has nearly 6000 pictures, which is clearly not enough to get an elaborate model. However, the methods and ideas used in this analysis is useful for further analysis when we have more data.</p>
+<h3 id="Delete-the-endpoint"><a href="#Delete-the-endpoint" class="headerlink" title="Delete the endpoint"></a>Delete the endpoint</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sagemaker.Session().delete_endpoint(deployed_model.endpoint)</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div></div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.jpg" alt="Jason 微信支付">
+        <p>微信支付</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/" rel="tag"># 机器学习</a>
+              <a href="/tags/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/" rel="tag"># 深度学习</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/02/23/SageMakerProject/" rel="prev" title="Creating a Sentiment Analysis Web App">
+      <i class="fa fa-chevron-left"></i> Creating a Sentiment Analysis Web App
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC80ODM1Ny8yNDg1MQ=="></div>
+  </div>
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#Introduction"><span class="nav-number">1.</span> <span class="nav-text">Introduction</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-Explore-the-dataset-and-data-preprocessing"><span class="nav-number">2.</span> <span class="nav-text">1. Explore the dataset and data preprocessing</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-Upload-the-training-data-to-S3"><span class="nav-number">3.</span> <span class="nav-text">2. Upload the training data to S3</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SageMaker-Estimator"><span class="nav-number">4.</span> <span class="nav-text">SageMaker Estimator</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Model-training"><span class="nav-number">5.</span> <span class="nav-text">Model training</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Deploy-the-model"><span class="nav-number">6.</span> <span class="nav-text">Deploy the model</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Predictions"><span class="nav-number">7.</span> <span class="nav-text">Predictions</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Assess-the-performance"><span class="nav-number">8.</span> <span class="nav-text">Assess the performance</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Improve-the-performance-of-the-model"><span class="nav-number">9.</span> <span class="nav-text">Improve the performance of the model</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Delete-the-endpoint"><span class="nav-number">10.</span> <span class="nav-text">Delete the endpoint</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Jason</p>
+  <div class="site-description" itemprop="description">A free place</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">20</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/JasonVictor17" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;JasonVictor17" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Jason</span>
+</div>
+<!--
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v4.2.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.7.0
+  </div>
+-->
+<div class="powered-by">
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <i class="fa fa-user-md"></i>
+    <span id="busuanzi_container_site_uv">
+        本站访客数:<span id="busuanzi_value_site_uv"></span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span id="busuanzi_container_site_pv">
+        本站访问量<span id="busuanzi_value_site_pv"></span>
+    </span>
+</div>
+<div class="theme-info">
+  <div class="powered-by"></div>
+  <span class="post-count">本博客全站共46.2k字</span>
+</div>
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  
+  <script color='0,0,255' opacity='0.5' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('div.pdf').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/pdfobject@2/pdfobject.min.js', () => {
+    document.querySelectorAll('div.pdf').forEach(element => {
+      PDFObject.embed(element.getAttribute('target'), element, {
+        pdfOpenParams: {
+          navpanes: 0,
+          toolbar: 0,
+          statusbar: 0,
+          pagemode: 'thumbs',
+          view: 'FitH'
+        },
+        PDFJS_URL: '/lib/pdf/web/viewer.html',
+        height: element.getAttribute('height') || '500px'
+      });
+    });
+  }, window.PDFObject);
+}
+</script>
+
+
+
+
+  
+
+  
+
+<script>
+NexT.utils.loadComments(document.querySelector('#lv-container'), () => {
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+});
+</script>
+
+</body>
+</html>
