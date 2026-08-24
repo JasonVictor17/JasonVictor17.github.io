@@ -141,6 +141,14 @@
   </div>
 
   <div class="chart-card">
+    <h2>十大高股息行业（点击行业查看个股明细）</h2>
+    <div style="overflow-x:auto">
+      <table id="industryTable" style="width:100%;border-collapse:collapse;font-size:14px">
+      </table>
+    </div>
+  </div>
+
+  <div class="chart-card">
     <h2>TOP15高夏普分红股（本周）</h2>
     <div style="overflow-x:auto">
       <table id="sharpeTable" style="width:100%;border-collapse:collapse;font-size:14px">
@@ -211,6 +219,10 @@ async function render() {
     tip.textContent = '⚠️ 暂无历史数据。数据每周累积，运行几周后折线图会越来越丰富。';
   }
 
+  if (latest && latest.top10_ind) {
+    renderIndustryTable(latest);
+  }
+
   if (latest && latest.top15_sharpe) {
     const cols = ['code', '名称', '行业', '3年平均分红收益率(%)', 'TTM股息率(%)', '波动率', '夏普'];
     const show = { '3年平均分红收益率(%)': '3年股息率(%)' };
@@ -230,6 +242,61 @@ async function render() {
       history.length ? history[history.length - 1].avg_top10_ind_ratio : '--';
     document.getElementById('stat-count').textContent = latest.top15_sharpe.length;
   }
+}
+render();
+
+function renderIndustryTable(latest) {
+  const cols = ['', '行业', '个股数', '平均分红', '3年股息率(%)', 'TTM股息率(%)'];
+  const header = `<tr style="background:#f8f8f8;font-weight:600">${
+    cols.map(c => `<td style="padding:8px">${c}</td>`).join('')}</tr>`;
+
+  const rows = latest.top10_ind.map((r, i) => {
+    const ind = r['行业'];
+    const stocks = (latest.top10_ind_stocks || {})[ind] || [];
+    const stockRows = stocks.map(s =>
+      `<tr>
+        <td style="padding:6px 8px;color:#888">${s.code}</td>
+        <td style="padding:6px 8px">${s.name}</td>
+        <td style="padding:6px 8px;text-align:right">${s.close}</td>
+        <td style="padding:6px 8px;text-align:right">${s['3年平均股息率(%)']}</td>
+        <td style="padding:6px 8px;text-align:right">${s['TTM股息率(%)']}</td>
+      </tr>`).join('');
+
+    return `
+      <tr onclick="toggleIndustry(${i})" id="ind-row-${i}"
+          style="cursor:pointer;border-bottom:1px solid #eee">
+        <td style="padding:8px" id="ind-arrow-${i}">▸</td>
+        <td style="padding:8px;font-weight:600">${ind}</td>
+        <td style="padding:8px">${r['个股数']}</td>
+        <td style="padding:8px">${r['分红']}</td>
+        <td style="padding:8px">${r['3年平均分红收益率(%)']}</td>
+        <td style="padding:8px">${r['TTM股息率(%)']}</td>
+      </tr>
+      <tr id="ind-detail-${i}" style="display:none">
+        <td colspan="6" style="background:#fafafa;padding:12px">
+          <table style="width:100%;border-collapse:collapse;font-size:13px">
+            <tr style="color:#999">
+              <td style="padding:4px 8px">代码</td>
+              <td style="padding:4px 8px">名称</td>
+              <td style="padding:4px 8px;text-align:right">最新价</td>
+              <td style="padding:4px 8px;text-align:right">3年股息率(%)</td>
+              <td style="padding:4px 8px;text-align:right">TTM股息率(%)</td>
+            </tr>
+            ${stockRows || '<tr><td colspan="5" style="padding:8px;color:#999">暂无明细数据</td></tr>'}
+          </table>
+        </td>
+      </tr>`;
+  }).join('');
+
+  document.getElementById('industryTable').innerHTML = header + rows;
+}
+
+function toggleIndustry(i) {
+  const detail = document.getElementById('ind-detail-' + i);
+  const arrow = document.getElementById('ind-arrow-' + i);
+  const open = detail.style.display === 'table-row';
+  detail.style.display = open ? 'none' : 'table-row';
+  arrow.textContent = open ? '▸' : '▾';
 }
 render();
 </script>
