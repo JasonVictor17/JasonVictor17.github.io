@@ -133,7 +133,10 @@
   </div>
 
   <div class="chart-card">
-    <h2>TOP10高分红行业平均股息率走势（3年平均分红口径）</h2>
+    <h2>TOP10高分红行业平均股息率走势（TTM口径）</h2>
+    <p style="font-size:12px;color:#bbb;margin:-10px 0 14px">
+      默认显示：银行 / 煤炭开采 / 电器连锁 / 白酒；图例按当前股息率降序，点击图例可显示或隐藏其他行业
+    </p>
     <div class="chart-wrapper">
       <canvas id="visitChart"></canvas>
     </div>
@@ -166,6 +169,7 @@
 <script>
 const PALETTE = ['#3b82f6', '#f59e0b', '#22c55e', '#ef4444', '#8b5cf6',
                  '#14b8a6', '#ec4899', '#84cc16', '#6366f1', '#f97316'];
+const PRIORITY_INDUSTRIES = ['银行', '煤炭开采', '电器连锁', '白酒'];
 
 async function fetchJson(path) {
   const res = await fetch(path + '?t=' + Date.now());
@@ -189,11 +193,18 @@ async function render() {
   const industries = [...new Set(
     history.flatMap(d => Object.keys(d.industry_ratios || {})))];
 
-  const datasets = industries.map((ind, i) => ({
+  // 按最新一期股息率降序排序行业
+  const latestRatio = history.length ? (history[history.length - 1].industry_ratios || {}) : {};
+  const sortedIndustries = [...industries].sort((a, b) =>
+    (latestRatio[b] ?? -Infinity) - (latestRatio[a] ?? -Infinity));
+
+  // 优先行业固定配色，其余按排序顺位分配；默认只显示优先行业
+  const datasets = sortedIndustries.map((ind, i) => ({
     label: ind,
     data: history.map(d => (d.industry_ratios || {})[ind] ?? null),
     borderColor: PALETTE[i % PALETTE.length],
-    borderWidth: 2, pointRadius: 2.5, tension: 0.35, spanGaps: true
+    borderWidth: 2, pointRadius: 2.5, tension: 0.35, spanGaps: true,
+    hidden: !PRIORITY_INDUSTRIES.includes(ind)
   }));
 
   new Chart(document.getElementById('visitChart').getContext('2d'), {
@@ -202,7 +213,20 @@ async function render() {
     options: {
       responsive: true,
       plugins: {
-        legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, font: { size: 12 } } },
+        legend: {
+          position: 'bottom',
+          labels: {
+            usePointStyle: true, boxWidth: 8, font: { size: 12 },
+            // 排序后的顺序即为图例顺序（Chart.js 默认按 datasets 顺序）
+          },
+          onClick(e, item, legend) {
+            // 默认点击行为：切换对应数据集的显示/隐藏
+            const idx = item.datasetIndex;
+            const ci = legend.chart;
+            ci.setDatasetVisibility(idx, !ci.isDatasetVisible(idx));
+            ci.update();
+          }
+        },
         tooltip: { mode: 'index', intersect: false }
       },
       scales: {
