@@ -111,155 +111,105 @@
 
   <div class="stats-row">
     <div class="stat-box">
-      <div class="value">1,286</div>
-      <div class="label">本月访问量</div>
-      <div class="change up">↑ 12.5%</div>
+      <div class="value" id="stat-date">--</div>
+      <div class="label">数据更新日期</div>
     </div>
     <div class="stat-box">
-      <div class="value">21</div>
-      <div class="label">文章总数</div>
-      <div class="change up">↑ 2</div>
+      <div class="value" id="stat-sharpe">--</div>
+      <div class="label">TOP15平均收益率(%)</div>
     </div>
     <div class="stat-box">
-      <div class="value">46.3k</div>
-      <div class="label">全站字数</div>
-      <div class="change up">↑ 3.2k</div>
+      <div class="value" id="stat-ind">--</div>
+      <div class="label">TOP10行业平均收益率(%)</div>
     </div>
     <div class="stat-box">
-      <div class="value">9</div>
-      <div class="label">标签数</div>
-      <div class="change down">— 0</div>
+      <div class="value" id="stat-count">--</div>
+      <div class="label">上榜股票数</div>
     </div>
   </div>
 
   <div class="chart-card">
-    <h2>月度访问趋势</h2>
+    <h2>TOP15高股息股平均收益率走势</h2>
     <div class="chart-wrapper">
       <canvas id="visitChart"></canvas>
     </div>
   </div>
 
   <div class="chart-card">
-    <h2>文章发布统计</h2>
-    <div class="chart-wrapper">
-      <canvas id="postChart"></canvas>
+    <h2>TOP15高夏普分红股（本周）</h2>
+    <div style="overflow-x:auto">
+      <table id="sharpeTable" style="width:100%;border-collapse:collapse;font-size:14px">
+      </table>
     </div>
+  </div>
+
+  <div class="chart-card">
+    <h2>分红 V.S. 风险散点图</h2>
+    <img src="/chart/data/dividend_scatter.jpg" style="width:100%;border-radius:8px"
+         onerror="this.parentNode.innerHTML='<p style=\'color:#999\'>暂无图片数据</p>'">
   </div>
 </div>
 
 <script>
-const visitCtx = document.getElementById('visitChart').getContext('2d');
-new Chart(visitCtx, {
-  type: 'line',
-  data: {
-    labels: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
-    datasets: [{
-      label: '访问量',
-      data: [320, 450, 380, 520, 610, 750, 680, 890, 920, 1050, 1180, 1286],
-      borderColor: '#3b82f6',
-      backgroundColor: 'rgba(59, 130, 246, 0.08)',
-      borderWidth: 2.5,
-      pointRadius: 4,
-      pointBackgroundColor: '#fff',
-      pointBorderColor: '#3b82f6',
-      pointBorderWidth: 2,
-      pointHoverRadius: 6,
-      fill: true,
-      tension: 0.35
-    }]
-  },
-  options: {
-    responsive: true,
-    maintainAspectRatio: true,
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        backgroundColor: '#222',
-        titleFontSize: 13,
-        bodyFontSize: 13,
-        cornerRadius: 8,
-        padding: 10
-      }
-    },
-    scales: {
-      x: {
-        grid: { display: false },
-        ticks: { color: '#999', font: { size: 12 } }
-      },
-      y: {
-        grid: { color: '#f0f0f0' },
-        ticks: { color: '#999', font: { size: 12 } },
-        beginAtZero: true
-      }
-    }
+async function render() {
+  let history = [], latest = null;
+  try {
+    history = await (await fetch('/chart/data/dividend_history.json')).json();
+    latest  = await (await fetch('/chart/data/dividend_latest.json')).json();
+  } catch (e) {
+    console.warn('数据文件不存在，使用演示数据');
   }
-});
 
-const postCtx = document.getElementById('postChart').getContext('2d');
-new Chart(postCtx, {
-  type: 'line',
-  data: {
-    labels: ['2019', '2020-Q1', '2020-Q2', '2021', '2022', '2023', '2024', '2025'],
-    datasets: [
-      {
-        label: 'Python',
-        data: [2, 8, 10, 12, 14, 15, 17, 18],
-        borderColor: '#22c55e',
-        backgroundColor: 'rgba(34, 197, 94, 0.06)',
-        borderWidth: 2,
-        pointRadius: 3,
-        fill: true,
-        tension: 0.35
-      },
-      {
-        label: 'R',
-        data: [0, 3, 4, 5, 5, 6, 6, 7],
-        borderColor: '#f59e0b',
-        backgroundColor: 'rgba(245, 158, 11, 0.06)',
-        borderWidth: 2,
-        pointRadius: 3,
-        fill: true,
-        tension: 0.35
-      },
-      {
-        label: '其他',
-        data: [0, 2, 3, 4, 5, 5, 6, 8],
-        borderColor: '#8b5cf6',
-        backgroundColor: 'rgba(139, 92, 246, 0.06)',
-        borderWidth: 2,
-        pointRadius: 3,
-        fill: true,
-        tension: 0.35
-      }
-    ]
-  },
-  options: {
-    responsive: true,
-    maintainAspectRatio: true,
-    plugins: {
-      legend: {
-        position: 'top',
-        labels: { usePointStyle: true, padding: 20, color: '#666', font: { size: 12 } }
-      },
-      tooltip: {
-        backgroundColor: '#222',
-        cornerRadius: 8,
-        padding: 10
-      }
+  new Chart(document.getElementById('visitChart').getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: history.map(d => d.date),
+      datasets: [
+        {
+          label: 'TOP15高夏普股平均收益率(%)',
+          data: history.map(d => d.avg_top15_sharpe_ratio),
+          borderColor: '#3b82f6',
+          backgroundColor: 'rgba(59,130,246,0.08)',
+          borderWidth: 2.5, pointRadius: 3, fill: true, tension: 0.35
+        },
+        {
+          label: 'TOP10高分红行业平均收益率(%)',
+          data: history.map(d => d.avg_top10_ind_ratio),
+          borderColor: '#f59e0b',
+          borderWidth: 2, pointRadius: 3, tension: 0.35
+        }
+      ]
     },
-    scales: {
-      x: {
-        grid: { display: false },
-        ticks: { color: '#999', font: { size: 12 } }
-      },
-      y: {
-        grid: { color: '#f0f0f0' },
-        ticks: { color: '#999', font: { size: 12 } },
-        beginAtZero: true
+    options: {
+      responsive: true,
+      plugins: { legend: { position: 'top', labels: { usePointStyle: true } } },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: '#999' } },
+        y: { grid: { color: '#f0f0f0' }, ticks: { color: '#999' } }
       }
     }
+  });
+
+  if (latest && latest.top15_sharpe) {
+    const cols = ['code', '名称', '行业', '收益率(%)', '波动率', '夏普'];
+    const rows = latest.top15_sharpe.map(r =>
+      `<tr>${cols.map(c => `<td style="padding:8px;border-bottom:1px solid #eee">${r[c] ?? r['名称'] ?? ''}</td>`).join('')}</tr>`);
+    document.getElementById('sharpeTable').innerHTML =
+      `<tr style="background:#f8f8f8;font-weight:600">${cols.map(c => `<td style="padding:8px">${c}</td>`).join('')}</tr>` + rows.join('');
   }
-});
+
+  if (latest) {
+    document.querySelector('.page-desc').textContent =
+      `数据更新时间：${latest.date}（每周自动更新）`;
+    document.getElementById('stat-date').textContent = latest.date;
+    document.getElementById('stat-sharpe').textContent =
+      history.length ? history[history.length - 1].avg_top15_sharpe_ratio : '--';
+    document.getElementById('stat-ind').textContent =
+      history.length ? history[history.length - 1].avg_top10_ind_ratio : '--';
+    document.getElementById('stat-count').textContent = latest.top15_sharpe.length;
+  }
+}
+render();
 </script>
 
 </body>
