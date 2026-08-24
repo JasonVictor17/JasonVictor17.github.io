@@ -116,11 +116,11 @@
     </div>
     <div class="stat-box">
       <div class="value" id="stat-sharpe">--</div>
-      <div class="label">TOP15平均收益率(%)</div>
+      <div class="label">TOP15平均股息率(%)</div>
     </div>
     <div class="stat-box">
       <div class="value" id="stat-ind">--</div>
-      <div class="label">TOP10行业平均收益率(%)</div>
+      <div class="label">TOP10行业平均股息率(%)</div>
     </div>
     <div class="stat-box">
       <div class="value" id="stat-count">--</div>
@@ -129,10 +129,11 @@
   </div>
 
   <div class="chart-card">
-    <h2>TOP15高股息股平均收益率走势</h2>
+    <h2>TOP10高分红行业平均股息率走势</h2>
     <div class="chart-wrapper">
       <canvas id="visitChart"></canvas>
     </div>
+    <p id="chart-tip" style="color:#999;font-size:13px;margin-top:12px;display:none"></p>
   </div>
 
   <div class="chart-card">
@@ -151,51 +152,68 @@
 </div>
 
 <script>
+const PALETTE = ['#3b82f6', '#f59e0b', '#22c55e', '#ef4444', '#8b5cf6',
+                 '#14b8a6', '#ec4899', '#84cc16', '#6366f1', '#f97316'];
+
+async function fetchJson(path) {
+  const res = await fetch(path + '?t=' + Date.now());
+  if (!res.ok) throw new Error(path + ' 加载失败: ' + res.status);
+  return res.json();
+}
+
 async function render() {
   let history = [], latest = null;
   try {
-    history = await (await fetch('/chart/data/dividend_history.json')).json();
-    latest  = await (await fetch('/chart/data/dividend_latest.json')).json();
+    history = await fetchJson('/chart/data/dividend_history.json');
+    latest  = await fetchJson('/chart/data/dividend_latest.json');
   } catch (e) {
-    console.warn('数据文件不存在，使用演示数据');
+    console.warn(e);
+    const tip = document.getElementById('chart-tip');
+    tip.style.display = 'block';
+    tip.textContent = '⚠️ 数据文件尚未就绪（' + e.message + '）。请确认 dividend_data_push.py 已成功运行并推送到 GitHub。';
   }
+
+  const labels = history.map(d => d.date);
+  const industries = [...new Set(
+    history.flatMap(d => Object.keys(d.industry_ratios || {})))];
+
+  const datasets = industries.map((ind, i) => ({
+    label: ind,
+    data: history.map(d => (d.industry_ratios || {})[ind] ?? null),
+    borderColor: PALETTE[i % PALETTE.length],
+    borderWidth: 2, pointRadius: 2.5, tension: 0.35, spanGaps: true
+  }));
 
   new Chart(document.getElementById('visitChart').getContext('2d'), {
     type: 'line',
-    data: {
-      labels: history.map(d => d.date),
-      datasets: [
-        {
-          label: 'TOP15高夏普股平均收益率(%)',
-          data: history.map(d => d.avg_top15_sharpe_ratio),
-          borderColor: '#3b82f6',
-          backgroundColor: 'rgba(59,130,246,0.08)',
-          borderWidth: 2.5, pointRadius: 3, fill: true, tension: 0.35
-        },
-        {
-          label: 'TOP10高分红行业平均收益率(%)',
-          data: history.map(d => d.avg_top10_ind_ratio),
-          borderColor: '#f59e0b',
-          borderWidth: 2, pointRadius: 3, tension: 0.35
-        }
-      ]
-    },
+    data: { labels, datasets },
     options: {
       responsive: true,
-      plugins: { legend: { position: 'top', labels: { usePointStyle: true } } },
+      plugins: {
+        legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, font: { size: 12 } } },
+        tooltip: { mode: 'index', intersect: false }
+      },
       scales: {
         x: { grid: { display: false }, ticks: { color: '#999' } },
-        y: { grid: { color: '#f0f0f0' }, ticks: { color: '#999' } }
+        y: { grid: { color: '#f0f0f0' }, ticks: { color: '#999' },
+             title: { display: true, text: '股息率(%)', color: '#999' } }
       }
     }
   });
 
+  if (history.length === 0) {
+    const tip = document.getElementById('chart-tip');
+    tip.style.display = 'block';
+    tip.textContent = '⚠️ 暂无历史数据。数据每周累积，运行几周后折线图会越来越丰富。';
+  }
+
   if (latest && latest.top15_sharpe) {
     const cols = ['code', '名称', '行业', '收益率(%)', '波动率', '夏普'];
+    const show = { '收益率(%)': '股息率(%)' };
     const rows = latest.top15_sharpe.map(r =>
-      `<tr>${cols.map(c => `<td style="padding:8px;border-bottom:1px solid #eee">${r[c] ?? r['名称'] ?? ''}</td>`).join('')}</tr>`);
+      `<tr>${cols.map(c => `<td style="padding:8px;border-bottom:1px solid #eee">${r[c] ?? ''}</td>`).join('')}</tr>`);
     document.getElementById('sharpeTable').innerHTML =
-      `<tr style="background:#f8f8f8;font-weight:600">${cols.map(c => `<td style="padding:8px">${c}</td>`).join('')}</tr>` + rows.join('');
+      `<tr style="background:#f8f8f8;font-weight:600">${cols.map(c => `<td style="padding:8px">${show[c] || c}</td>`).join('')}</tr>` + rows.join('');
   }
 
   if (latest) {
