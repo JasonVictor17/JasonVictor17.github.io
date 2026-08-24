@@ -108,6 +108,10 @@
 <div class="container">
   <h1 class="page-title">📊 数据看板</h1>
   <p class="page-desc">这是一个数据可视化 Demo 页面，后续可接入真实数据。</p>
+  <p style="font-size:12px;color:#bbb;margin:-24px 0 28px">
+    口径说明：「3年平均分红」= 近2~3个自然年年度分红均值 ÷ 当前股价（要求连续分红）；
+    「TTM股息率」= 近365天实际派发分红合计 ÷ 当前股价
+  </p>
 
   <div class="stats-row">
     <div class="stat-box">
@@ -116,11 +120,11 @@
     </div>
     <div class="stat-box">
       <div class="value" id="stat-sharpe">--</div>
-      <div class="label">TOP15平均股息率(%)</div>
+      <div class="label">TOP15平均3年股息率(%)</div>
     </div>
     <div class="stat-box">
       <div class="value" id="stat-ind">--</div>
-      <div class="label">TOP10行业平均股息率(%)</div>
+      <div class="label">TOP10行业平均3年股息率(%)</div>
     </div>
     <div class="stat-box">
       <div class="value" id="stat-count">--</div>
@@ -129,7 +133,7 @@
   </div>
 
   <div class="chart-card">
-    <h2>TOP10高分红行业平均股息率走势</h2>
+    <h2>TOP10高分红行业平均股息率走势（3年平均分红口径）</h2>
     <div class="chart-wrapper">
       <canvas id="visitChart"></canvas>
     </div>
@@ -208,8 +212,8 @@ async function render() {
   }
 
   if (latest && latest.top15_sharpe) {
-    const cols = ['code', '名称', '行业', '收益率(%)', '波动率', '夏普'];
-    const show = { '收益率(%)': '股息率(%)' };
+    const cols = ['code', '名称', '行业', '3年平均分红收益率(%)', 'TTM股息率(%)', '波动率', '夏普'];
+    const show = { '3年平均分红收益率(%)': '3年股息率(%)' };
     const rows = latest.top15_sharpe.map(r =>
       `<tr>${cols.map(c => `<td style="padding:8px;border-bottom:1px solid #eee">${r[c] ?? ''}</td>`).join('')}</tr>`);
     document.getElementById('sharpeTable').innerHTML =
