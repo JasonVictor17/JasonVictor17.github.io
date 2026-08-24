@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>数据看板 - Jingde's Blog</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: #f5f7fa;
+      color: #333;
+    }
+    .nav-bar {
+      background: #222;
+      padding: 16px 0;
+      text-align: center;
+    }
+    .nav-bar a {
+      color: #fff;
+      text-decoration: none;
+      font-size: 16px;
+      margin: 0 20px;
+      opacity: 0.8;
+      transition: opacity 0.2s;
+    }
+    .nav-bar a:hover { opacity: 1; }
+    .nav-bar a.active { opacity: 1; border-bottom: 2px solid #fff; padding-bottom: 4px; }
+    .container {
+      max-width: 960px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+    .page-title {
+      font-size: 28px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #222;
+    }
+    .page-desc {
+      font-size: 14px;
+      color: #999;
+      margin-bottom: 32px;
+    }
+    .chart-card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      padding: 32px;
+      margin-bottom: 24px;
+    }
+    .chart-card h2 {
+      font-size: 18px;
+      margin-bottom: 20px;
+      color: #333;
+    }
+    .chart-wrapper {
+      position: relative;
+      width: 100%;
+      max-height: 400px;
+    }
+    .stats-row {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-box {
+      flex: 1;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      padding: 24px;
+      text-align: center;
+    }
+    .stat-box .value {
+      font-size: 32px;
+      font-weight: 700;
+      color: #222;
+    }
+    .stat-box .label {
+      font-size: 13px;
+      color: #999;
+      margin-top: 4px;
+    }
+    .stat-box .change {
+      font-size: 13px;
+      margin-top: 8px;
+    }
+    .change.up { color: #22c55e; }
+    .change.down { color: #ef4444; }
+    @media (max-width: 600px) {
+      .stats-row { flex-direction: column; }
+      .container { margin: 20px auto; }
+      .chart-card { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="nav-bar">
+  <a href="/">首页</a>
+  <a href="/about/">关于</a>
+  <a href="/chart/" class="active">数据看板</a>
+  <a href="/archives/">归档</a>
+</div>
+
+<div class="container">
+  <h1 class="page-title">📊 数据看板</h1>
+  <p class="page-desc">这是一个数据可视化 Demo 页面，后续可接入真实数据。</p>
+
+  <div class="stats-row">
+    <div class="stat-box">
+      <div class="value">1,286</div>
+      <div class="label">本月访问量</div>
+      <div class="change up">↑ 12.5%</div>
+    </div>
+    <div class="stat-box">
+      <div class="value">21</div>
+      <div class="label">文章总数</div>
+      <div class="change up">↑ 2</div>
+    </div>
+    <div class="stat-box">
+      <div class="value">46.3k</div>
+      <div class="label">全站字数</div>
+      <div class="change up">↑ 3.2k</div>
+    </div>
+    <div class="stat-box">
+      <div class="value">9</div>
+      <div class="label">标签数</div>
+      <div class="change down">— 0</div>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <h2>月度访问趋势</h2>
+    <div class="chart-wrapper">
+      <canvas id="visitChart"></canvas>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <h2>文章发布统计</h2>
+    <div class="chart-wrapper">
+      <canvas id="postChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<script>
+const visitCtx = document.getElementById('visitChart').getContext('2d');
+new Chart(visitCtx, {
+  type: 'line',
+  data: {
+    labels: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
+    datasets: [{
+      label: '访问量',
+      data: [320, 450, 380, 520, 610, 750, 680, 890, 920, 1050, 1180, 1286],
+      borderColor: '#3b82f6',
+      backgroundColor: 'rgba(59, 130, 246, 0.08)',
+      borderWidth: 2.5,
+      pointRadius: 4,
+      pointBackgroundColor: '#fff',
+      pointBorderColor: '#3b82f6',
+      pointBorderWidth: 2,
+      pointHoverRadius: 6,
+      fill: true,
+      tension: 0.35
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: true,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#222',
+        titleFontSize: 13,
+        bodyFontSize: 13,
+        cornerRadius: 8,
+        padding: 10
+      }
+    },
+    scales: {
+      x: {
+        grid: { display: false },
+        ticks: { color: '#999', font: { size: 12 } }
+      },
+      y: {
+        grid: { color: '#f0f0f0' },
+        ticks: { color: '#999', font: { size: 12 } },
+        beginAtZero: true
+      }
+    }
+  }
+});
+
+const postCtx = document.getElementById('postChart').getContext('2d');
+new Chart(postCtx, {
+  type: 'line',
+  data: {
+    labels: ['2019', '2020-Q1', '2020-Q2', '2021', '2022', '2023', '2024', '2025'],
+    datasets: [
+      {
+        label: 'Python',
+        data: [2, 8, 10, 12, 14, 15, 17, 18],
+        borderColor: '#22c55e',
+        backgroundColor: 'rgba(34, 197, 94, 0.06)',
+        borderWidth: 2,
+        pointRadius: 3,
+        fill: true,
+        tension: 0.35
+      },
+      {
+        label: 'R',
+        data: [0, 3, 4, 5, 5, 6, 6, 7],
+        borderColor: '#f59e0b',
+        backgroundColor: 'rgba(245, 158, 11, 0.06)',
+        borderWidth: 2,
+        pointRadius: 3,
+        fill: true,
+        tension: 0.35
+      },
+      {
+        label: '其他',
+        data: [0, 2, 3, 4, 5, 5, 6, 8],
+        borderColor: '#8b5cf6',
+        backgroundColor: 'rgba(139, 92, 246, 0.06)',
+        borderWidth: 2,
+        pointRadius: 3,
+        fill: true,
+        tension: 0.35
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: true,
+    plugins: {
+      legend: {
+        position: 'top',
+        labels: { usePointStyle: true, padding: 20, color: '#666', font: { size: 12 } }
+      },
+      tooltip: {
+        backgroundColor: '#222',
+        cornerRadius: 8,
+        padding: 10
+      }
+    },
+    scales: {
+      x: {
+        grid: { display: false },
+        ticks: { color: '#999', font: { size: 12 } }
+      },
+      y: {
+        grid: { color: '#f0f0f0' },
+        ticks: { color: '#999', font: { size: 12 } },
+        beginAtZero: true
+      }
+    }
+  }
+});
+</script>
+
+</body>
+</html>
