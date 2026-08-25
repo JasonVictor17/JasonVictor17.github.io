@@ -30,11 +30,9 @@
     }
     .stat-box .value { font-size: 30px; font-weight: 700; color: #222; }
     .stat-box .label { font-size: 13px; color: #999; margin-top: 4px; }
-    .heat-badge {
-      display: inline-block; min-width: 46px; text-align: center;
-      border-radius: 999px; padding: 3px 10px;
-      font-weight: 600; font-size: 12px;
-    }
+    .heat-bar { display: inline-flex; gap: 2px; vertical-align: middle; }
+    .heat-cell { width: 10px; height: 16px; border-radius: 2px; }
+    .heat-cell-empty { background: #e5e7eb; }
     @media (max-width: 600px) {
       .stats-row { flex-direction: column; }
       .container { margin: 20px auto; }
@@ -86,7 +84,7 @@
       <table id="top20Table" style="width:100%;border-collapse:collapse;font-size:13px"></table>
     </div>
     <p style="font-size:12px;color:#bbb;margin-top:10px">
-      热力值：标准化得分（缩尾±3）。红色越深热度越高，蓝色越深越冷，接近0为中性
+      十格热力条：格子越多热度越高（最差1格、最好10格），蓝色偏冷、红色偏热，悬停可查看数值
     </p>
   </div>
 
@@ -107,22 +105,20 @@
   return res.json();
 }
 
-// 热力值徽章：正值红热、负值蓝冷，颜色深浅随强度变化
-function heatBadge(v) {
+// 十格热力条：格子数=热度（1~10格），填充色由蓝到红渐变，不显示数值
+function heatBar(v) {
   const x = Math.max(-3, Math.min(3, Number(v) || 0));
-  const t = Math.min(Math.abs(x) / 3, 1);
-  let bg, fg;
-  if (x > 0.05) {
-    bg = `rgba(239, 68, 68, ${(0.10 + 0.45 * t).toFixed(3)})`;
-    fg = t > 0.5 ? '#fff' : '#b91c1c';
-  } else if (x < -0.05) {
-    bg = `rgba(59, 130, 246, ${(0.10 + 0.45 * t).toFixed(3)})`;
-    fg = t > 0.5 ? '#fff' : '#1d4ed8';
-  } else {
-    bg = 'rgba(148, 163, 184, 0.14)';
-    fg = '#64748b';
+  const cells = Math.max(1, Math.min(10, Math.round((x + 3) / 6 * 10)));
+  let html = `<span class="heat-bar" title="${(Number(v) || 0).toFixed(2)}">`;
+  for (let i = 1; i <= 10; i++) {
+    if (i <= cells) {
+      const hue = Math.round(220 - 220 * (i / 10));   // 220°蓝 → 0°红
+      html += `<span class="heat-cell" style="background:hsl(${hue}, 85%, 55%)"></span>`;
+    } else {
+      html += `<span class="heat-cell heat-cell-empty"></span>`;
+    }
   }
-  return `<span class="heat-badge" style="background:${bg};color:${fg}">${(Number(v) || 0).toFixed(2)}</span>`;
+  return html + '</span>';
 }
 
 async function render() {
@@ -149,9 +145,9 @@ async function render() {
         <td style="padding:8px;text-align:right">${r['3年股息率(%)']}</td>
         <td style="padding:8px;text-align:right;color:#2563eb;font-weight:600">${r['TTM股息率(%)']}</td>
         <td style="padding:8px;text-align:right">${r['总市值(亿)']}</td>
-        <td style="padding:8px;text-align:center">${heatBadge(r['动量Z'])}</td>
-        <td style="padding:8px;text-align:center">${heatBadge(r['股息率Z'])}</td>
-        <td style="padding:8px;text-align:center">${heatBadge(r['综合得分'])}</td>
+        <td style="padding:8px;text-align:center">${heatBar(r['动量Z'])}</td>
+        <td style="padding:8px;text-align:center">${heatBar(r['股息率Z'])}</td>
+        <td style="padding:8px;text-align:center">${heatBar(r['综合得分'])}</td>
       </tr>`).join('');
     document.getElementById('top20Table').innerHTML = header + rows;
   }
