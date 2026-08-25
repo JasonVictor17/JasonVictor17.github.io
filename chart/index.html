@@ -136,7 +136,7 @@
   <div class="chart-card">
     <h2>TOP10高分红行业平均股息率走势（3年平均分红口径）</h2>
     <p style="font-size:12px;color:#bbb;margin:-10px 0 14px">
-      默认显示：银行 / 煤炭开采 / 电器连锁 / 白酒；图例按当前股息率降序，点击图例可显示或隐藏其他行业
+      默认显示：银行 / 煤炭开采 / 路桥 / 白酒；图例按当前股息率降序，点击图例可显示或隐藏其他行业
     </p>
     <div class="chart-wrapper">
       <canvas id="visitChart"></canvas>
@@ -170,7 +170,7 @@
 <script>
 const PALETTE = ['#3b82f6', '#f59e0b', '#22c55e', '#ef4444', '#8b5cf6',
                  '#14b8a6', '#ec4899', '#84cc16', '#6366f1', '#f97316'];
-const PRIORITY_INDUSTRIES = ['银行', '煤炭开采', '电器连锁', '白酒'];
+const PRIORITY_INDUSTRIES = ['银行', '煤炭开采', '路桥', '白酒'];
 
 async function fetchJson(path) {
   const res = await fetch(path + '?t=' + Date.now());
