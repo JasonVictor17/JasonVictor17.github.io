@@ -1,0 +1,214 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>红利动量策略选股 - Jingde's Blog</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <style>    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: #f5f7fa; color: #333;
+    }
+    .nav-bar { background: #222; padding: 16px 0; text-align: center; }
+    .nav-bar a { color: #fff; text-decoration: none; font-size: 16px; margin: 0 20px; opacity: 0.8; transition: opacity 0.2s; }
+    .nav-bar a:hover { opacity: 1; }
+    .nav-bar a.active { opacity: 1; border-bottom: 2px solid #fff; padding-bottom: 4px; }
+    .container { max-width: 960px; margin: 40px auto; padding: 0 20px; }
+    .page-title { font-size: 28px; font-weight: 600; margin-bottom: 8px; color: #222; }
+    .page-desc { font-size: 14px; color: #999; margin-bottom: 32px; }
+    .chart-card {
+      background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      padding: 32px; margin-bottom: 24px;
+    }
+    .chart-card h2 { font-size: 18px; margin-bottom: 20px; color: #333; }
+    .chart-wrapper { position: relative; width: 100%; height: 380px; }
+    .stats-row { display: flex; gap: 16px; margin-bottom: 24px; }
+    .stat-box {
+      flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      padding: 24px; text-align: center;
+    }
+    .stat-box .value { font-size: 30px; font-weight: 700; color: #222; }
+    .stat-box .label { font-size: 13px; color: #999; margin-top: 4px; }
+    @media (max-width: 600px) {
+      .stats-row { flex-direction: column; }
+      .container { margin: 20px auto; }
+      .chart-card { padding: 20px; }
+      .chart-wrapper { height: 300px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="nav-bar">
+  <a href="/">首页</a>
+  <a href="/about/">关于</a>
+  <a href="/chart/">数据看板</a>
+  <a href="/archives/">归档</a>
+</div>
+
+<div style="text-align:center;background:#fff;border-bottom:1px solid #eee;padding:10px 0">
+  <a href="/chart/dividend/" style="display:inline-block;margin:0 14px;font-size:14px;color:#999">功能1：红利股全览</a>
+  <a href="/chart/momentum/" style="display:inline-block;margin:0 14px;font-size:14px;color:#222;font-weight:600;border-bottom:2px solid #222;padding-bottom:4px">功能2：红利动量策略选股（大市值）</a>
+</div>
+
+<div class="container">
+  <h1 class="page-title">🚀 红利动量策略选股（大市值）</h1>
+  <p class="page-desc">数据更新时间：--（每周自动更新）</p>
+
+  <div class="stats-row">
+    <div class="stat-box">
+      <div class="value" id="stat-date">--</div>
+      <div class="label">数据更新日期</div>
+    </div>
+    <div class="stat-box">
+      <div class="value" id="stat-count">--</div>
+      <div class="label">入选股票数</div>
+    </div>
+    <div class="stat-box">
+      <div class="value" id="stat-pool">--</div>
+      <div class="label">候选池规模</div>
+    </div>
+    <div class="stat-box">
+      <div class="value" id="stat-weights">--</div>
+      <div class="label">动量/股息 权重</div>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <h2>TOP20组合指标走势</h2>
+    <p style="font-size:12px;color:#bbb;margin:-10px 0 14px">
+      左轴：TOP20平均TTM股息率(%)；右轴：TOP20平均综合得分
+    </p>
+    <div class="chart-wrapper">
+      <canvas id="momChart"></canvas>
+    </div>
+    <p id="chart-tip" style="color:#999;font-size:13px;margin-top:12px;display:none"></p>
+  </div>
+
+  <div class="chart-card">
+    <h2>TOP20 红利动量组合名单</h2>
+    <div style="overflow-x:auto">
+      <table id="top20Table" style="width:100%;border-collapse:collapse;font-size:13px"></table>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <h2>策略说明</h2>
+    <ul style="font-size:13px;color:#666;line-height:2;padding-left:20px">
+      <li><b>股票池</b>：近三年连续分红且当前TTM股息率&gt;1%；市值&gt;500亿；近一月日均成交额&gt;1亿；剔除ST</li>
+      <li><b>动量得分（标普方法）</b>：风险调整动量 = 窗口前复权回报率 ÷ 年化波动率，跨候选股做Z标准化并缩尾±3</li>
+      <li><b>股息率Z</b>：TTM股息率跨候选股标准化并缩尾±3</li>
+      <li><b>综合得分</b> = 动量Z × 动量权重 + 股息率Z × 股息权重，按得分降序取TOP20</li>
+      <li><b>窗口参数</b>：动量窗口与剔除天数按交易日计，权重可配置（见下方实际参数）</li>
+    </ul>
+  </div>
+</div>
+
+<script>async function fetchJson(path) {
+  const res = await fetch(path + '?t=' + Date.now());
+  if (!res.ok) throw new Error(path + ' 加载失败: ' + res.status);
+  return res.json();
+}
+
+async function render() {
+  let history = [], latest = null;
+  try {
+    history = await fetchJson('/chart/data/momentum_history.json');
+    latest  = await fetchJson('/chart/data/momentum_latest.json');
+  } catch (e) {
+    console.warn(e);
+    const tip = document.getElementById('chart-tip');
+    tip.style.display = 'block';
+    tip.textContent = '⚠️ 数据文件尚未就绪（' + e.message + '）。请确认 update_high_dividend_mom.py 已成功运行并推送到 GitHub。';
+  }
+
+  // 走势图：平均TTM股息率（左轴）+ 平均综合得分（右轴）
+  new Chart(document.getElementById('momChart').getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: history.map(d => d.date),
+      datasets: [
+        {
+          label: 'TOP20平均TTM股息率(%)', yAxisID: 'y',
+          data: history.map(d => d.avg_ttm),
+          borderColor: '#3b82f6', borderWidth: 2, pointRadius: 3, tension: 0.35
+        },
+        {
+          label: 'TOP20平均综合得分', yAxisID: 'y1',
+          data: history.map(d => d.avg_score),
+          borderColor: '#f59e0b', borderWidth: 2, pointRadius: 3, tension: 0.35,
+          borderDash: [5, 3]
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            usePointStyle: true,
+            boxWidth: window.innerWidth < 600 ? 5 : 8,
+            padding: window.innerWidth < 600 ? 6 : 14,
+            font: { size: window.innerWidth < 600 ? 10 : 12 }
+          }
+        },
+        tooltip: { mode: 'index', intersect: false }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: '#999',
+             maxTicksLimit: window.innerWidth < 600 ? 6 : 12 } },
+        y: { grid: { color: '#f0f0f0' }, ticks: { color: '#999' },
+             title: { display: true, text: '股息率(%)', color: '#999' } },
+        y1: { position: 'right', grid: { display: false }, ticks: { color: '#999' },
+              title: { display: true, text: '综合得分', color: '#999' } }
+      }
+    }
+  });
+
+  if (history.length === 0) {
+    const tip = document.getElementById('chart-tip');
+    tip.style.display = 'block';
+    tip.textContent = '⚠️ 暂无历史数据。数据每周累积，运行几周后走势会越来越丰富。';
+  }
+
+  if (latest && latest.top20) {
+    const cols = ['code', 'name', 'industry', 'close', '3年股息率(%)', 'TTM股息率(%)', '总市值(亿)', '动量Z', '股息率Z', '综合得分'];
+    const names = ['代码', '名称', '行业', '收盘价', '3年股息率(%)', 'TTM股息率(%)', '总市值(亿)', '动量Z', '股息率Z', '综合得分'];
+    const header = `<tr style="background:#f8f8f8;font-weight:600">${
+      names.map(c => `<td style="padding:8px">${c}</td>`).join('')}</tr>`;
+    const rows = latest.top20.map((r, i) =>
+      `<tr style="border-bottom:1px solid #eee">
+        <td style="padding:8px;color:#888">${r.code}</td>
+        <td style="padding:8px;font-weight:600">${r.name}</td>
+        <td style="padding:8px">${r.industry}</td>
+        <td style="padding:8px;text-align:right">${r.close}</td>
+        <td style="padding:8px;text-align:right">${r['3年股息率(%)']}</td>
+        <td style="padding:8px;text-align:right;color:#2563eb;font-weight:600">${r['TTM股息率(%)']}</td>
+        <td style="padding:8px;text-align:right">${r['总市值(亿)']}</td>
+        <td style="padding:8px;text-align:right">${r['动量Z']}</td>
+        <td style="padding:8px;text-align:right">${r['股息率Z']}</td>
+        <td style="padding:8px;text-align:right;font-weight:600">${r['综合得分']}</td>
+      </tr>`).join('');
+    document.getElementById('top20Table').innerHTML = header + rows;
+  }
+
+  if (latest) {
+    document.querySelector('.page-desc').textContent =
+      `数据更新时间：${latest.date}（交易日17点后自动更新）`;
+    document.getElementById('stat-date').textContent = latest.date;
+    document.getElementById('stat-count').textContent = (latest.top20 || []).length;
+    document.getElementById('stat-pool').textContent = latest.pool_size;
+    const p = latest.params || {};
+    document.getElementById('stat-weights').textContent =
+      `${p.w_mom ?? '-'} / ${p.w_div ?? '-'}`;
+  }
+}
+render();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>数据看板 - Jingde's Blog</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: #f5f7fa;
+      color: #333;
+    }
+    .nav-bar {
+      background: #222;
+      padding: 16px 0;
+      text-align: center;
+    }
+    .nav-bar a {
+      color: #fff;
+      text-decoration: none;
+      font-size: 16px;
+      margin: 0 20px;
+      opacity: 0.8;
+      transition: opacity 0.2s;
+    }
+    .nav-bar a:hover { opacity: 1; }
+    .nav-bar a.active { opacity: 1; border-bottom: 2px solid #fff; padding-bottom: 4px; }
+    .container {
+      max-width: 960px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+    .page-title {
+      font-size: 28px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #222;
+    }
+    .page-desc {
+      font-size: 14px;
+      color: #999;
+      margin-bottom: 32px;
+    }
+    .chart-card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      padding: 32px;
+      margin-bottom: 24px;
+    }
+    .chart-card h2 {
+      font-size: 18px;
+      margin-bottom: 20px;
+      color: #333;
+    }
+    .chart-wrapper {
+      position: relative;
+      width: 100%;
+      height: 420px;
+    }
+    .stats-row {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-box {
+      flex: 1;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      padding: 24px;
+      text-align: center;
+    }
+    .stat-box .value {
+      font-size: 32px;
+      font-weight: 700;
+      color: #222;
+    }
+    .stat-box .label {
+      font-size: 13px;
+      color: #999;
+      margin-top: 4px;
+    }
+    .stat-box .change {
+      font-size: 13px;
+      margin-top: 8px;
+    }
+    .change.up { color: #22c55e; }
+    .change.down { color: #ef4444; }
+    @media (max-width: 600px) {
+      .stats-row { flex-direction: column; }
+      .container { margin: 20px auto; }
+      .chart-card { padding: 20px; }
+      .chart-wrapper { height: 320px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="nav-bar">
+  <a href="/">首页</a>
+  <a href="/about/">关于</a>
+  <a href="/chart/" class="active">数据看板</a>
+  <a href="/archives/">归档</a>
+</div>
+
+<div class="container">
+  <h1 class="page-title">📊 数据看板</h1>
+  <p class="page-desc">这是一个数据可视化 Demo 页面，后续可接入真实数据。</p>
+  <p style="font-size:12px;color:#bbb;margin:-24px 0 28px">
+    口径说明：「3年平均分红」= 近2~3个自然年年度分红均值 ÷ 当前股价（要求连续分红）；
+    「TTM股息率」= 近365天实际派发分红合计 ÷ 当前股价
+  </p>
+
+  <div class="stats-row">
+    <div class="stat-box">
+      <div class="value" id="stat-date">--</div>
+      <div class="label">数据更新日期</div>
+    </div>
+    <div class="stat-box">
+      <div class="value" id="stat-sharpe">--</div>
+      <div class="label">TOP15平均3年股息率(%)</div>
+    </div>
+    <div class="stat-box">
+      <div class="value" id="stat-ind">--</div>
+      <div class="label">TOP10行业平均3年股息率(%)</div>
+    </div>
+    <div class="stat-box">
+      <div class="value" id="stat-count">--</div>
+      <div class="label">上榜股票数</div>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <h2>TOP10高分红行业平均股息率走势（3年平均分红口径）</h2>
+    <p style="font-size:12px;color:#bbb;margin:-10px 0 14px">
+      默认显示：银行 / 煤炭开采 / 路桥 / 白酒；图例按当前股息率降序，点击图例可显示或隐藏其他行业
+    </p>
+    <div class="chart-wrapper">
+      <canvas id="visitChart"></canvas>
+    </div>
+    <p id="chart-tip" style="color:#999;font-size:13px;margin-top:12px;display:none"></p>
+  </div>
+
+  <div class="chart-card">
+    <h2>十大高股息行业（点击行业查看个股明细）</h2>
+    <div style="overflow-x:auto">
+      <table id="industryTable" style="width:100%;border-collapse:collapse;font-size:14px">
+      </table>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <h2>TOP15高夏普分红股（本周）</h2>
+    <div style="overflow-x:auto">
+      <table id="sharpeTable" style="width:100%;border-collapse:collapse;font-size:14px">
+      </table>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <h2>分红 V.S. 风险散点图</h2>
+    <img src="/chart/data/dividend_scatter.jpg" style="width:100%;border-radius:8px"
+         onerror="this.parentNode.innerHTML='<p style=\'color:#999\'>暂无图片数据</p>'">
+  </div>
+</div>
+
+<script>
+const PALETTE = ['#3b82f6', '#f59e0b', '#22c55e', '#ef4444', '#8b5cf6',
+                 '#14b8a6', '#ec4899', '#84cc16', '#6366f1', '#f97316'];
+const PRIORITY_INDUSTRIES = ['银行', '煤炭开采', '路桥', '白酒'];
+
+async function fetchJson(path) {
+  const res = await fetch(path + '?t=' + Date.now());
+  if (!res.ok) throw new Error(path + ' 加载失败: ' + res.status);
+  return res.json();
+}
+
+async function render() {
+  let history = [], latest = null;
+  try {
+    history = await fetchJson('/chart/data/dividend_history.json');
+    latest  = await fetchJson('/chart/data/dividend_latest.json');
+  } catch (e) {
+    console.warn(e);
+    const tip = document.getElementById('chart-tip');
+    tip.style.display = 'block';
+    tip.textContent = '⚠️ 数据文件尚未就绪（' + e.message + '）。请确认 dividend_data_push.py 已成功运行并推送到 GitHub。';
+  }
+
+  const labels = history.map(d => d.date);
+  const industries = [...new Set(
+    history.flatMap(d => Object.keys(d.industry_ratios || {})))];
+
+  // 按最新一期股息率降序排序行业
+  const latestRatio = history.length ? (history[history.length - 1].industry_ratios || {}) : {};
+  const sortedIndustries = [...industries].sort((a, b) =>
+    (latestRatio[b] ?? -Infinity) - (latestRatio[a] ?? -Infinity));
+
+  // 优先行业固定配色，其余按排序顺位分配；默认只显示优先行业
+  const datasets = sortedIndustries.map((ind, i) => ({
+    label: ind,
+    data: history.map(d => (d.industry_ratios || {})[ind] ?? null),
+    borderColor: PALETTE[i % PALETTE.length],
+    borderWidth: 2, pointRadius: 2.5, tension: 0.35, spanGaps: true,
+    hidden: !PRIORITY_INDUSTRIES.includes(ind)
+  }));
+
+  new Chart(document.getElementById('visitChart').getContext('2d'), {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            usePointStyle: true,
+            boxWidth: window.innerWidth < 600 ? 5 : 8,
+            padding: window.innerWidth < 600 ? 6 : 14,
+            font: { size: window.innerWidth < 600 ? 10 : 12 }
+          },
+          onClick(e, item, legend) {
+            const idx = item.datasetIndex;
+            const ci = legend.chart;
+            ci.setDatasetVisibility(idx, !ci.isDatasetVisible(idx));
+            ci.update();
+          }
+        },
+        tooltip: { mode: 'index', intersect: false }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: '#999',
+             maxTicksLimit: window.innerWidth < 600 ? 6 : 12 } },
+        y: { grid: { color: '#f0f0f0' }, ticks: { color: '#999' },
+             title: { display: true, text: '股息率(%)', color: '#999' } }
+      }
+    }
+  });
+
+  if (history.length === 0) {
+    const tip = document.getElementById('chart-tip');
+    tip.style.display = 'block';
+    tip.textContent = '⚠️ 暂无历史数据。数据每周累积，运行几周后折线图会越来越丰富。';
+  }
+
+  if (latest && latest.top10_ind) {
+    renderIndustryTable(latest);
+  }
+
+  if (latest && latest.top15_sharpe) {
+    const cols = ['code', '名称', '行业', '3年平均分红收益率(%)', 'TTM股息率(%)', '波动率', '夏普'];
+    const show = { '3年平均分红收益率(%)': '3年股息率(%)' };
+    const rows = latest.top15_sharpe.map(r =>
+      `<tr>${cols.map(c => `<td style="padding:8px;border-bottom:1px solid #eee">${r[c] ?? ''}</td>`).join('')}</tr>`);
+    document.getElementById('sharpeTable').innerHTML =
+      `<tr style="background:#f8f8f8;font-weight:600">${cols.map(c => `<td style="padding:8px">${show[c] || c}</td>`).join('')}</tr>` + rows.join('');
+  }
+
+  if (latest) {
+    document.querySelector('.page-desc').textContent =
+      `数据更新时间：${latest.date}（每周自动更新）`;
+    document.getElementById('stat-date').textContent = latest.date;
+    document.getElementById('stat-sharpe').textContent =
+      history.length ? history[history.length - 1].avg_top15_sharpe_ratio : '--';
+    document.getElementById('stat-ind').textContent =
+      history.length ? history[history.length - 1].avg_top10_ind_ratio : '--';
+    document.getElementById('stat-count').textContent = latest.top15_sharpe.length;
+  }
+}
+render();
+
+function renderIndustryTable(latest) {
+  const cols = ['', '行业', '个股数', '平均分红', '3年股息率(%)', 'TTM股息率(%)'];
+  const header = `<tr style="background:#f8f8f8;font-weight:600">${
+    cols.map(c => `<td style="padding:8px">${c}</td>`).join('')}</tr>`;
+
+  const rows = latest.top10_ind.map((r, i) => {
+    const ind = r['行业'];
+    const stocks = (latest.top10_ind_stocks || {})[ind] || [];
+    const stockRows = stocks.map(s =>
+      `<tr>
+        <td style="padding:6px 8px;color:#888">${s.code}</td>
+        <td style="padding:6px 8px">${s.name}</td>
+        <td style="padding:6px 8px;text-align:right">${s.close}</td>
+        <td style="padding:6px 8px;text-align:right">${s['3年平均股息率(%)']}</td>
+        <td style="padding:6px 8px;text-align:right">${s['TTM股息率(%)']}</td>
+      </tr>`).join('');
+
+    return `
+      <tr onclick="toggleIndustry(${i})" id="ind-row-${i}"
+          style="cursor:pointer;border-bottom:1px solid #eee">
+        <td style="padding:8px" id="ind-arrow-${i}">▸</td>
+        <td style="padding:8px;font-weight:600">${ind}</td>
+        <td style="padding:8px">${r['个股数']}</td>
+        <td style="padding:8px">${r['分红']}</td>
+        <td style="padding:8px">${r['3年平均分红收益率(%)']}</td>
+        <td style="padding:8px">${r['TTM股息率(%)']}</td>
+      </tr>
+      <tr id="ind-detail-${i}" style="display:none">
+        <td colspan="6" style="background:#fafafa;padding:12px">
+          <table style="width:100%;border-collapse:collapse;font-size:13px">
+            <tr style="color:#999">
+              <td style="padding:4px 8px">代码</td>
+              <td style="padding:4px 8px">名称</td>
+              <td style="padding:4px 8px;text-align:right">最新价</td>
+              <td style="padding:4px 8px;text-align:right">3年股息率(%)</td>
+              <td style="padding:4px 8px;text-align:right">TTM股息率(%)</td>
+            </tr>
+            ${stockRows || '<tr><td colspan="5" style="padding:8px;color:#999">暂无明细数据</td></tr>'}
+          </table>
+        </td>
+      </tr>`;
+  }).join('');
+
+  document.getElementById('industryTable').innerHTML = header + rows;
+}
+
+function toggleIndustry(i) {
+  const detail = document.getElementById('ind-detail-' + i);
+  const arrow = document.getElementById('ind-arrow-' + i);
+  const open = detail.style.display === 'table-row';
+  detail.style.display = open ? 'none' : 'table-row';
+  arrow.textContent = open ? '▸' : '▾';
+}
+render();
+</script>
+
+</body>
+</html>
