@@ -151,7 +151,7 @@ let REBAL_DATA = [];
 function renderRebal(i) {
   const r = REBAL_DATA[i];
   if (!r) return;
-  const head = `<tr><th>代码</th><th>名称</th><th class="num">股数</th><th class="num">买入价(前复权)</th>
+  const head = `<tr><th>代码</th><th>名称</th><th class="num">股数</th><th class="num">买入价</th>
     <th class="num">成本(元)</th><th class="num">权重</th><th class="num">区间收益</th><th>备注</th></tr>`;
   const rows = (r.stocks || []).map(s =>
     `<tr>
@@ -269,7 +269,7 @@ async function render() {
   const ht = document.getElementById('holdTable');
   if (snaps.length) {
     const last = snaps[snaps.length - 1];
-    const head = `<tr><th>代码</th><th>名称</th><th class="num">股数</th><th class="num">收盘价(前复权)</th>
+    const head = `<tr><th>代码</th><th>名称</th><th class="num">股数</th><th class="num">收盘价</th>
       <th class="num">市值(元)</th><th class="num">权重</th></tr>`;
     const body = last.holdings.map(h =>
       `<tr><td style="color:#888">${h[0]}</td>
