@@ -76,24 +76,34 @@
   </div>
 
   <div class="chart-card">
-    <h2>③ 总资产曲线（初始资金 100 万）</h2>
+    <h2>③ 累计几何超额（策略 / 基准，>1 表示跑赢）</h2>
+    <div class="chart-wrapper"><canvas id="excessChart"></canvas></div>
+  </div>
+
+  <div class="chart-card">
+    <h2>④ 今年累计超额（年初 = 1，>1 表示年内跑赢）</h2>
+    <div class="chart-wrapper"><canvas id="ytdExcessChart"></canvas></div>
+  </div>
+
+  <div class="chart-card">
+    <h2>⑤ 总资产曲线（初始资金 100 万）</h2>
     <div class="chart-wrapper"><canvas id="assetChart"></canvas></div>
   </div>
 
   <div class="chart-card">
-    <h2>④ 业绩表现（累计 & 当年）</h2>
+    <h2>⑥ 业绩表现（累计 & 当年）</h2>
     <div style="overflow-x:auto"><table class="tbl" id="perfTable"></table></div>
     <p style="font-size:12px;color:#bbb;margin-top:10px">当年收益以上一年最后一个交易日净值为基准；基准为中证红利全收益指数（拉取失败时回退为红利股票池等权）</p>
   </div>
 
   <div class="chart-card">
-    <h2>⑤ 当前持仓（每日按收盘价重估）</h2>
+    <h2>⑦ 当前持仓（每日按收盘价重估）</h2>
     <p style="font-size:12px;color:#bbb;margin:-10px 0 14px">持仓股数只在调仓日变化（当前为每周三），权重与市值每个交易日随收盘价更新</p>
     <div style="overflow-x:auto"><table class="tbl" id="holdTable"></table></div>
   </div>
 
   <div class="chart-card">
-    <h2>⑥ 历史换仓查询</h2>
+    <h2>⑧ 历史换仓查询</h2>
     <select id="rebalSelect"></select>
     <p id="rebal-meta" style="font-size:12px;color:#999;margin-bottom:12px"></p>
     <div style="overflow-x:auto"><table class="tbl" id="rebalTable"></table></div>
@@ -215,6 +225,23 @@ async function render() {
       { label: benchName, data: yb.values, borderColor: '#f59e0b', pointRadius: 0, borderWidth: 1.4 },
       { label: '红利池等权', data: yp.values, borderColor: '#94a3b8', borderDash: [4, 3], pointRadius: 0, borderWidth: 1.2 }
     ], '净值（年初=1）');
+  }
+
+  // ③ 累计几何超额：策略净值 / 基准净值（几何复利口径，>1 即跑赢）
+  lineChart('excessChart', labels, [
+    { label: `策略 / ${benchName}`, data: nav.map(d => d[benchKey] ? +(d.strategy / d[benchKey]).toFixed(4) : null), borderColor: '#6366f1', pointRadius: 0, borderWidth: 1.6 },
+    { label: '持平线(1)', data: nav.map(() => 1), borderColor: '#94a3b8', borderDash: [5, 4], pointRadius: 0, borderWidth: 1 }
+  ], '超额（净值比）');
+
+  // ④ 今年累计超额：年内策略净值 / 基准净值（各自以年初为基准，>1 即年内跑赢）
+  if (nav.length) {
+    const ysE = ytdSeries(nav, 'strategy'), ybE = ytdSeries(nav, benchKey);
+    const exE = ysE.values.map((v, i) =>
+      (v != null && ybE.values[i] != null && ybE.values[i] !== 0) ? +(v / ybE.values[i]).toFixed(4) : null);
+    lineChart('ytdExcessChart', ysE.labels, [
+      { label: `当年 策略 / ${benchName}`, data: exE, borderColor: '#6366f1', pointRadius: 0, borderWidth: 1.6 },
+      { label: '持平线(1)', data: ysE.labels.map(() => 1), borderColor: '#94a3b8', borderDash: [5, 4], pointRadius: 0, borderWidth: 1 }
+    ], '超额（净值比）');
   }
 
   // ③ 总资产曲线
