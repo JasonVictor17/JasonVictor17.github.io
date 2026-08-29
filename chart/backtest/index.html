@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>红利动量策略回测 - Jingde's Blog</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background: #f5f7fa; color: #333; }
@@ -134,7 +135,11 @@ function lineChart(id, labels, datasets, yTitle) {
       interaction: { mode: 'index', intersect: false },
       plugins: { legend: { position: 'top' } },
       scales: {
-        x: { ticks: { maxTicksLimit: 12, maxRotation: 0 } },
+        x: {
+          type: 'time',                                  // 按真实日期定位，周频/日频混合数据不再失真
+          time: { tooltipFormat: 'yyyy-MM-dd' },
+          ticks: { maxTicksLimit: 12, maxRotation: 0 }
+        },
         y: { title: { display: true, text: yTitle } }
       }
     }
