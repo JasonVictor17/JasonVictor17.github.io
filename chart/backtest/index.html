@@ -56,7 +56,7 @@
 <div class="container">
   <h1 class="page-title">🧪 红利动量策略回测</h1>
   <p class="page-desc" id="page-desc">数据加载中…</p>
-  <p class="params-desc" id="params-desc"></p>
+  <!-- 策略参数明细已隐藏（DOM 元素也一并移除，避免留下空白行） -->
 
   <div class="stats-row">
     <div class="stat-box"><div class="value" id="stat-range" style="font-size:16px">--</div><div class="label">回测区间</div></div>
@@ -99,15 +99,6 @@
     <div style="overflow-x:auto"><table class="tbl" id="rebalTable"></table></div>
   </div>
 
-  <div class="chart-card">
-    <h2>策略说明</h2>
-    <ul style="font-size:13px;color:#666;line-height:2;padding-left:20px">
-      <li><b>股票池</b>：近三年连续分红且 TTM 股息率达标、市值/成交额达门槛、剔除 ST</li>
-      <li><b>综合得分</b> = 动量Z × 动量权重 + 股息率Z × 股息权重，取 TOP N 等额分仓</li>
-      <li><b>资金口径</b>：初始资金等额分仓，按手取整买入（主板 100 股 / 科创板 688 为 200 股），余下为现金</li>
-      <li><b>风控</b>：买入后观察期内跌幅超阈值按当日收盘止损；近期暴涨/暴跌股调仓时剔除</li>
-    </ul>
-  </div>
 </div>
 
 <script>
@@ -192,11 +183,6 @@ async function render() {
 
   document.getElementById('page-desc').textContent =
     `回测区间 ${p.start} ~ ${p.end}（数据每个交易日更新）`;
-  const stop = p.stop_loss || {};
-  document.getElementById('params-desc').textContent =
-    `调仓：${p.rebal_mode === 'weekly' ? '每周' + p.rebal_day : (p.rebal_mode === 'monthly' ? '每月' + p.rebal_day + '号' : '每' + p.freq_tdays + '交易日')} ｜ ` +
-    `动量${p.mom_tdays}日 / 权重 ${p.w_mom}/${p.w_div} / TOP${p.top_n} ｜ ` +
-    `初始资金 ${fmtWan(cap)}万 ｜ 止损：${stop.on ? '买入后' + stop.tdays + '日内跌超' + (stop.pct * 100).toFixed(0) + '%' : '关闭'}`;
 
   // 统计卡
   const lastNav = nav.length ? nav[nav.length - 1] : null;
