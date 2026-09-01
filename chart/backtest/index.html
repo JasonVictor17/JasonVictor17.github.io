@@ -95,7 +95,7 @@
   <div class="chart-card">
     <h2>⑥ 业绩表现（累计 & 当年）</h2>
     <div style="overflow-x:auto"><table class="tbl" id="perfTable"></table></div>
-    <p style="font-size:12px;color:#bbb;margin-top:10px">当年收益以上一年最后一个交易日净值为基准；基准为中证红利全收益指数（拉取失败时回退为红利股票池等权）</p>
+    <p id="perf-note" style="font-size:12px;color:#bbb;margin-top:10px">当年收益以上一年最后一个交易日净值为基准；基准为中证红利全收益指数（拉取失败时回退为红利股票池等权）</p>
   </div>
 
   <div class="chart-card">
@@ -159,8 +159,12 @@ function renderRebal(i) {
   const r = REBAL_DATA[i];
   if (!r) return;
   const head = `<tr><th>代码</th><th>名称</th><th class="num">股数</th><th class="num">买入价</th>
-    <th class="num">成本(元)</th><th class="num">权重</th><th class="num">区间收益</th><th>备注</th></tr>`;
-  const rows = (r.stocks || []).map(s =>
+    <th class="num">成本/差额(元)</th><th class="num">权重</th><th class="num">持有天数</th><th class="num">区间收益</th><th>备注</th></tr>`;
+  // 按权重从高到低展示；权重缺失（未买入/停牌）排最后，再按代码排序保证顺序稳定
+  const rows = [...(r.stocks || [])]
+    .sort((a, b) => (b.weight ?? -1) - (a.weight ?? -1)
+      || String(a.code).localeCompare(String(b.code)))
+    .map(s =>
     `<tr>
       <td style="color:#888">${s.code}</td>
       <td style="font-weight:600">${s.name}</td>
@@ -168,13 +172,15 @@ function renderRebal(i) {
       <td class="num">${fmtNum(s.buy, 2)}</td>
       <td class="num">${fmtWan(s.cost)}</td>
       <td class="num">${fmtPct(s.weight)}</td>
+      <td class="num">${s.hold_days != null ? s.hold_days : '--'}</td>
       <td class="num ${pctColor(s.ret)}">${fmtPct(s.ret)}</td>
-      <td>${s.stop_date ? '⛔ ' + fmtDate(s.stop_date) + ' 止损' : ''}</td>
+      <td>${s.stop_date ? '⛔ ' + fmtDate(s.stop_date) + ' 止损'
+        : (s.retained ? '🔁 续持（仅调差额）' : '')}</td>
     </tr>`).join('');
   const foot = `<tr class="foot-row">
       <td colspan="4">现金 ${fmtWan(r.cash)} 元 ｜ 调仓后总值 ${fmtWan(r.total)} 元</td>
       <td class="num" colspan="2">换手率 ${fmtPct(r.turnover)}</td>
-      <td colspan="2">候选池 ${r.pool_size ?? '--'} 只</td></tr>`;
+      <td colspan="3">候选池 ${r.pool_size ?? '--'} 只</td></tr>`;
   document.getElementById('rebalTable').innerHTML = head + rows + foot;
   document.getElementById('rebal-meta').textContent =
     `${fmtDate(r.date)} 调仓，持有至 ${fmtDate(r.end_date)}，共 ${ (r.stocks || []).length } 只`;
@@ -277,10 +283,20 @@ async function render() {
     ['平均换手', fmtPct(m.avg_turnover), '--', '--', '--'],
     ['止损次数', nStops, '--', '--', '--']
   ];
+  // 交易成本（仅含费用的回测版本写入 params.trade_fee；旧版数据无此字段时自动不展示）
+  const tf = p.trade_fee;
+  if (tf && tf.total != null) {
+    rows.push(['交易成本', `${fmtWan(tf.total)} 元（占初始资金 ${fmtPct(tf.total / (cap * 1e4))}）`, '--', '--', '--']);
+  }
   document.getElementById('perfTable').innerHTML =
     `<tr><th>指标</th><th class="num">累计·策略</th><th class="num">累计·${bName}</th>
      <th class="num">当年·策略</th><th class="num">当年·${bName}</th></tr>` +
     rows.map(r => `<tr><td>${r[0]}</td>${r.slice(1).map(v => `<td class="num">${v}</td>`).join('')}</tr>`).join('');
+  if (tf && tf.total != null) {
+    document.getElementById('perf-note').textContent +=
+      `；交易成本口径：佣金双边 ${(tf.comm_rate * 100).toFixed(2)}%（最低 ${tf.min_comm} 元/笔）` +
+      `，卖出印花税 ${(tf.stamp_tax * 100).toFixed(2)}%，回测期内累计扣除 ${fmtWan(tf.total)} 元（已从净值中扣除）`;
+  }
 
   // ⑤ 当前持仓（最新每日快照）
   const nameMap = {};
@@ -289,16 +305,20 @@ async function render() {
   if (snaps.length) {
     const last = snaps[snaps.length - 1];
     const head = `<tr><th>代码</th><th>名称</th><th class="num">股数</th><th class="num">收盘价</th>
-      <th class="num">市值(元)</th><th class="num">权重</th></tr>`;
-    const body = last.holdings.map(h =>
+      <th class="num">市值(元)</th><th class="num">权重</th><th class="num">已持有</th></tr>`;
+    // 按权重从高到低展示；权重缺失（null）排最后，再按代码排序保证顺序稳定
+    const holdings = [...last.holdings].sort((a, b) =>
+      (b[3] ?? -1) - (a[3] ?? -1) || String(a[0]).localeCompare(String(b[0])));
+    const body = holdings.map(h =>
       `<tr><td style="color:#888">${h[0]}</td>
         <td style="font-weight:600">${nameMap[h[0]] || '--'}</td>
         <td class="num">${h[1].toLocaleString('zh-CN')}</td>
         <td class="num">${fmtNum(h[2], 2)}</td>
         <td class="num">${fmtWan(h[1] * h[2])}</td>
-        <td class="num">${fmtPct(h[3])}</td></tr>`).join('');
+        <td class="num">${fmtPct(h[3])}</td>
+        <td class="num">${h[4] != null ? h[4] + ' 日' : '--'}</td></tr>`).join('');
     const mv = last.holdings.reduce((a, h) => a + h[1] * h[2], 0);
-    const foot = `<tr class="foot-row"><td colspan="4">截至 ${fmtDate(last.date)} ｜ 现金 ${fmtWan(last.cash)} 元</td>
+    const foot = `<tr class="foot-row"><td colspan="5">截至 ${fmtDate(last.date)} ｜ 现金 ${fmtWan(last.cash)} 元</td>
       <td class="num">持仓市值 ${fmtWan(mv)} 元</td><td class="num">总资产 ${fmtWan(last.total)} 元</td></tr>`;
     ht.innerHTML = head + body + foot;
   } else {
