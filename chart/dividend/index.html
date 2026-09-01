@@ -168,8 +168,26 @@
 
   <div class="chart-card">
     <h2>分红 V.S. 风险散点图</h2>
-    <img src="/chart/data/dividend_scatter.jpg" style="width:100%;border-radius:8px"
-         onerror="this.parentNode.innerHTML='<p style=\'color:#999\'>暂无图片数据</p>'">
+    <p style="font-size:12px;color:#bbb;margin:-10px 0 14px">
+      鼠标悬停可查看个股名称与股息率；红色点为本周 TOP15 高夏普分红股，可通过下方筛选器切换行业与股息率口径
+    </p>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px">
+      <label style="font-size:13px;color:#666">行业筛选：
+        <select id="scatter-ind" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;color:#333;background:#fff">
+          <option value="__all__">全部行业</option>
+        </select>
+      </label>
+      <label style="font-size:13px;color:#666">股息率口径：
+        <select id="scatter-metric" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;color:#333;background:#fff">
+          <option value="y3" selected>三年平均股息率</option>
+          <option value="ttm">TTM股息率</option>
+        </select>
+      </label>
+    </div>
+    <div class="chart-wrapper">
+      <canvas id="scatterChart"></canvas>
+    </div>
+    <p id="scatter-tip" style="color:#999;font-size:13px;margin-top:12px;display:none"></p>
   </div>
 </div>
 
@@ -333,6 +351,133 @@ function toggleIndustry(i) {
   arrow.textContent = open ? '▸' : '▾';
 }
 render();
+
+// ---------------- 交互式散点图 ----------------
+let scatterChart = null;
+let scatterPoints = [];
+const METRIC_LABEL = { y3: '三年平均股息率', ttm: 'TTM股息率' };
+
+async function loadScatter() {
+  const tip = document.getElementById('scatter-tip');
+  try {
+    const data = await fetchJson('/chart/data/dividend_scatter.json');
+    scatterPoints = data.points || [];
+  } catch (e) {
+    tip.style.display = 'block';
+    tip.textContent = '⚠️ 散点图数据尚未就绪（' + e.message + '）。请运行最新版 dividend_data_push.py 并推送到 GitHub。';
+    return;
+  }
+  if (!scatterPoints.length) {
+    tip.style.display = 'block';
+    tip.textContent = '⚠️ 暂无散点图数据。';
+    return;
+  }
+
+  buildScatterIndOptions();
+  scatterChart = new Chart(document.getElementById('scatterChart').getContext('2d'), {
+    type: 'scatter',
+    data: { datasets: buildScatterDatasets() },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { usePointStyle: true, font: { size: window.innerWidth < 600 ? 10 : 12 } }
+        },
+        tooltip: {
+          callbacks: {
+            title: items => {
+              const p = items[0].raw._p;
+              return `${p.name}（${p.code}）`;
+            },
+            label: item => {
+              const p = item.raw._p;
+              const metric = document.getElementById('scatter-metric').value;
+              return [
+                `行业：${p.industry}`,
+                `${METRIC_LABEL[metric]}：${item.raw.y}%`,
+                `TTM股息率：${p.ttm}%`,
+                `三年平均股息率：${p.y3}%`,
+                `年化波动率：${p.vol}%`,
+                `夏普：${p.sharpe}`
+              ];
+            }
+          }
+        }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: '#999' },
+             title: { display: true, text: '年化波动率(%)', color: '#999' } },
+        y: { grid: { color: '#f0f0f0' }, ticks: { color: '#999' },
+             title: { display: true, text: scatterYTitle(), color: '#999' } }
+      }
+    }
+  });
+
+  document.getElementById('scatter-ind').addEventListener('change', refreshScatter);
+  document.getElementById('scatter-metric').addEventListener('change', () => {
+    buildScatterIndOptions();
+    refreshScatter();
+  });
+}
+
+function scatterMetric() {
+  return document.getElementById('scatter-metric').value;
+}
+
+function scatterYTitle() {
+  return METRIC_LABEL[scatterMetric()] + '(%)';
+}
+
+// 行业下拉：按当前口径的行业平均股息率降序排序，选项内附带均值
+function buildScatterIndOptions() {
+  const metric = scatterMetric();
+  const sel = document.getElementById('scatter-ind');
+  const prev = sel.value;
+
+  const groups = {};
+  scatterPoints.forEach(p => {
+    (groups[p.industry] = groups[p.industry] || []).push(p[metric]);
+  });
+  const inds = Object.keys(groups)
+    .map(ind => ({ ind, avg: groups[ind].reduce((a, b) => a + b, 0) / groups[ind].length }))
+    .sort((a, b) => b.avg - a.avg);
+
+  sel.innerHTML = '<option value="__all__">全部行业</option>' +
+    inds.map(o => `<option value="${o.ind}">${o.ind}（${o.avg.toFixed(2)}%）</option>`).join('');
+  if ([...sel.options].some(op => op.value === prev)) {
+    sel.value = prev;
+  }
+}
+
+function filteredScatterPoints() {
+  const ind = document.getElementById('scatter-ind').value;
+  return ind === '__all__' ? scatterPoints : scatterPoints.filter(p => p.industry === ind);
+}
+
+function buildScatterDatasets() {
+  const metric = scatterMetric();
+  const pts = filteredScatterPoints();
+  const mk = (arr, label, color, radius) => ({
+    label,
+    data: arr.map(p => ({ x: p.vol, y: p[metric], _p: p })),
+    backgroundColor: color,
+    pointRadius: radius
+  });
+  return [
+    mk(pts.filter(p => !p.top15), '达标个股', 'rgba(59,130,246,0.55)', 4),
+    mk(pts.filter(p => p.top15), 'TOP15高夏普', 'rgba(239,68,68,0.9)', 5.5)
+  ];
+}
+
+function refreshScatter() {
+  if (!scatterChart) return;
+  scatterChart.data.datasets = buildScatterDatasets();
+  scatterChart.options.scales.y.title.text = scatterYTitle();
+  scatterChart.update();
+}
+loadScatter();
 </script>
 
 </body>
