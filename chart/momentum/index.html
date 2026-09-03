@@ -100,7 +100,9 @@
   </div>
 </div>
 
-<script>async function fetchJson(path) {
+<script>// 红利动量策略的数据目录（各策略输出分文件夹：ETF 轮动在 /chart/data/etf/）
+const DATA_DIR = '/chart/data/momentum';
+async function fetchJson(path) {
   const res = await fetch(path + '?t=' + Date.now());
   if (!res.ok) throw new Error(path + ' 加载失败: ' + res.status);
   return res.json();
@@ -125,7 +127,7 @@ function heatBar(v) {
 async function render() {
   let history = [], latest = null;
   try {
-    latest  = await fetchJson('/chart/data/momentum_latest.json');
+    latest  = await fetchJson(`${DATA_DIR}/momentum_latest.json`);
   } catch (e) {
     console.warn(e);
     document.querySelector('.page-desc').textContent =

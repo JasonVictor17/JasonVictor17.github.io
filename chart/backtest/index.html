@@ -114,6 +114,8 @@
 </div>
 
 <script>
+// 红利动量策略的数据目录（各策略输出分文件夹：ETF 轮动在 /chart/data/etf/）
+const DATA_DIR = '/chart/data/momentum';
 async function fetchJson(path) {
   const res = await fetch(path + '?t=' + Date.now());
   if (!res.ok) throw new Error(path + ' 加载失败: ' + res.status);
@@ -189,13 +191,13 @@ function renderRebal(i) {
 async function render() {
   let data = null, snaps = [];
   try {
-    data = await fetchJson('/chart/data/backtest_momentum.json');
+    data = await fetchJson(`${DATA_DIR}/backtest_momentum.json`);
   } catch (e) {
     document.getElementById('page-desc').textContent =
       '⚠️ 数据文件尚未就绪（' + e.message + '）。请确认 backtest_high_dividend_mom.py 已成功运行并推送到 GitHub。';
     return;
   }
-  try { snaps = await fetchJson('/chart/data/backtest_snapshots.json'); } catch (e) { console.warn(e); }
+  try { snaps = await fetchJson(`${DATA_DIR}/backtest_snapshots.json`); } catch (e) { console.warn(e); }
 
   const p = data.params || {}, m = data.metrics || {}, nav = data.nav || [];
   const benchKeys = Object.keys(nav[0] || {}).filter(k => !['date', 'strategy', 'pool'].includes(k));
