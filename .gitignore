@@ -1,0 +1,11 @@
+/chart/dividend_data_push.py
+/chart/dividend_data_backfill.py
+/python_files
+# 策略输出按子目录分开：etf = ETF 轮动，momentum = 红利动量
+/chart/data/momentum/backtest_snapshots_full.json
+/chart/data/momentum/backtest_select_cache.json
+# ETF 轮动：网页只消费 backtest_etf.json（/chart/etf/），其余产物不进 GitHub
+# （选股缓存 234KB + 明细 CSV 217KB + 静态 PNG 269KB，每次重跑都会变，避免仓库膨胀）
+/chart/data/etf/backtest_etf_cache.json
+/chart/data/etf/backtest_etf_records.csv
+/chart/data/etf/backtest_etf_plot.png

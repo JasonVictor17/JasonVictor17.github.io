@@ -18,8 +18,7 @@
     .sub-nav a.cur { color: #222; font-weight: 600; border-bottom: 2px solid #222; padding-bottom: 4px; }
     .container { max-width: 960px; margin: 40px auto; padding: 0 20px; }
     .page-title { font-size: 28px; font-weight: 600; margin-bottom: 8px; color: #222; }
-    .page-desc { font-size: 14px; color: #999; margin-bottom: 8px; }
-    .params-desc { font-size: 12px; color: #bbb; margin-bottom: 32px; line-height: 1.8; }
+    .page-desc { font-size: 14px; color: #999; margin-bottom: 32px; }
     .chart-card { background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); padding: 32px; margin-bottom: 24px; }
     .chart-card h2 { font-size: 18px; margin-bottom: 20px; color: #333; }
     .chart-wrapper { position: relative; width: 100%; height: 380px; }
@@ -37,7 +36,6 @@
     select { padding: 6px 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; margin-bottom: 14px; }
     .note { font-size: 12px; color: #bbb; margin-top: 10px; line-height: 1.8; }
     .sub { font-size: 12px; color: #bbb; margin: -10px 0 14px; line-height: 1.8; }
-    ul.exp { font-size: 13px; color: #666; line-height: 2; padding-left: 20px; }
     @media (max-width: 600px) {
       .stats-row { flex-direction: column; }
       .container { margin: 20px auto; }
@@ -65,7 +63,6 @@
 <div class="container">
   <h1 class="page-title">🔄 ETF 轮动策略回测</h1>
   <p class="page-desc" id="page-desc">数据加载中…</p>
-  <p class="params-desc" id="params-desc"></p>
 
   <div class="stats-row">
     <div class="stat-box"><div class="value" id="stat-range" style="font-size:16px">--</div><div class="label">回测区间</div></div>
@@ -116,11 +113,6 @@
     <select id="rebalSelect"></select>
     <p id="rebal-meta" style="font-size:12px;color:#999;margin-bottom:12px;line-height:1.8"></p>
     <div style="overflow-x:auto"><table class="tbl" id="rebalTable"></table></div>
-  </div>
-
-  <div class="chart-card">
-    <h2>⑨ 策略说明</h2>
-    <ul class="exp" id="expList"></ul>
   </div>
 
 </div>
@@ -275,13 +267,6 @@ async function render() {
 
   document.getElementById('page-desc').textContent =
     `回测区间 ${fmtDate(p.start)} ~ ${fmtDate(p.end)}（${p.rebal || '每周调仓'}）`;
-  document.getElementById('params-desc').innerHTML =
-    `持仓 TOP${p.top_n ?? 10} ／ 候选池 TOP${p.optional_n ?? 20} ｜ `
-    + `打分：${p.mom_days ?? 7} 日涨幅 × ${p.w_mom ?? 1.5} + 溢价率 × ${p.w_premium ?? 1} ｜ `
-    + `流动性：前 ${p.vol_days ?? 5} 日日均成交量 ≥ ${fmtVol(p.vol_threshold)}股，`
-    + `同指数按 ${p.cluster && p.cluster.liquidity_days || 20} 日日均成交额只留 ${p.cluster && p.cluster.head || 1} 只 ｜ `
-    + `成交价 ${p.exec || '--'} ／ 信号价 ${p.signal || '--'} ｜ `
-    + `择时 ${p.timing ? p.timing.mode : 'off'} ｜ 基准 ${benchName}`;
   document.getElementById('asset-title').textContent =
     `⑤ 总资产曲线（初始资金 ${cap.toLocaleString('zh-CN')} 万）`;
 
@@ -392,19 +377,6 @@ async function render() {
       '<tr><td style="color:#999;padding:16px">暂无换仓记录</td></tr>';
   }
 
-  // ⑨ 策略说明（关键参数直接取自 JSON，避免文案与脚本漂移）
-  const cl = p.cluster || {}, tm = p.timing || {};
-  document.getElementById('expList').innerHTML = [
-    `<b>基金池</b>：场内 ETF/LOF（含已退市，规避幸存者偏差），剔除债券型/货币型/REITs/封闭式/分级基金，按上市日与退市日做时点过滤`,
-    `<b>流动性过滤</b>：前 ${p.vol_days ?? 5} 个交易日日均成交量 ≥ ${fmtVol(p.vol_threshold)}股`,
-    `<b>同指数去重</b>：按业绩比较基准归一化出「跟踪指数」，每个指数只留 ${cl.liquidity_days ?? 20} 日日均成交额最高的 ${cl.head ?? 1} 只（替代原聚宽版 KMeans 价格聚类）`,
-    `<b>打分排名</b>：${p.mom_days ?? 7} 日涨幅（降序）× ${p.w_mom ?? 1.5} + 溢价率（升序，低溢价优先）× ${p.w_premium ?? 1}；单项分 =（总数 − 名次 + 1）÷ 总数 × 100`,
-    `<b>调仓规则</b>：TOP${p.top_n ?? 10} 为买入池、TOP${p.optional_n ?? 20} 为候选池；跌出候选池才卖出，已持有且与目标市值偏离不大的只调差额（降换手），每只目标市值 = 总资产 ÷ ${p.top_n ?? 10}`,
-    `<b>价格口径</b>：成交价 ${p.exec || '--'}、信号价 ${p.signal || '--'}（两者可解耦：信号价用于排名、成交价用于下单）`,
-    `<b>择时（RSRS）</b>：${tm.mode === 'off' || !tm.mode ? '当前关闭，每周无条件轮换'
-      : `${tm.mode}，信号 ${tm.strategy}，买入阈值 ${tm.buy_limit} / 清仓阈值 ${tm.sell_limit}，滞后 ${tm.lag} 个交易日`}；空仓期闲置现金扫入货币 ETF ${p.cash_etf || '--'}`,
-    `<b>数据来源</b>：NAS fund_data（日线/复权因子/单位净值/份额/分红）+ MySQL index_daily（基准）与 time_picking（择时信号）`
-  ].map(t => `<li>${t}</li>`).join('');
 }
 render();
 </script>
