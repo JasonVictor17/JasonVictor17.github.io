@@ -197,7 +197,7 @@ function ytdFromNav(nav) {
 // 单期持仓表（⑦ 最新一期 与 ⑧ 历史查询 共用）
 function etfTable(rec) {
   const head = `<tr><th>代码</th><th>名称</th><th class="num">综合得分</th><th class="num">7日涨幅</th>
-    <th class="num">溢价率</th><th class="num">信号价</th><th class="num">日均成交量</th>
+    <th class="num">溢价率</th><th class="num">信号价</th><th class="num">成交价</th><th class="num">日均成交量</th>
     <th class="num">份额</th><th class="num">市值(元)</th><th class="num">权重</th><th>操作</th></tr>`;
   const tv = rec.total_value || 0;
   const rows = [...(rec.etfs || [])]
@@ -211,7 +211,8 @@ function etfTable(rec) {
         <td class="num">${fmtNum(s.rank_total, 1)}</td>
         <td class="num ${pctColor(s.increase_net)}">${fmtPct(s.increase_net)}</td>
         <td class="num" style="color:#666">${fmtPct(s.unit_net)}</td>
-        <td class="num">${fmtNum(s.price, 3)}</td>
+        <td class="num" style="color:#999">${fmtNum(s.price, 3)}</td>
+        <td class="num">${fmtNum(s.exec_price, 3)}</td>
         <td class="num">${fmtVol(s.volumn)}</td>
         <td class="num">${s.shares != null ? s.shares.toLocaleString('zh-CN') : '--'}</td>
         <td class="num">${fmtWan(s.value)}</td>
@@ -221,7 +222,7 @@ function etfTable(rec) {
     }).join('');
   const mv = (rec.etfs || []).reduce((a, s) => a + (s.value || 0), 0);
   const foot = `<tr class="foot-row">
-      <td colspan="7">现金 ${fmtWan(rec.cash)} 元 ｜ 调仓后总值 ${fmtWan(rec.total_value)} 元
+      <td colspan="8">现金 ${fmtWan(rec.cash)} 元 ｜ 调仓后总值 ${fmtWan(rec.total_value)} 元
         ｜ 本期换手(单边) ${fmtPct(rec.turnover)} ｜ 累计手续费 ${fmtWan(rec.fee_total)} 元</td>
       <td class="num" colspan="2">持仓市值 ${fmtWan(mv)}</td>
       <td class="num" colspan="2">${(rec.etfs || []).length} 只</td></tr>`;
@@ -351,8 +352,14 @@ async function render() {
     + `基准 ${benchName}；「${poolName}」= 每期候选池后复权等权（含分红），用于剥离择股能力与池子本身的贝塔。`;
   const tf = p.trade_fee;
   if (tf && tf.total != null) {
-    note += ` 交易成本口径：佣金双边 ${(tf.comm_rate * 1e4).toFixed(1)} 万分之一（最低 ${tf.min_comm} 元/笔），`
-      + `卖出印花税 ${(tf.stamp_tax * 1e4).toFixed(1)} 万分之一，滑点 0；回测期内累计扣除 ${fmtWan(tf.total)} 元（已从净值中扣除）。`;
+    const sl = (tf.slippage_mode === 'none' || !tf.slippage) ? '滑点 0'
+      : (tf.slippage_mode === 'fixed'
+        ? `滑点每份 ${tf.slippage} 元（买卖各承担 ${(tf.slippage / 2).toFixed(4)} 元）`
+        : `滑点单边 ${(tf.slippage * 1e4).toFixed(1)} 万分之一`);
+    note += ` 交易成本口径：成交价 ${p.exec || '--'} ／信号价 ${p.signal || '--'}，`
+      + `佣金双边 ${(tf.comm_rate * 1e4).toFixed(1)} 万分之一（最低 ${tf.min_comm} 元/笔），`
+      + `卖出印花税 ${(tf.stamp_tax * 1e4).toFixed(1)} 万分之一，${sl}；`
+      + `回测期内累计扣除手续费 ${fmtWan(tf.total)} 元（滑点已直接体现在成交价上，不单列）。`;
   } else {
     note += ' 交易成本已在净值中扣除（累计手续费见上表）。';
   }
@@ -365,7 +372,8 @@ async function render() {
     document.getElementById('holdTable').innerHTML = etfTable(last);
     document.getElementById('hold-sub').textContent =
       `最新调仓日 ${fmtDate(last.date)}（${ACT_LABEL[last.action] || last.action}），持有至 ${fmtDate(last.end_date)}；`
-      + `份额与市值为该期调仓成交结果（信号价口径 ${p.signal || '--'}），本策略未生成每日重估快照`;
+      + `信号价口径 ${p.signal || '--'}（仅用于排名）／成交价口径 ${p.exec || '--'}（份额、市值、权重按此计），`
+      + `本策略未生成每日重估快照`;
     const sel = document.getElementById('rebalSelect');
     sel.innerHTML = REBAL.map((r, i) =>
       `<option value="${i}">${fmtDate(r.date)}（${(r.etfs || []).length} 只 · ${ACT_LABEL[r.action] || r.action}）</option>`).join('');
