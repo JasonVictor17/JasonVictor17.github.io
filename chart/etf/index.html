@@ -207,7 +207,7 @@ function etfTable(rec) {
       const w = (s.value != null && tv) ? s.value / tv : null;
       return `<tr>
         <td style="color:#888">${s.code}</td>
-        <td style="font-weight:600;white-space:normal">${s.name || '--'}</td>
+        <td style="font-weight:600;white-space:normal">${s.name || '--'}${s.buffer ? ' <span style="font-size:10px;color:#b45309;background:#fffbeb;border:1px solid #fcd34d;border-radius:3px;padding:0 3px;font-weight:400;white-space:nowrap" title="缓冲持仓：靠缓冲池留下、不在本期买入名单的老仓">缓冲</span>' : ''}</td>
         <td class="num">${fmtNum(s.rank_total, 1)}</td>
         <td class="num ${pctColor(s.increase_net)}">${fmtPct(s.increase_net)}</td>
         <td class="num" style="color:#666">${fmtPct(s.unit_net)}</td>
@@ -230,14 +230,18 @@ function etfTable(rec) {
 }
 
 let REBAL = [];
+let PARAMS = {};
 function renderRebal(i) {
   const r = REBAL[i];
   if (!r) return;
   document.getElementById('rebalTable').innerHTML = etfTable(r);
+  const corrTxt = (PARAMS.corr_cap != null)
+    ? ` → 相关性去重（阈值 ${PARAMS.corr_cap}／${PARAMS.corr_window ?? 60} 日）跳过 ${r.corr_skipped ?? 0} 只高相关 → 候选 TOP${PARAMS.optional_n ?? '--'}`
+    : '（相关性去重未启用）';
   document.getElementById('rebal-meta').innerHTML =
     `${fmtDate(r.date)} 调仓（${ACT_LABEL[r.action] || r.action}），持有至 ${fmtDate(r.end_date)}；`
     + `成交量过滤后基金池 ${r.pool_n ?? '--'} 只 → 同指数去重后 ${r.cluster_n ?? '--'} 只（${r.k ?? '--'} 个指数组）；`
-    + `溢价率缺失剔除 ${r.nav_missing ?? 0} 只`
+    + `溢价率缺失剔除 ${r.nav_missing ?? 0} 只${corrTxt}`
     + (r.signal != null ? `；择时信号 ${fmtNum(r.signal, 3)}` : '');
 }
 
@@ -253,6 +257,7 @@ async function render() {
   }
 
   const p = data.params || {}, m = data.metrics || {}, nav = data.nav || [];
+  PARAMS = p;
   if (!nav.length) {
     document.getElementById('page-desc').textContent = '⚠️ backtest_etf.json 中没有净值序列。';
     return;
