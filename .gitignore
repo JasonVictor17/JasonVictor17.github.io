@@ -1,6 +1,10 @@
-/chart/dividend_data_push.py
-/chart/dividend_data_backfill.py
-/python_files
+# website 只承载 GitHub Pages 静态产物：任何 Python 源码都不许进公开仓库
+# （数据生成与回测代码已迁到 python_project/etf、python_project/data_process）
+*.py
+*.pyc
+__pycache__/
+/deploy/
+
 # 策略输出按子目录分开：etf = ETF 轮动，momentum = 红利动量
 /chart/data/momentum/backtest_snapshots_full.json
 /chart/data/momentum/backtest_select_cache.json
