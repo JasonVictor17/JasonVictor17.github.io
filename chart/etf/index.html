@@ -251,7 +251,7 @@ async function render() {
     data = await fetchJson(`${DATA_DIR}/backtest_etf.json`);
   } catch (e) {
     document.getElementById('page-desc').textContent =
-      '⚠️ 数据文件尚未就绪（' + e.message + '）。请确认 python_files/etf/backtest_etf.py 已运行，'
+      '⚠️ 数据文件尚未就绪（' + e.message + '）。请确认 etf/strategy/backtest_etf.py 已运行，'
       + '且 chart/data/etf/backtest_etf.json 已随 chart/ 推送到 GitHub。';
     return;
   }
