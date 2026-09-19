@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="数据看板">
+  <title>数据看板</title>
+  <desc>靛蓝底牌上的猫头：描边走完左耳—额头—右耳—脸廓一圈，两只金眼睛是唯一的实心点缀</desc>
+  <defs>
+    <linearGradient id="bg" x1="6" y1="6" x2="58" y2="58" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#312e81"/>
+      <stop offset="1" stop-color="#4f46e5"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="url(#bg)"/>
+  <g stroke="#fff" stroke-width="2" opacity=".16" stroke-linecap="round">
+    <path d="M15 57.5h34"/>
+  </g>
+  <!-- 一笔成形的脸廓：耳朵尖必须在 16px（缩到 1/4）下仍然顶得出轮廓，
+       所以耳高给到 16 单位、笔宽 5 单位（16px 下约 1.25px）。 -->
+  <path d="M19 26.5 L16.5 10 L24.5 21 Q32 17.5 39.5 21 L47.5 10 L45 26.5
+           C50 36 44 48.5 32 49 C20 48.5 14 36 19 26.5 Z"
+        fill="none" stroke="#fff" stroke-width="5" stroke-linejoin="round"/>
+  <g fill="#ffd54a">
+    <circle cx="25.8" cy="33.5" r="3.1"/>
+    <circle cx="38.2" cy="33.5" r="3.1"/>
+  </g>
+  <path d="M29.6 40.5 32 42.8 34.4 40.5 Z" fill="#fff" opacity=".9"/>
+</svg>

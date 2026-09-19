@@ -14,6 +14,11 @@
     .nav-bar a { color: #fff; text-decoration: none; font-size: 16px; margin: 0 20px; opacity: 0.8; transition: opacity 0.2s; }
     .nav-bar a:hover { opacity: 1; }
     .nav-bar a.active { opacity: 1; border-bottom: 2px solid #fff; padding-bottom: 4px; }
+    .nav-bar { position: relative; }
+    .brand { margin: 0; opacity: 1; position: absolute; left: 18px; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 8px; }
+    .brand img { width: 26px; height: 26px; border-radius: 7px; display: block; }
+    .brand span { color: #fff; font-size: 14px; font-weight: 600; letter-spacing: .5px; }
+    @media (max-width: 600px) { .brand { left: 12px; } .brand span { display: none; } }
     .container { max-width: 960px; margin: 40px auto; padding: 0 20px; }
     .page-title { font-size: 28px; font-weight: 600; margin-bottom: 8px; color: #222; }
     .page-desc { font-size: 14px; color: #999; margin-bottom: 32px; }
@@ -40,13 +45,15 @@
       .chart-wrapper { height: 300px; }
     }
   </style>
+  <link rel="icon" type="image/svg+xml" href="/chart/logo.svg">
 </head>
 <body>
 
 <div class="nav-bar">
+  <a class="brand" href="/"><img src="/chart/logo.svg" alt="guojingde.cn"><span>guojingde.cn</span></a>
   <a href="/">首页</a>
   <a href="/about/">关于</a>
-  <a href="/chart/">数据看板</a>
+  <a href="/chart/" class="active">数据看板</a>
   <a href="/archives/">归档</a>
 </div>
 
