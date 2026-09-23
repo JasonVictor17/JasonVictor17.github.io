@@ -44,8 +44,6 @@
     .kv { display: flex; flex-wrap: wrap; gap: 8px 10px; font-size: 12px; margin-bottom: 14px; }
     .kv span { background: #f6f7fb; border: 1px solid #ececf2; border-radius: 6px; padding: 3px 9px; color: #666; }
     .kv b { color: #222; font-weight: 600; }
-    ul.diff { margin: 0 0 4px 18px; font-size: 13px; line-height: 2; color: #555; }
-    ul.diff li { margin-bottom: 6px; }
     @media (max-width: 600px) {
       .stats-row { flex-direction: column; }
       .container { margin: 20px auto; }
@@ -127,29 +125,6 @@
     <select id="rebalSelect"></select>
     <p id="rebal-meta" style="font-size:12px;color:#999;margin-bottom:12px;line-height:1.8"></p>
     <div style="overflow-x:auto"><table class="tbl" id="rebalTable"></table></div>
-    <p class="note">全量逐期明细可直接下载：<a href="/chart/data/smallcap/backtest_smallcap_records.csv" download>backtest_smallcap_records.csv</a></p>
-  </div>
-
-  <div class="chart-card">
-    <h2>⑨ 可成交性体检（这策略实盘做不做得成）</h2>
-    <p class="sub">微盘票的成交假设是这套回测最容易虚高的地方。下面每一格都是回测期内<b>真实发生的次数</b>：被挡下的单子不成交、顺延到下一期再试，净值里已经扣掉了这个后果。</p>
-    <div style="overflow-x:auto"><table class="tbl" id="healthTable"></table></div>
-    <p class="note" id="health-note"></p>
-  </div>
-
-  <div class="chart-card">
-    <h2>⑩ 与聚宽原文的差异</h2>
-    <p class="sub">策略骨架照搬聚宽 post/62479《微盘50，完美复制微盘指数》（作者 jack010）：市值最小 50 只等权、跌出前 70 名才清、权重漂移 0.5% 以内不调、每周五 9:35 调仓。本地版改了七处，前四处是为了不再偷看未来；调仓日遇节假日一律顺延（不提前到当周最后一个交易日），星期几可用 <code>--weekday</code> 改。</p>
-    <ul class="diff">
-      <li><b>点时 ST／退市</b>：聚宽的 <code>get_current_data()</code> 天然拿到「当天」的名单；本地 <code>stock_basic.name</code> 只代表今天，于是改用简称变更历史（<code>stock_namechange</code>）还原「调仓日它叫什么」，并用上市／退市日卡住在市判定。不改这一条，等于提前知道谁会退市、谁还没上市。</li>
-      <li><b>排名口径</b>：市值与流动性取<b>调仓日前一交易日</b>为止的数据（9:35 下单时能看到的最近一份），不用当天收盘后的数字。</li>
-      <li><b>可成交约束（原文没有）</b>：开盘涨停买不进、开盘跌停卖不出、停牌或零成交不成交、一手 100 股取整。计数见上方 ⑨。</li>
-      <li><b>流动性门槛（原文没有）</b>：近 20 个交易日日均成交额低于 <b id="liq-th"></b>的不进候选池。微盘票里有一批日均只有几十万，不给门槛的话回测收益明显虚高。</li>
-      <li><b>保留名单取全池前 70</b>：原文 <code>hold_threshold=70</code> 大于 <code>candidate_num=60</code>，作者注释里承认它实际只拿到排序后的前 60 名（保留名单被候选池截断）。本地按作者本意取前 70，缓冲更足。</li>
-      <li><b>成交与成本</b>：以当日<b>开盘价</b>成交；佣金双边万 1.0（最低 5 元/笔）＋卖出印花税万 5.0，与原文 <code>OrderCost</code> 一致；除权除息按复权因子比值折算份额（送转＋分红一次覆盖，价值中性），不另记现金分红。</li>
-      <li><b>调仓日落在周四</b>（原文是周五）：2026-09-23 用同一份代码把星期 1~5 各扫一遍（其余参数不动），周四年化 <b>43.02%</b>／卡玛 0.88 是五天里最好的、周五最差（40.07%／0.80），极差约 3pp。要说清楚：<b>五天全部跑输各自的候选池</b>（超额 −2.52pp ~ −5.63pp），所以这一格是挑日期，不是找到了 alpha。</li>
-    </ul>
-    <p class="note" id="dev-note"></p>
   </div>
 
 </div>
@@ -174,11 +149,6 @@ const fmtYi = w => (w == null || isNaN(w)) ? '--' : (w / 1e4).toFixed(1);
 const OP_LABEL = { buy: '🟢 建仓', add: '⚖️ 补仓', trim: '⚖️ 减仓', sell: '🔴 清仓',
                    hold: '🔁 续持', miss: '⚠️ 未成交', block_buy: '⛔ 涨停买不进',
                    block_sell: '⛔ 跌停卖不出', suspend: '⏸ 停牌', split: '🔁 除权折算' };
-const HEALTH_LABEL = {
-  buy_limit_up: '开盘涨停、买不进', sell_limit_down: '开盘跌停、卖不出',
-  suspend_buy: '停牌／零成交、买不进', suspend_sell: '停牌／零成交、卖不出',
-  buy_no_cash: '排到它时现金已用完', lot_too_big: '一手金额就超过目标仓位'
-};
 
 function lineChart(id, labels, datasets, yTitle) {
   new Chart(document.getElementById(id), {
@@ -286,29 +256,6 @@ function renderRebal(i) {
     + `建仓 ${r.n_buy ?? '--'} 只／清仓 ${r.n_sell ?? '--'} 只，期末实际持有 ${r.n_hold ?? '--'} 只`;
 }
 
-function renderHealth(h) {
-  if (!h || !h.blocked) {
-    document.getElementById('healthTable').innerHTML =
-      '<tr><td style="color:#999;padding:16px">暂无体检数据（回测脚本升级后重跑即有）</td></tr>';
-    return;
-  }
-  const amt = h.blocked_amt || {};
-  const rows = Object.keys(HEALTH_LABEL).map(k => {
-    const n = h.blocked[k] ?? 0;
-    const a = amt[k];
-    const zero = n === 0;
-    return `<tr><td>${HEALTH_LABEL[k]}</td>
-      <td class="num" style="font-weight:600;color:${zero ? '#22c55e' : '#ef4444'}">${n} 次</td>
-      <td class="num" style="color:#666">${a != null ? fmtWan(a) + ' 元' : '--'}</td></tr>`;
-  }).join('');
-  document.getElementById('healthTable').innerHTML =
-    `<tr><th>被挡下的情形</th><th class="num">回测期内发生次数</th><th class="num">涉及金额（名义）</th></tr>`
-    + rows
-    + `<tr><td>一手取整后剩下没买出去的零头</td><td class="num" colspan="2" style="color:#666">${fmtWan(h.lot_residual)} 元（累计）</td></tr>`
-    + `<tr><td>平均持有只数 ／ 平均留现金</td><td class="num" colspan="2" style="color:#666">${h.avg_hold ?? '--'} 只 ／ ${fmtWan(h.avg_cash_w)} 元</td></tr>`;
-  document.getElementById('health-note').textContent = h.note || '';
-}
-
 async function render() {
   let data = null;
   try {
@@ -339,11 +286,10 @@ async function render() {
 
   document.getElementById('page-desc').textContent =
     `全市场市值最小 ${p.stock_num ?? 50} 只等权 · ${rebalShort}调仓（遇节假日顺延） · `
+    + `近 ${p.liq_tdays ?? 20} 日日均成交额 ≥ ${p.min_avg_amount_wan ?? '--'} 万 · `
     + `回测区间 ${fmtDate(p.start)} ~ ${fmtDate(p.end)}（开盘价成交）`;
   document.getElementById('asset-title').textContent =
     `⑤ 总资产曲线（初始资金 ${cap.toLocaleString('zh-CN')} 万）`;
-  document.getElementById('liq-th').textContent =
-    `${p.min_avg_amount_wan ?? '--'} 万元`;
 
   // 统计卡
   const lastNav = nav[nav.length - 1];
@@ -439,7 +385,8 @@ async function render() {
   const wp = x => (x == null || isNaN(x)) ? '--' : (x * 1e4).toFixed(1);
   let note = `当年收益以上一年最后一个交易日净值为基准（年初=1）${data.metrics_ytd ? '（由回测脚本按同一口径算好）' : '，由前端按 nav 序列实时计算'}；`
     + `交易成本：成交价 ${p.exec || '--'}，佣金双边 ${wp(tf.comm_rate)} 万分之一（最低 ${tf.min_comm ?? '--'} 元/笔），`
-    + `卖出印花税 ${wp(tf.stamp_tax)} 万分之一，滑点未建模（开盘价成交，冲击成本看 ⑨ 的成交额门槛与封板统计）。`;
+    + `卖出印花税 ${wp(tf.stamp_tax)} 万分之一；滑点未建模，`
+    + `开盘涨停买不进／跌停卖不出／停牌已在回测里按不成交处理（流动性门槛 ${p.min_avg_amount_wan ?? '--'} 万）。`;
   document.getElementById('perf-note').textContent = note;
 
   // ⑦⑧ 持仓与历史换仓
@@ -461,15 +408,6 @@ async function render() {
     document.getElementById('holdTable').innerHTML =
       '<tr><td style="color:#999;padding:16px">暂无换仓记录</td></tr>';
   }
-
-  renderHealth(data.health);
-  document.getElementById('dev-note').textContent =
-    `数据口径：湖 = MySQL tushare_data（stock_basic / stock_namechange / index_daily）＋ /data/stock_data 的按日 pqt 分片（行情、复权因子、总市值）。`
-    + `首期选股漏斗：${(p.funnel_first && p.funnel_first.n_has_mv) ?? '--'} 只有市值 → `
-    + `${(p.funnel_first && p.funnel_first.n_live) ?? '--'} 只在市（剔科创／北交后）→ `
-    + `${p.funnel_first ? p.funnel_first.n_live - p.funnel_first.n_st : '--'} 只非 ST/退 → `
-    + `${p.funnel_first ? p.funnel_first.n_pool : '--'} 只流动性达标。`
-    + (p.deviation ? ` ${p.deviation}` : '') + ` ${p.source || ''}`;
 }
 render();
 </script>

@@ -25,7 +25,6 @@ __pycache__/
 !/chart/data/etf/backtest_etf.json
 !/chart/data/etf/backtest_etf_records.csv
 !/chart/data/smallcap/backtest_smallcap.json
-!/chart/data/smallcap/backtest_smallcap_records.csv
 !/chart/data/momentum/momentum_latest.json
 !/chart/data/momentum/backtest_momentum.json
 !/chart/data/momentum/backtest_snapshots.json
