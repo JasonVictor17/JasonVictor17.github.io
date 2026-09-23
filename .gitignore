@@ -17,11 +17,15 @@ __pycache__/
 !/chart/**/
 !/chart/index.html
 !/chart/etf/index.html
+!/chart/smallcap/index.html
 !/chart/momentum/index.html
 !/chart/dividend/index.html
 !/chart/backtest/index.html
 !/chart/logo.svg
 !/chart/data/etf/backtest_etf.json
+!/chart/data/etf/backtest_etf_records.csv
+!/chart/data/smallcap/backtest_smallcap.json
+!/chart/data/smallcap/backtest_smallcap_records.csv
 !/chart/data/momentum/momentum_latest.json
 !/chart/data/momentum/backtest_momentum.json
 !/chart/data/momentum/backtest_snapshots.json

@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>小微盘策略回测 - Jingde's Blog</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background: #f5f7fa; color: #333; }
+    .nav-bar { background: #222; padding: 16px 0; text-align: center; }
+    .nav-bar a { color: #fff; text-decoration: none; font-size: 16px; margin: 0 20px; opacity: 0.8; transition: opacity 0.2s; }
+    .nav-bar a:hover { opacity: 1; }
+    .nav-bar a.active { opacity: 1; border-bottom: 2px solid #fff; padding-bottom: 4px; }
+    .nav-bar { position: relative; }
+    .brand { margin: 0; opacity: 1; position: absolute; left: 18px; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 8px; }
+    .brand img { width: 26px; height: 26px; border-radius: 7px; display: block; }
+    .brand span { color: #fff; font-size: 14px; font-weight: 600; letter-spacing: .5px; }
+    @media (max-width: 600px) { .brand { left: 12px; } .brand span { display: none; } }
+    .sub-nav { text-align: center; background: #fff; border-bottom: 1px solid #eee; padding: 10px 0; }
+    .sub-nav a { display: inline-block; margin: 4px 14px; font-size: 14px; color: #999; text-decoration: none; }
+    .sub-nav a.cur { color: #222; font-weight: 600; border-bottom: 2px solid #222; padding-bottom: 4px; }
+    .container { max-width: 960px; margin: 40px auto; padding: 0 20px; }
+    .page-title { font-size: 28px; font-weight: 600; margin-bottom: 8px; color: #222; }
+    .page-desc { font-size: 14px; color: #999; margin-bottom: 32px; }
+    .chart-card { background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); padding: 32px; margin-bottom: 24px; }
+    .chart-card h2 { font-size: 18px; margin-bottom: 20px; color: #333; }
+    .chart-wrapper { position: relative; width: 100%; height: 380px; }
+    .stats-row { display: flex; gap: 16px; margin-bottom: 24px; }
+    .stat-box { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); padding: 24px; text-align: center; }
+    .stat-box .value { font-size: 26px; font-weight: 700; color: #222; }
+    .stat-box .label { font-size: 13px; color: #999; margin-top: 4px; }
+    table.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .tbl td, .tbl th { padding: 8px; border-bottom: 1px solid #eee; white-space: nowrap; }
+    .tbl th { background: #f8f8f8; font-weight: 600; }
+    .num { text-align: right; }
+    /* A股惯例：涨红跌绿 */
+    .up { color: #ef4444; } .down { color: #22c55e; }
+    .foot-row td { font-weight: 600; background: #fafafa; white-space: normal; }
+    select { padding: 6px 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; margin-bottom: 14px; }
+    .note { font-size: 12px; color: #bbb; margin-top: 10px; line-height: 1.8; }
+    .sub { font-size: 12px; color: #bbb; margin: -10px 0 14px; line-height: 1.8; }
+    .kv { display: flex; flex-wrap: wrap; gap: 8px 10px; font-size: 12px; margin-bottom: 14px; }
+    .kv span { background: #f6f7fb; border: 1px solid #ececf2; border-radius: 6px; padding: 3px 9px; color: #666; }
+    .kv b { color: #222; font-weight: 600; }
+    ul.diff { margin: 0 0 4px 18px; font-size: 13px; line-height: 2; color: #555; }
+    ul.diff li { margin-bottom: 6px; }
+    @media (max-width: 600px) {
+      .stats-row { flex-direction: column; }
+      .container { margin: 20px auto; }
+      .chart-card { padding: 20px; }
+      .chart-wrapper { height: 300px; }
+    }
+  </style>
+  <link rel="icon" type="image/svg+xml" href="/chart/logo.svg">
+</head>
+<body>
+
+<div class="nav-bar">
+  <a class="brand" href="/"><img src="/chart/logo.svg" alt="guojingde.cn"><span>guojingde.cn</span></a>
+  <a href="/">首页</a>
+  <a href="/about/">关于</a>
+  <a href="/chart/" class="active">数据看板</a>
+  <a href="/archives/">归档</a>
+</div>
+
+<div class="sub-nav">
+  <a href="/chart/dividend/">功能1：红利股全览</a>
+  <a href="/chart/momentum/">功能2：红利动量策略选股（大市值）</a>
+  <a href="/chart/backtest/">功能3：红利动量策略回测</a>
+  <a href="/chart/etf/">功能4：ETF 轮动策略回测</a>
+  <a href="/chart/smallcap/" class="cur">功能5：小微盘策略回测</a>
+</div>
+
+<div class="container">
+  <h1 class="page-title">🐜 小微盘策略回测</h1>
+  <p class="page-desc" id="page-desc">数据加载中…</p>
+
+  <div class="stats-row">
+    <div class="stat-box"><div class="value" id="stat-range" style="font-size:16px">--</div><div class="label">回测区间</div></div>
+    <div class="stat-box"><div class="value" id="stat-nav">--</div><div class="label">最新净值</div></div>
+    <div class="stat-box"><div class="value" id="stat-total">--</div><div class="label">累计收益</div></div>
+    <div class="stat-box"><div class="value" id="stat-ytd">--</div><div class="label" id="stat-ytd-label">当年收益</div></div>
+  </div>
+
+  <div class="chart-card">
+    <h2>① 累计净值曲线对比</h2>
+    <div class="chart-wrapper"><canvas id="navChart"></canvas></div>
+    <p class="note" id="nav-note"></p>
+  </div>
+
+  <div class="chart-card">
+    <h2>② 当年净值曲线对比（年初 = 1）</h2>
+    <div class="chart-wrapper"><canvas id="ytdChart"></canvas></div>
+  </div>
+
+  <div class="chart-card">
+    <h2>③ 累计几何超额（策略 / 对照，&gt;1 表示跑赢）</h2>
+    <div class="chart-wrapper"><canvas id="excessChart"></canvas></div>
+  </div>
+
+  <div class="chart-card">
+    <h2>④ 今年累计超额（年初 = 1，&gt;1 表示年内跑赢）</h2>
+    <div class="chart-wrapper"><canvas id="ytdExcessChart"></canvas></div>
+  </div>
+
+  <div class="chart-card">
+    <h2 id="asset-title">⑤ 总资产曲线</h2>
+    <div class="chart-wrapper"><canvas id="assetChart"></canvas></div>
+  </div>
+
+  <div class="chart-card">
+    <h2>⑥ 业绩表现（累计 &amp; 当年）</h2>
+    <div style="overflow-x:auto"><table class="tbl" id="perfTable"></table></div>
+    <p class="note" id="perf-note"></p>
+  </div>
+
+  <div class="chart-card">
+    <h2>⑦ 最新一期持仓</h2>
+    <p class="sub" id="hold-sub">调仓日口径：份额与市值取自该期调仓成交结果，非每日重估；「区间收益」= 当前持仓自建仓日成交价至回测末日收盘的后复权涨跌幅（含分红）</p>
+    <div style="overflow-x:auto"><table class="tbl" id="holdTable"></table></div>
+  </div>
+
+  <div class="chart-card">
+    <h2>⑧ 历史换仓查询</h2>
+    <select id="rebalSelect"></select>
+    <p id="rebal-meta" style="font-size:12px;color:#999;margin-bottom:12px;line-height:1.8"></p>
+    <div style="overflow-x:auto"><table class="tbl" id="rebalTable"></table></div>
+    <p class="note">全量逐期明细可直接下载：<a href="/chart/data/smallcap/backtest_smallcap_records.csv" download>backtest_smallcap_records.csv</a></p>
+  </div>
+
+  <div class="chart-card">
+    <h2>⑨ 可成交性体检（这策略实盘做不做得成）</h2>
+    <p class="sub">微盘票的成交假设是这套回测最容易虚高的地方。下面每一格都是回测期内<b>真实发生的次数</b>：被挡下的单子不成交、顺延到下一期再试，净值里已经扣掉了这个后果。</p>
+    <div style="overflow-x:auto"><table class="tbl" id="healthTable"></table></div>
+    <p class="note" id="health-note"></p>
+  </div>
+
+  <div class="chart-card">
+    <h2>⑩ 与聚宽原文的差异</h2>
+    <p class="sub">策略骨架照搬聚宽 post/62479《微盘50，完美复制微盘指数》（作者 jack010）：市值最小 50 只等权、跌出前 70 名才清、权重漂移 0.5% 以内不调、每周五 9:35 调仓。本地版改了七处，前四处是为了不再偷看未来；调仓日遇节假日一律顺延（不提前到当周最后一个交易日），星期几可用 <code>--weekday</code> 改。</p>
+    <ul class="diff">
+      <li><b>点时 ST／退市</b>：聚宽的 <code>get_current_data()</code> 天然拿到「当天」的名单；本地 <code>stock_basic.name</code> 只代表今天，于是改用简称变更历史（<code>stock_namechange</code>）还原「调仓日它叫什么」，并用上市／退市日卡住在市判定。不改这一条，等于提前知道谁会退市、谁还没上市。</li>
+      <li><b>排名口径</b>：市值与流动性取<b>调仓日前一交易日</b>为止的数据（9:35 下单时能看到的最近一份），不用当天收盘后的数字。</li>
+      <li><b>可成交约束（原文没有）</b>：开盘涨停买不进、开盘跌停卖不出、停牌或零成交不成交、一手 100 股取整。计数见上方 ⑨。</li>
+      <li><b>流动性门槛（原文没有）</b>：近 20 个交易日日均成交额低于 <b id="liq-th"></b>的不进候选池。微盘票里有一批日均只有几十万，不给门槛的话回测收益明显虚高。</li>
+      <li><b>保留名单取全池前 70</b>：原文 <code>hold_threshold=70</code> 大于 <code>candidate_num=60</code>，作者注释里承认它实际只拿到排序后的前 60 名（保留名单被候选池截断）。本地按作者本意取前 70，缓冲更足。</li>
+      <li><b>成交与成本</b>：以当日<b>开盘价</b>成交；佣金双边万 1.0（最低 5 元/笔）＋卖出印花税万 5.0，与原文 <code>OrderCost</code> 一致；除权除息按复权因子比值折算份额（送转＋分红一次覆盖，价值中性），不另记现金分红。</li>
+      <li><b>调仓日落在周四</b>（原文是周五）：2026-09-23 用同一份代码把星期 1~5 各扫一遍（其余参数不动），周四年化 <b>43.02%</b>／卡玛 0.88 是五天里最好的、周五最差（40.07%／0.80），极差约 3pp。要说清楚：<b>五天全部跑输各自的候选池</b>（超额 −2.52pp ~ −5.63pp），所以这一格是挑日期，不是找到了 alpha。</li>
+    </ul>
+    <p class="note" id="dev-note"></p>
+  </div>
+
+</div>
+
+<script>
+// 小微盘策略的数据目录（各策略输出分文件夹）
+const DATA_DIR = '/chart/data/smallcap';
+async function fetchJson(path) {
+  const res = await fetch(path + '?t=' + Date.now());
+  if (!res.ok) throw new Error(path + ' 加载失败: ' + res.status);
+  return res.json();
+}
+const fmtPct = x => (x == null || isNaN(x)) ? '--' : (x * 100).toFixed(2) + '%';
+const fmtNum = (x, d = 2) => (x == null || isNaN(x)) ? '--' : Number(x).toFixed(d);
+const fmtWan = x => (x == null || isNaN(x)) ? '--' :
+  Number(x).toLocaleString('zh-CN', { maximumFractionDigits: 1 });
+const fmtInt = x => (x == null || isNaN(x)) ? '--' : Number(x).toLocaleString('zh-CN');
+const fmtDate = s => (s && s.length === 8) ? `${s.slice(0,4)}-${s.slice(4,6)}-${s.slice(6)}` : (s || '--');
+const pctColor = x => (x == null || isNaN(x)) ? '' : (x >= 0 ? 'up' : 'down');
+// 总市值（万元）→ 亿元
+const fmtYi = w => (w == null || isNaN(w)) ? '--' : (w / 1e4).toFixed(1);
+const OP_LABEL = { buy: '🟢 建仓', add: '⚖️ 补仓', trim: '⚖️ 减仓', sell: '🔴 清仓',
+                   hold: '🔁 续持', miss: '⚠️ 未成交', block_buy: '⛔ 涨停买不进',
+                   block_sell: '⛔ 跌停卖不出', suspend: '⏸ 停牌', split: '🔁 除权折算' };
+const HEALTH_LABEL = {
+  buy_limit_up: '开盘涨停、买不进', sell_limit_down: '开盘跌停、卖不出',
+  suspend_buy: '停牌／零成交、买不进', suspend_sell: '停牌／零成交、卖不出',
+  buy_no_cash: '排到它时现金已用完', lot_too_big: '一手金额就超过目标仓位'
+};
+
+function lineChart(id, labels, datasets, yTitle) {
+  new Chart(document.getElementById(id), {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { position: 'top' } },
+      scales: {
+        x: { type: 'time', time: { tooltipFormat: 'yyyy-MM-dd' },
+             ticks: { maxTicksLimit: 12, maxRotation: 0 } },
+        y: { title: { display: true, text: yTitle } }
+      }
+    }
+  });
+}
+
+// 当年序列：以上一年最后一个交易日净值为基准归一（年初 = 1）
+function ytdSeries(nav, key) {
+  const year = nav[nav.length - 1].date.slice(0, 4);
+  const prev = nav.filter(d => d.date < year + '-01-01');
+  const cur = nav.filter(d => d.date >= year + '-01-01');
+  const base = prev.length ? prev[prev.length - 1][key] : cur[0][key];
+  return { year, labels: cur.map(d => d.date), values: cur.map(d => base ? d[key] / base : null) };
+}
+
+// 与 backtest_smallcap.py 的 _perf() 同口径：252 交易日年化、std 用 ddof=1
+function perfFromNav(vals) {
+  const v = (vals || []).filter(x => x != null && !isNaN(x) && x > 0);
+  if (v.length < 3) return {};
+  const rets = [];
+  for (let i = 1; i < v.length; i++) rets.push(v[i] / v[i - 1] - 1);
+  const n = rets.length;
+  const mean = rets.reduce((a, b) => a + b, 0) / n;
+  const sd = n > 1 ? Math.sqrt(rets.reduce((a, b) => a + (b - mean) ** 2, 0) / (n - 1)) : 0;
+  const last = v[v.length - 1];
+  const years = Math.max(v.length / 252, 1e-9);
+  const ann = last > 0 ? Math.pow(last, 1 / years) - 1 : null;
+  let peak = v[0], mdd = 0;
+  for (const x of v) { if (x > peak) peak = x; const dd = x / peak - 1; if (dd < mdd) mdd = dd; }
+  return { total: last - 1, ann, vol: sd * Math.sqrt(252),
+           sharpe: sd > 0 ? mean / sd * Math.sqrt(252) : null,
+           mdd, calmar: (mdd < 0 && ann != null) ? ann / Math.abs(mdd) : null };
+}
+
+let BENCH = '国证2000';
+function ytdFromNav(nav) {
+  if (!nav.length) return null;
+  const out = {};
+  for (const k of ['strategy', 'pool', BENCH]) {
+    const ys = ytdSeries(nav, k);
+    out.year = ys.year;
+    out[k] = perfFromNav(ys.values);
+  }
+  return out;
+}
+
+// 单期持仓表（⑦ 最新一期 与 ⑧ 历史查询 共用）：按市值排名升序（微盘票排名小 = 市值小 = 先买）
+function posTable(rec) {
+  const head = `<tr><th>代码</th><th>名称</th>
+    <th class="num" title="本调仓日全池按总市值升序的名次（1 = 全市场市值最小的非科创／非北交／非 ST／流动性达标个股）">市值排名</th>
+    <th class="num" title="总市值（亿元），取调仓日的前一交易日">总市值<br><span style="font-weight:400;font-size:10px;color:#999">亿元</span></th>
+    <th class="num">成交价</th><th class="num">份额</th><th class="num">市值(元)</th><th class="num">权重</th>
+    <th class="num" title="本段持仓区间收益：调仓日成交价 → 下一调仓日成交价（最后一期到回测末日收盘）。后复权口径，含分红、跨除权折算连续，与净值同口径">区间收益<br><span style="font-weight:400;font-size:10px;color:#999">成交日→期末·后复权</span></th>
+    <th>操作</th></tr>`;
+  const tv = rec.total_value || 0;
+  const rows = [...(rec.stocks || [])]
+    .sort((a, b) => (a.rank ?? 1e9) - (b.rank ?? 1e9) || String(a.code).localeCompare(String(b.code)))
+    .map(s => {
+      const w = (s.value != null && tv) ? s.value / tv : null;
+      return `<tr>
+        <td style="color:#888">${s.code}</td>
+        <td style="font-weight:600;white-space:normal">${s.name || '--'}${s.buffer ? ' <span style="font-size:10px;color:#b45309;background:#fffbeb;border:1px solid #fcd34d;border-radius:3px;padding:0 3px;font-weight:400;white-space:nowrap" title="缓冲持仓：已跌出买入名单（前 50），但还在保留名单（前 70）里，所以本期不动它">缓冲</span>' : ''}</td>
+        <td class="num" style="color:#666">${s.rank ?? '--'}</td>
+        <td class="num">${fmtYi(s.total_mv)}</td>
+        <td class="num">${fmtNum(s.price, 3)}</td>
+        <td class="num">${fmtInt(s.shares)}</td>
+        <td class="num">${fmtWan(s.value)}</td>
+        <td class="num">${fmtPct(w)}</td>
+        <td class="num ${pctColor(s.ret)}">${fmtPct(s.ret)}</td>
+        <td>${OP_LABEL[s.op] || s.op || '--'}</td>
+      </tr>`;
+    }).join('');
+  const mv = (rec.stocks || []).reduce((a, s) => a + (s.value || 0), 0);
+  const foot = `<tr class="foot-row">
+      <td colspan="5">现金 ${fmtWan(rec.cash)} 元 ｜ 调仓前总值 ${fmtWan(rec.total_value)} 元
+        ｜ 本期换手(单边) ${fmtPct(rec.turnover)} ｜ 本期手续费 ${fmtWan(rec.fee_period)} 元</td>
+      <td class="num" colspan="2">持仓市值 ${fmtWan(mv)}</td>
+      <td class="num" colspan="3">${(rec.stocks || []).length} 只（建仓 ${rec.n_buy ?? '--'}／清仓 ${rec.n_sell ?? '--'}）</td></tr>`;
+  return head + rows + foot;
+}
+
+let REBAL = [];
+let PARAMS = {};
+function renderRebal(i) {
+  const r = REBAL[i];
+  if (!r) return;
+  document.getElementById('rebalTable').innerHTML = posTable(r);
+  const f = r.pool_n ?? '--';
+  document.getElementById('rebal-meta').innerHTML =
+    `${fmtDate(r.date)} 调仓，持有至 ${fmtDate(r.end_date)}；`
+    + `当日候选池 ${f} 只 → 买入名单 = 市值最小前 ${PARAMS.stock_num ?? '--'} 只，`
+    + `保留名单 = 前 ${PARAMS.hold_threshold ?? '--'} 只（跌出保留名单才清仓）；`
+    + `建仓 ${r.n_buy ?? '--'} 只／清仓 ${r.n_sell ?? '--'} 只，期末实际持有 ${r.n_hold ?? '--'} 只`;
+}
+
+function renderHealth(h) {
+  if (!h || !h.blocked) {
+    document.getElementById('healthTable').innerHTML =
+      '<tr><td style="color:#999;padding:16px">暂无体检数据（回测脚本升级后重跑即有）</td></tr>';
+    return;
+  }
+  const amt = h.blocked_amt || {};
+  const rows = Object.keys(HEALTH_LABEL).map(k => {
+    const n = h.blocked[k] ?? 0;
+    const a = amt[k];
+    const zero = n === 0;
+    return `<tr><td>${HEALTH_LABEL[k]}</td>
+      <td class="num" style="font-weight:600;color:${zero ? '#22c55e' : '#ef4444'}">${n} 次</td>
+      <td class="num" style="color:#666">${a != null ? fmtWan(a) + ' 元' : '--'}</td></tr>`;
+  }).join('');
+  document.getElementById('healthTable').innerHTML =
+    `<tr><th>被挡下的情形</th><th class="num">回测期内发生次数</th><th class="num">涉及金额（名义）</th></tr>`
+    + rows
+    + `<tr><td>一手取整后剩下没买出去的零头</td><td class="num" colspan="2" style="color:#666">${fmtWan(h.lot_residual)} 元（累计）</td></tr>`
+    + `<tr><td>平均持有只数 ／ 平均留现金</td><td class="num" colspan="2" style="color:#666">${h.avg_hold ?? '--'} 只 ／ ${fmtWan(h.avg_cash_w)} 元</td></tr>`;
+  document.getElementById('health-note').textContent = h.note || '';
+}
+
+async function render() {
+  let data = null;
+  try {
+    data = await fetchJson(`${DATA_DIR}/backtest_smallcap.json`);
+  } catch (e) {
+    document.getElementById('page-desc').textContent =
+      '🚧 本页数据尚未发布，暂时只有页面骨架。回测脚本是 data_process/smallcap/backtest_smallcap.py'
+      + '（聚宽 post/62479「微盘50」本地版），产物落在 chart/data/smallcap/ 后即自动渲染下面所有分节。';
+    // 数据没来就别摆空壳：统计卡、图表、明细表和那个会 404 的下载链接一并摘掉
+    document.querySelectorAll('.stats-row, .chart-card').forEach(el => el.remove());
+    return;
+  }
+
+  const p = data.params || {}, m = data.metrics || {}, nav = data.nav || [];
+  PARAMS = p;
+  BENCH = m.bench_label || p.bench_label || '国证2000';
+  if (!nav.length) {
+    document.getElementById('page-desc').textContent = '⚠️ backtest_smallcap.json 中没有净值序列。';
+    return;
+  }
+  const s = m.strategy || {}, pm = m.pool_benchmark || {}, b = m.benchmark || {};
+  const poolName = `微盘池 TOP${p.candidate_num ?? 60} 等权`;
+  const rebalShort = ['周一', '周二', '周三', '周四', '周五'][(p.rebal_weekday ?? 4) - 1];
+  const cap = (p.init_capital || 3000000) / 1e4;   // 万元
+  const my = data.metrics_ytd || ytdFromNav(nav);
+  const ys = (my && my.strategy) || {}, yb = (my && my[BENCH]) || {};
+  const extras = Object.keys(m.index_benchmarks || {});
+
+  document.getElementById('page-desc').textContent =
+    `全市场市值最小 ${p.stock_num ?? 50} 只等权 · ${rebalShort}调仓（遇节假日顺延） · `
+    + `回测区间 ${fmtDate(p.start)} ~ ${fmtDate(p.end)}（开盘价成交）`;
+  document.getElementById('asset-title').textContent =
+    `⑤ 总资产曲线（初始资金 ${cap.toLocaleString('zh-CN')} 万）`;
+  document.getElementById('liq-th').textContent =
+    `${p.min_avg_amount_wan ?? '--'} 万元`;
+
+  // 统计卡
+  const lastNav = nav[nav.length - 1];
+  document.getElementById('stat-range').textContent = `${fmtDate(p.start)} ~ ${fmtDate(p.end)}`;
+  document.getElementById('stat-nav').textContent = fmtNum(lastNav.strategy, 3);
+  const elT = document.getElementById('stat-total');
+  elT.textContent = fmtPct(s.total); elT.className = 'value ' + pctColor(s.total);
+  if (my && my.year) document.getElementById('stat-ytd-label').textContent = `${my.year} 年收益`;
+  const elY = document.getElementById('stat-ytd');
+  elY.textContent = fmtPct(ys.total); elY.className = 'value ' + pctColor(ys.total);
+
+  // ① 累计净值对比
+  const labels = nav.map(d => d.date);
+  const PALETTE = ['#3b82f6', '#8b5cf6', '#0ea5e9', '#a855f7'];
+  const ds = [
+    { label: `策略（市值最小 ${p.stock_num ?? 50} 只）`, data: nav.map(d => d.strategy),
+      borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,.08)', pointRadius: 0, borderWidth: 1.8 },
+    { label: BENCH, data: nav.map(d => d[BENCH]),
+      borderColor: '#f59e0b', pointRadius: 0, borderWidth: 1.4 },
+    { label: poolName, data: nav.map(d => d.pool),
+      borderColor: '#94a3b8', borderDash: [4, 3], pointRadius: 0, borderWidth: 1.2 }
+  ];
+  extras.forEach((k, i) => {
+    if (k === BENCH || !(k in nav[0])) return;
+    ds.push({ label: k, data: nav.map(d => d[k]), borderColor: PALETTE[i % PALETTE.length],
+              pointRadius: 0, borderWidth: 1.1 });
+  });
+  lineChart('navChart', labels, ds, '净值');
+  document.getElementById('nav-note').textContent =
+    `「${poolName}」= 每期候选池后复权等权（含分红、${rebalShort}再平衡），用来剥离「选得准不准」与「微盘本身涨不涨」；`
+    + `净值起点＝首个调仓日，不含预热期。`;
+
+  // ② 当年净值对比
+  const yS = ytdSeries(nav, 'strategy'), yB = ytdSeries(nav, BENCH), yP = ytdSeries(nav, 'pool');
+  const dsY = [
+    { label: `策略（市值最小 ${p.stock_num ?? 50} 只）`, data: yS.values, borderColor: '#ef4444', pointRadius: 0, borderWidth: 1.8 },
+    { label: BENCH, data: yB.values, borderColor: '#f59e0b', pointRadius: 0, borderWidth: 1.4 },
+    { label: poolName, data: yP.values, borderColor: '#94a3b8', borderDash: [4, 3], pointRadius: 0, borderWidth: 1.2 }
+  ];
+  extras.forEach((k, i) => {
+    if (k === BENCH || !(k in nav[0])) return;
+    const y = ytdSeries(nav, k);
+    dsY.push({ label: k, data: y.values, borderColor: PALETTE[i % PALETTE.length], pointRadius: 0, borderWidth: 1.1 });
+  });
+  lineChart('ytdChart', yS.labels, dsY, '净值（年初=1）');
+
+  // ③ 累计几何超额
+  lineChart('excessChart', labels, [
+    { label: `策略 / ${BENCH}`, data: nav.map(d => d[BENCH] ? +(d.strategy / d[BENCH]).toFixed(4) : null),
+      borderColor: '#6366f1', pointRadius: 0, borderWidth: 1.6 },
+    { label: `策略 / ${poolName}`, data: nav.map(d => d.pool ? +(d.strategy / d.pool).toFixed(4) : null),
+      borderColor: '#14b8a6', borderDash: [4, 3], pointRadius: 0, borderWidth: 1.2 },
+    { label: '持平线(1)', data: nav.map(() => 1), borderColor: '#94a3b8', borderDash: [5, 4], pointRadius: 0, borderWidth: 1 }
+  ], '超额（净值比）');
+
+  // ④ 今年累计超额
+  const exY = yS.values.map((v, i) =>
+    (v != null && yB.values[i] != null && yB.values[i] !== 0) ? +(v / yB.values[i]).toFixed(4) : null);
+  lineChart('ytdExcessChart', yS.labels, [
+    { label: `当年 策略 / ${BENCH}`, data: exY, borderColor: '#6366f1', pointRadius: 0, borderWidth: 1.6 },
+    { label: '持平线(1)', data: yS.labels.map(() => 1), borderColor: '#94a3b8', borderDash: [5, 4], pointRadius: 0, borderWidth: 1 }
+  ], '超额（净值比）');
+
+  // ⑤ 总资产曲线
+  lineChart('assetChart', labels, [
+    { label: '策略总资产(万元)', data: nav.map(d => d.strategy * cap), borderColor: '#22c55e',
+      backgroundColor: 'rgba(34,197,94,.08)', fill: true, pointRadius: 0, borderWidth: 1.8 },
+    { label: '初始资金', data: nav.map(() => cap), borderColor: '#94a3b8', borderDash: [5, 4], pointRadius: 0, borderWidth: 1 }
+  ], '总资产（万元）');
+
+  // ⑥ 业绩表（累计 & 当年）
+  const dash = '--';
+  const rows = [
+    ['累计收益', fmtPct(s.total), fmtPct(pm.total), fmtPct(b.total), fmtPct(ys.total), fmtPct(yb.total)],
+    ['年化收益', fmtPct(s.ann), fmtPct(pm.ann), fmtPct(b.ann), dash, dash],
+    ['最大回撤', fmtPct(s.mdd), fmtPct(pm.mdd), fmtPct(b.mdd), fmtPct(ys.mdd), fmtPct(yb.mdd)],
+    ['年化波动', fmtPct(s.vol), fmtPct(pm.vol), fmtPct(b.vol), fmtPct(ys.vol), fmtPct(yb.vol)],
+    ['夏普比率', fmtNum(s.sharpe), fmtNum(pm.sharpe), fmtNum(b.sharpe), fmtNum(ys.sharpe), fmtNum(yb.sharpe)],
+    ['卡玛比率', fmtNum(s.calmar), fmtNum(pm.calmar), fmtNum(b.calmar), fmtNum(ys.calmar), fmtNum(yb.calmar)],
+    [`超额年化(vs ${BENCH})`, (s.ann != null && b.ann != null) ? fmtPct(m.excess_ann) : dash, dash, dash, dash, dash],
+    [`超额年化(vs ${poolName})`, (s.ann != null && pm.ann != null) ? fmtPct(m.excess_vs_pool_ann) : dash, dash, dash, dash, dash],
+    [`Beta / Alpha(vs ${BENCH})`, `${fmtNum(m.beta)} / ${fmtPct(m.alpha_ann)}`, dash, dash, dash, dash],
+    ['期数 / 期胜率', `${m.n_rebal ?? '--'} / ${fmtPct(m.win_rate)}`, dash, dash, dash, dash],
+    ['平均换手(单边)', fmtPct(m.avg_turnover), dash, dash, dash, dash],
+    ['期末总资产 / 累计手续费', `${fmtWan(m.final_value)} 元 / ${fmtWan(m.fee_total)} 元`, dash, dash, dash, dash]
+  ];
+  document.getElementById('perfTable').innerHTML =
+    `<tr><th>指标</th><th class="num">累计·策略</th><th class="num">累计·${poolName}</th>
+     <th class="num">累计·${BENCH}</th><th class="num">当年·策略</th><th class="num">当年·${BENCH}</th></tr>` +
+    rows.map(r => `<tr><td>${r[0]}</td>${r.slice(1).map(v => `<td class="num">${v}</td>`).join('')}</tr>`).join('');
+
+  const tf = p.trade_fee || {};
+  const wp = x => (x == null || isNaN(x)) ? '--' : (x * 1e4).toFixed(1);
+  let note = `当年收益以上一年最后一个交易日净值为基准（年初=1）${data.metrics_ytd ? '（由回测脚本按同一口径算好）' : '，由前端按 nav 序列实时计算'}；`
+    + `交易成本：成交价 ${p.exec || '--'}，佣金双边 ${wp(tf.comm_rate)} 万分之一（最低 ${tf.min_comm ?? '--'} 元/笔），`
+    + `卖出印花税 ${wp(tf.stamp_tax)} 万分之一，滑点未建模（开盘价成交，冲击成本看 ⑨ 的成交额门槛与封板统计）。`;
+  document.getElementById('perf-note').textContent = note;
+
+  // ⑦⑧ 持仓与历史换仓
+  REBAL = data.rebalances || [];
+  if (REBAL.length) {
+    const last = REBAL[REBAL.length - 1];
+    document.getElementById('holdTable').innerHTML = posTable(last);
+    document.getElementById('hold-sub').textContent =
+      `最新调仓日 ${fmtDate(last.date)}，持有至 ${fmtDate(last.end_date)}；`
+      + `份额与市值按 ${p.exec || '当日开盘价'}成交结果计，非每日重估；`
+      + `「区间收益」= 建仓日成交价 → 下一调仓日成交价（最后一期到回测末日收盘）的后复权涨跌幅，含分红`;
+    const sel = document.getElementById('rebalSelect');
+    sel.innerHTML = REBAL.map((r, i) =>
+      `<option value="${i}">${fmtDate(r.date)}（持有 ${r.n_hold ?? '--'} 只 · 建仓 ${r.n_buy ?? '--'}／清仓 ${r.n_sell ?? '--'}）</option>`).join('');
+    sel.value = REBAL.length - 1;
+    renderRebal(REBAL.length - 1);
+    sel.addEventListener('change', () => renderRebal(Number(sel.value)));
+  } else {
+    document.getElementById('holdTable').innerHTML =
+      '<tr><td style="color:#999;padding:16px">暂无换仓记录</td></tr>';
+  }
+
+  renderHealth(data.health);
+  document.getElementById('dev-note').textContent =
+    `数据口径：湖 = MySQL tushare_data（stock_basic / stock_namechange / index_daily）＋ /data/stock_data 的按日 pqt 分片（行情、复权因子、总市值）。`
+    + `首期选股漏斗：${(p.funnel_first && p.funnel_first.n_has_mv) ?? '--'} 只有市值 → `
+    + `${(p.funnel_first && p.funnel_first.n_live) ?? '--'} 只在市（剔科创／北交后）→ `
+    + `${p.funnel_first ? p.funnel_first.n_live - p.funnel_first.n_st : '--'} 只非 ST/退 → `
+    + `${p.funnel_first ? p.funnel_first.n_pool : '--'} 只流动性达标。`
+    + (p.deviation ? ` ${p.deviation}` : '') + ` ${p.source || ''}`;
+}
+render();
+</script>
+
+</body>
+</html>
