@@ -253,7 +253,8 @@ function renderRebal(i) {
     `${fmtDate(r.date)} 调仓，持有至 ${fmtDate(r.end_date)}；`
     + `当日候选池 ${f} 只 → 买入名单 = 市值最小前 ${PARAMS.stock_num ?? '--'} 只，`
     + `保留名单 = 前 ${PARAMS.hold_threshold ?? '--'} 只（跌出保留名单才清仓）；`
-    + `建仓 ${r.n_buy ?? '--'} 只／清仓 ${r.n_sell ?? '--'} 只，期末实际持有 ${r.n_hold ?? '--'} 只`;
+    + `建仓 ${r.n_buy ?? '--'} 只／清仓 ${r.n_sell ?? '--'} 只，期末实际持有 ${r.n_hold ?? '--'} 只；`
+    + `名称是调仓日当天的简称（此后才戴帽的票，这里显示它当时的干净名字）`;
 }
 
 async function render() {
