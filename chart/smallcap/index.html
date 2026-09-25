@@ -26,6 +26,7 @@
     .page-desc { font-size: 14px; color: #999; margin-bottom: 32px; }
     .chart-card { background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); padding: 32px; margin-bottom: 24px; }
     .chart-card h2 { font-size: 18px; margin-bottom: 20px; color: #333; }
+    .chart-card h3.chart-sub { font-size: 14px; font-weight: 600; color: #666; margin: 22px 0 10px; }
     .chart-wrapper { position: relative; width: 100%; height: 380px; }
     .stats-row { display: flex; gap: 16px; margin-bottom: 24px; }
     .stat-box { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); padding: 24px; text-align: center; }
@@ -127,6 +128,17 @@
     <div style="overflow-x:auto"><table class="tbl" id="rebalTable"></table></div>
   </div>
 
+  <div class="chart-card" id="senti-card">
+    <h2>⑨ 情绪指标（择时闸门读数）</h2>
+    <p class="sub" id="senti-sub"></p>
+    <div class="kv" id="senti-kv"></div>
+    <h3 class="chart-sub" id="senti-1y-t">最近一年</h3>
+    <div class="chart-wrapper"><canvas id="senti1yChart"></canvas></div>
+    <h3 class="chart-sub" id="senti-3m-t">最近三个月</h3>
+    <div class="chart-wrapper"><canvas id="senti3mChart"></canvas></div>
+    <p class="note" id="senti-note"></p>
+  </div>
+
 </div>
 
 <script>
@@ -150,7 +162,7 @@ const OP_LABEL = { buy: '🟢 建仓', add: '⚖️ 补仓', trim: '⚖️ 减�
                    hold: '🔁 续持', miss: '⚠️ 未成交', block_buy: '⛔ 涨停买不进',
                    block_sell: '⛔ 跌停卖不出', suspend: '⏸ 停牌', split: '🔁 除权折算' };
 
-function lineChart(id, labels, datasets, yTitle) {
+function lineChart(id, labels, datasets, yTitle, extraScales) {
   new Chart(document.getElementById(id), {
     type: 'line',
     data: { labels, datasets },
@@ -161,7 +173,8 @@ function lineChart(id, labels, datasets, yTitle) {
       scales: {
         x: { type: 'time', time: { tooltipFormat: 'yyyy-MM-dd' },
              ticks: { maxTicksLimit: 12, maxRotation: 0 } },
-        y: { title: { display: true, text: yTitle } }
+        y: { title: { display: true, text: yTitle } },
+        ...(extraScales || {})
       }
     }
   });
@@ -244,13 +257,22 @@ function posTable(rec) {
 
 let REBAL = [];
 let PARAMS = {};
+let GATE_IN = new Set();     // 闸门「转多」那天的日期：这些调仓日是真建仓，其余续持
+// 每期状态：闸门当天判空仓 → 次日开盘全清（这条记录就是空仓期）；闸门刚开 → 建仓；否则＝常规周调仓
+function gateMark(rec) {
+  if (rec.action === 'timing_out') return '⚪ 空仓';
+  return GATE_IN.has(rec.date) ? '🟢 建仓' : '🔁 续持';
+}
 function renderRebal(i) {
   const r = REBAL[i];
   if (!r) return;
   document.getElementById('rebalTable').innerHTML = posTable(r);
   const f = r.pool_n ?? '--';
+  const why = r.action === 'timing_out'
+    ? '，本期状态 ⚪ 空仓 ＝ 情绪闸门当天判离场，表中是没来得及清掉的残留（跌停/停牌），之后每个交易日继续尝试'
+    : (GATE_IN.has(r.date) ? '，本期状态 🟢 建仓 ＝ 情绪闸门当天重新放开，按这份名单在开盘建仓' : '');
   document.getElementById('rebal-meta').innerHTML =
-    `${fmtDate(r.date)} 调仓，持有至 ${fmtDate(r.end_date)}；`
+    `${fmtDate(r.date)} 调仓，持有至 ${fmtDate(r.end_date)}${why}；`
     + `当日候选池 ${f} 只 → 买入名单 = 市值最小前 ${PARAMS.stock_num ?? '--'} 只，`
     + `保留名单 = 前 ${PARAMS.hold_threshold ?? '--'} 只（跌出保留名单才清仓）；`
     + `建仓 ${r.n_buy ?? '--'} 只／清仓 ${r.n_sell ?? '--'} 只，期末实际持有 ${r.n_hold ?? '--'} 只；`
@@ -391,6 +413,8 @@ async function render() {
   document.getElementById('perf-note').textContent = note;
 
   // ⑦⑧ 持仓与历史换仓
+  GATE_IN = new Set((((m.timing || {}).events) || [])
+    .filter(e => e.action === 'timing_in').map(e => e.date));
   REBAL = data.rebalances || [];
   if (REBAL.length) {
     const last = REBAL[REBAL.length - 1];
@@ -401,7 +425,7 @@ async function render() {
       + `「区间收益」= 建仓日成交价 → 下一调仓日成交价（最后一期到回测末日收盘）的后复权涨跌幅，含分红`;
     const sel = document.getElementById('rebalSelect');
     sel.innerHTML = REBAL.map((r, i) =>
-      `<option value="${i}">${fmtDate(r.date)}（持有 ${r.n_hold ?? '--'} 只 · 建仓 ${r.n_buy ?? '--'}／清仓 ${r.n_sell ?? '--'}）</option>`).join('');
+      `<option value="${i}">${fmtDate(r.date)} ${gateMark(r)}（持有 ${r.n_hold ?? '--'} 只 · 建仓 ${r.n_buy ?? '--'}／清仓 ${r.n_sell ?? '--'}）</option>`).join('');
     sel.value = REBAL.length - 1;
     renderRebal(REBAL.length - 1);
     sel.addEventListener('change', () => renderRebal(Number(sel.value)));
@@ -409,6 +433,68 @@ async function render() {
     document.getElementById('holdTable').innerHTML =
       '<tr><td style="color:#999;padding:16px">暂无换仓记录</td></tr>';
   }
+
+  // ⑨ 情绪指标（闸门读数序列由回测脚本随产物落盘，页面只负责画）
+  const senti = data.sentiment;
+  const pts = (senti && senti.points) || [];
+  if (!pts.length) {
+    document.getElementById('senti-card').remove();
+    return;
+  }
+  const u = senti.unit || '';
+  const hasQ = pts.some(x => x.q_hi != null);
+  const f2 = x => (x == null || isNaN(x)) ? '--' : Number(x).toFixed(2);
+  const q = p.timing_q || [];                    // 分位档位从产物参数取，别在页面写死
+  const qLab = i => (q[i] == null ? '--' : Math.round(q[i] * 100) + '%');
+  const tail = n => pts.slice(Math.max(0, pts.length - n));
+  const put = (id, html) => document.getElementById(id).innerHTML = html;
+  const span = (k, v) => `<span>${k} <b>${v}</b></span>`;
+
+  put('senti-sub', `口径＝${senti.rule || p.timing || '--'}。`
+    + `t 日收盘定信号、t+1 开盘执行 ⇒ 图上的灰底表示「从下一个开盘起空仓」。`);
+  const tm = m.timing || {};                     // 期内的闸门计数在这里（sentiment 那两个字段含预热段）
+  put('senti-kv',
+    span('最新读数', `${f2(pts[pts.length - 1].v)} ${u}（${fmtDate(pts[pts.length - 1].d)}）`)
+    + (hasQ ? span('转空线', `${f2(pts[pts.length - 1].q_hi)} ${u}`)
+             + span('回补线', `${f2(pts[pts.length - 1].q_lo)} ${u}`)
+             + span(`${senti.q_win} 日百分位`, `${f2(pts[pts.length - 1].pct)}%`) : '')
+    + span('当前状态', senti.last_state || '--')
+    + span('回测期内空仓时间', tm.cash_days_pct == null ? '--' : fmtPct(tm.cash_days_pct))
+    + span('离场/回补', `${tm.n_out ?? '--'} 次／${tm.n_in ?? '--'} 次`));
+
+  function sentiChart(id, arr) {
+    const ds = [
+      { label: `${senti.name}(${u})`, data: arr.map(x => x.v), borderColor: '#6366f1',
+        backgroundColor: 'rgba(99,102,241,.07)', fill: true, pointRadius: 0, borderWidth: 1.6 },
+      { label: '空仓期（次日开盘起无持仓）', data: arr.map(x => x.state === 0 ? 1 : null),
+        yAxisID: 'y1', stepped: true, borderWidth: 0, pointRadius: 0, fill: 'origin',
+        backgroundColor: 'rgba(148,163,184,.25)' }
+    ];
+    if (hasQ) {
+      ds.splice(1, 0,
+        { label: `转空线（${senti.q_win}日 ${qLab(0)}分位）`,
+          data: arr.map(x => x.q_hi), borderColor: '#ef4444', borderDash: [5, 4],
+          pointRadius: 0, borderWidth: 1.2 },
+        { label: `回补线（${senti.q_win}日 ${qLab(1)}分位）`,
+          data: arr.map(x => x.q_lo), borderColor: '#22c55e', borderDash: [5, 4],
+          pointRadius: 0, borderWidth: 1.2 });
+    }
+    lineChart(id, arr.map(x => fmtDate(x.d)), ds, `${senti.name}（${u}）`,
+              { y1: { display: false, min: 0, max: 8 } });
+  }
+  const y1 = tail(245), y3 = tail(62);
+  const hspan = a => `${fmtDate(a[0].d)} ~ ${fmtDate(a[a.length - 1].d)}，${a.length} 个交易日`;
+  document.getElementById('senti-1y-t').textContent = `最近一年（${hspan(y1)}）`;
+  document.getElementById('senti-3m-t').textContent = `最近三个月（${hspan(y3)}）`;
+  sentiChart('senti1yChart', y1);
+  sentiChart('senti3mChart', y3);
+  document.getElementById('senti-note').textContent =
+    `读数越高＝池内一起创新低的票越多（情绪越差）。两条虚线是过去 ${senti.q_win} 个交易日的 `
+    + `${qLab(0)}／${qLab(1)} 分位：读数踩上转空线就离场，回落到回补线下方才建仓，卡在中间就维持原状态（迟滞）`
+    + `—— 所以离场与回补不是同一条线来回穿，回测期内因此离场 ${tm.n_out ?? '--'} 次、回补 ${tm.n_in ?? '--'} 次，`
+    + `空仓时间占 ${tm.cash_days_pct == null ? '--' : fmtPct(tm.cash_days_pct)}。`
+    + `这一节只解释上面几节的离场／建仓时点，不改变任何一节的收益口径；`
+    + `序列与状态由回测脚本算好写进 backtest_smallcap.json 的 sentiment 段，页面拿最近 ${pts.length} 个交易日。`;
 }
 render();
 </script>
