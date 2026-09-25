@@ -37,6 +37,22 @@
     .up { color: #ef4444; } .down { color: #22c55e; }
     .foot-row td { font-weight: 600; background: #fafafa; }
     select { padding: 6px 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; margin-bottom: 14px; }
+    .note { font-size: 12px; color: #bbb; margin-top: 10px; line-height: 1.8; }
+    .sub { font-size: 12px; color: #bbb; margin: -10px 0 14px; line-height: 1.8; }
+    /* 区间筛选控件条 */
+    .rng-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    .rng-bar .lab { font-size: 13px; color: #666; }
+    .seg { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+    .seg button { padding: 5px 12px; border-radius: 16px; border: 1px solid #ddd; background: #fff;
+      color: #555; cursor: pointer; font-size: 12.5px; font-family: inherit; }
+    .seg button:hover { background: #f3f4f6; }
+    .seg button.on { background: #222; color: #fff; border-color: #222; font-weight: 600; }
+    .rng-bar input[type=date] { padding: 5px 8px; border: 1px solid #ddd; border-radius: 8px; font-size: 12.5px; }
+    .rngtxt { font-size: 12px; color: #999; margin-left: auto; }
+    /* 两个数族必须分开标：一张卡上混着「筛完区间重算的」和「回测产物原值」而不标注，就是假数 */
+    .src { font-size: 10px; font-weight: 400; border-radius: 4px; padding: 1px 5px; margin-left: 6px; white-space: nowrap; }
+    .src.calc { background: #eef2ff; color: #4f46e5; }
+    .src.art { background: #f3f4f6; color: #6b7280; }
     @media (max-width: 600px) {
       .stats-row { flex-direction: column; }
       .container { margin: 20px auto; }
@@ -61,6 +77,7 @@
   <a href="/chart/momentum/" style="display:inline-block;margin:0 14px;font-size:14px;color:#999">功能2：红利动量策略选股（大市值）</a>
   <a href="/chart/backtest/" style="display:inline-block;margin:0 14px;font-size:14px;color:#222;font-weight:600;border-bottom:2px solid #222;padding-bottom:4px">功能3：红利动量策略回测</a>
   <a href="/chart/etf/" style="display:inline-block;margin:0 14px;font-size:14px;color:#999">功能4：ETF 轮动策略回测</a>
+  <a href="/chart/smallcap/" style="display:inline-block;margin:0 14px;font-size:14px;color:#999">功能5：小微盘策略回测</a>
 </div>
 
 <div class="container">
@@ -68,10 +85,21 @@
   <p class="page-desc" id="page-desc">数据加载中…</p>
   <!-- 策略参数明细已隐藏（DOM 元素也一并移除，避免留下空白行） -->
 
+  <div class="chart-card" style="padding:18px 24px">
+    <div class="rng-bar">
+      <span class="lab">区间</span>
+      <span class="seg" id="rangeSeg"></span>
+      <span id="customRng" hidden><input type="date" id="fromIn"> ~ <input type="date" id="toIn"></span>
+      <span class="rngtxt" id="rngTxt"></span>
+    </div>
+    <p class="note">统计卡与 ①③⑤⑥⑧ 跟着区间变（指标按区间首点重算），②④ 固定看当年、⑦ 固定看产物自带的最新快照。
+      净值是抽稀过的（最近两年逐日、更早每周只留一个点），所以「区间重算」的最大回撤一定比回测当时的日频口径浅 —— 数字旁边标了出处。</p>
+  </div>
+
   <div class="stats-row">
-    <div class="stat-box"><div class="value" id="stat-range" style="font-size:16px">--</div><div class="label">回测区间</div></div>
-    <div class="stat-box"><div class="value" id="stat-nav">--</div><div class="label">最新净值</div></div>
-    <div class="stat-box"><div class="value" id="stat-total">--</div><div class="label">累计收益</div></div>
+    <div class="stat-box"><div class="value" id="stat-range" style="font-size:16px">--</div><div class="label" id="stat-range-label">回测区间</div></div>
+    <div class="stat-box"><div class="value" id="stat-nav">--</div><div class="label" id="stat-nav-label">最新净值</div></div>
+    <div class="stat-box"><div class="value" id="stat-total">--</div><div class="label" id="stat-total-label">累计收益</div></div>
     <div class="stat-box"><div class="value" id="stat-ytd">--</div><div class="label" id="stat-ytd-label">当年收益</div></div>
   </div>
 
@@ -96,26 +124,27 @@
   </div>
 
   <div class="chart-card">
-    <h2>⑤ 总资产曲线（初始资金 100 万）</h2>
+    <h2 id="asset-title">⑤ 总资产曲线（初始资金 100 万）</h2>
     <div class="chart-wrapper"><canvas id="assetChart"></canvas></div>
   </div>
 
   <div class="chart-card">
-    <h2>⑥ 业绩表现（累计 & 当年）</h2>
+    <h2>⑥ 业绩表现（累计 &amp; 当年）
+      <span class="seg" id="perfSeg" style="float:right"></span></h2>
     <div style="overflow-x:auto"><table class="tbl" id="perfTable"></table></div>
-    <p id="perf-note" style="font-size:12px;color:#bbb;margin-top:10px">当年收益以上一年最后一个交易日净值为基准；基准为中证红利全收益指数（拉取失败时回退为红利股票池等权）</p>
+    <p class="note" id="perf-note">当年收益以上一年最后一个交易日净值为基准；基准为中证红利全收益指数（拉取失败时回退为红利股票池等权）</p>
   </div>
 
   <div class="chart-card">
     <h2>⑦ 当前持仓（每日按收盘价重估）</h2>
-    <p style="font-size:12px;color:#bbb;margin:-10px 0 14px">持仓股数只在调仓日变化（当前为每周三），权重与市值每个交易日随收盘价更新</p>
+    <p class="sub" id="hold-sub">持仓股数只在调仓日变化（当前为每周三），权重与市值每个交易日随收盘价更新</p>
     <div style="overflow-x:auto"><table class="tbl" id="holdTable"></table></div>
   </div>
 
   <div class="chart-card">
     <h2>⑧ 历史换仓查询</h2>
     <select id="rebalSelect"></select>
-    <p id="rebal-meta" style="font-size:12px;color:#999;margin-bottom:12px"></p>
+    <p id="rebal-meta" style="font-size:12px;color:#999;margin-bottom:12px;line-height:1.8"></p>
     <div style="overflow-x:auto"><table class="tbl" id="rebalTable"></table></div>
   </div>
 
@@ -135,9 +164,14 @@ const fmtWan = x => (x == null || isNaN(x)) ? '--' :
   Number(x).toLocaleString('zh-CN', { maximumFractionDigits: 1 });
 const fmtDate = s => (s && s.length === 8) ? `${s.slice(0,4)}-${s.slice(4,6)}-${s.slice(6)}` : (s || '--');
 const pctColor = x => (x == null || isNaN(x)) ? '' : (x >= 0 ? 'up' : 'down');
+const isnum = x => x != null && !isNaN(x) && x !== '';
+const dash = '--';
 
+const CH = {};
 function lineChart(id, labels, datasets, yTitle) {
-  new Chart(document.getElementById(id), {
+  // 区间/来源一切换就重画同一个 canvas：不先 destroy 的话 Chart.js 直接抛「Canvas is already in use」
+  if (CH[id]) { CH[id].destroy(); delete CH[id]; }
+  CH[id] = new Chart(document.getElementById(id), {
     type: 'line',
     data: { labels, datasets },
     options: {
@@ -161,12 +195,124 @@ function ytdSeries(nav, key) {
   const prev = nav.filter(d => d.date < year + '-01-01');
   const cur = nav.filter(d => d.date >= year + '-01-01');
   const base = prev.length ? prev[prev.length - 1][key] : cur[0][key];
-  return { labels: cur.map(d => d.date), values: cur.map(d => base ? d[key] / base : null) };
+  return { year, labels: cur.map(d => d.date), values: cur.map(d => base ? d[key] / base : null) };
 }
 
-let REBAL_DATA = [];
+function calYears(a, b) {
+  const d = (new Date(String(b).slice(0, 10)) - new Date(String(a).slice(0, 10))) / 86400000;
+  return d > 0 ? d / 365.25 : null;
+}
+
+// 与回测脚本 _perf() 同式（std 用 ddof=1），但改两处口径：净值按**区间首点**归一、years 按首末**日期**算。
+// 产物里的 nav 是抽稀过的（最近两年逐日、更早每周一个点），老写法「点数/252」会把 8 年当成 3 年 ——
+// 那是假数，所以这里一律喂 [日期, 值] 成对，ppy = 点数/年数 用来折算波动与夏普。
+function perfFromNav(pts) {
+  const v = (pts || []).filter(p => p && isnum(p[1]) && Number(p[1]) > 0);
+  if (v.length < 3) return {};
+  const seq = v.map(p => Number(p[1]));
+  const rets = [];
+  for (let i = 1; i < seq.length; i++) rets.push(seq[i] / seq[i - 1] - 1);
+  const n = rets.length;
+  const mean = rets.reduce((a, b) => a + b, 0) / n;
+  const sd = n > 1 ? Math.sqrt(rets.reduce((a, b) => a + (b - mean) ** 2, 0) / (n - 1)) : 0;
+  const base = seq[0];
+  const last = seq[seq.length - 1] / base;
+  const years = Math.max(calYears(v[0][0], v[v.length - 1][0]) || (n / 252), 1e-9);
+  const ppy = n / years;                                  // 每年多少根（日频≈252，抽稀周频≈52）
+  const ann = last > 0 ? Math.pow(last, 1 / years) - 1 : null;
+  let peak = seq[0], mdd = 0;
+  for (const x of seq) { if (x > peak) peak = x; const dd = x / peak - 1; if (dd < mdd) mdd = dd; }
+  return { total: last - 1, ann, vol: sd * Math.sqrt(ppy),
+           sharpe: sd > 0 ? mean / sd * Math.sqrt(ppy) : null,
+           mdd, calmar: (mdd < 0 && ann != null) ? ann / Math.abs(mdd) : null,
+           n: seq.length, years, ppy };
+}
+/** nv 里的某条曲线（日期+值成对，抽稀或缺值都按日期对齐，不会串位）。 */
+function seriesOf(nv, key) {
+  return nv.filter(d => isnum(d[key])).map(d => [d.date, Number(d[key])]);
+}
+const perfOf = (nv, key) => perfFromNav(seriesOf(nv, key));
+/** 几何超额年化：逐点比值取对数收益 × ppy（与 sr_store._excess_ann 同式）。 */
+function excessAnn(nv, benchKey) {
+  const rows = nv.filter(d => isnum(d.strategy) && isnum(d[benchKey])
+                           && d.strategy > 0 && d[benchKey] > 0);
+  if (rows.length < 2) return null;
+  const logs = [];
+  for (let i = 1; i < rows.length; i++) {
+    const a = rows[i - 1], b = rows[i];
+    if (b.date <= a.date) continue;
+    const r = (b.strategy / a.strategy) / (b[benchKey] / a[benchKey]);
+    if (r > 0) logs.push(Math.log(r));
+  }
+  if (!logs.length) return null;
+  const years = calYears(rows[0].date, rows[rows.length - 1].date) || (rows.length / 252);
+  const ppy = (rows.length - 1) / Math.max(years, 1e-9);
+  return Math.exp(logs.reduce((x, y) => x + y, 0) / logs.length * ppy) - 1;
+}
+
+/* ---------------- 区间筛选（本地动态站的对照功能，公网这份只能前端切片） ---------------- */
+let FULL = [];            // 全样本 nav，②④ 与「当年」两列一律从它取
+let DATA = null;          // backtest_momentum.json 原文
+let SNAPS = [];           // backtest_snapshots.json（产物只带回测末尾最近几个交易日）
+const ST = { preset: 'all', from: null, to: null, src: 'range' };
+const PRESETS = [['all', '全部'], ['y1', '近一年'], ['y3', '近三年'], ['y5', '近五年'],
+                 ['this', '今年'], ['prev', '去年'], ['custom', '自定义']];
+
+function bounds() {
+  if (!FULL.length) return [null, null];
+  return [FULL[0].date, FULL[FULL.length - 1].date];
+}
+/** 预设档 → [from, to]。边界取产物真实首末日期，不是「今天」。 */
+function presetRange(key) {
+  const [, d1] = bounds();
+  if (!d1) return [null, null];
+  const y = Number(d1.slice(0, 4));
+  switch (key) {
+    case 'this': return [`${y}-01-01`, d1];
+    case 'prev': return [`${y - 1}-01-01`, `${y - 1}-12-31`];
+    case 'y1': case 'y3': case 'y5': {
+      const d = new Date(d1 + 'T00:00:00');
+      d.setFullYear(d.getFullYear() - Number(key[1]));
+      const p = (x) => String(x).padStart(2, '0');
+      return [`${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`, d1];
+    }
+    default: return [null, null];
+  }
+}
+function rangeNav() {
+  if (!ST.from && !ST.to) return FULL;
+  return FULL.filter(d => (!ST.from || d.date >= ST.from) && (!ST.to || d.date <= ST.to));
+}
+/** 区间内最后一期落在下拉末尾。 */
+function rebalInRange() {
+  if (!ST.from && !ST.to) return REBAL_ALL;
+  return REBAL_ALL.filter(r => (!ST.from || r.date >= ST.from) && (!ST.to || r.date <= ST.to));
+}
+
+let REBAL = [];           // 落在当前区间的调仓记录（⑧ 下拉的数据源）
+let REBAL_ALL = [];       // 全样本调仓记录，⑦ 之外的一切「按期聚合」都从它筛
+let PARAMS = {};
+let CAP = 100, MY = null, YS = {}, YB = {};
+let BENCH_KEY = 'pool', BENCH_NAME = '红利池等权';
+const METRICS = () => (DATA && DATA.metrics) || {};
+const srcTag = (k) => `<span class="src ${k}">${k === 'calc' ? '区间重算' : '产物原值'}</span>`;
+
+function ytdFromNav(nav) {
+  if (!nav.length) return null;
+  const out = {};
+  for (const k of ['strategy', 'pool', BENCH_KEY]) {
+    const ys = ytdSeries(nav, k);
+    out.year = ys.year;
+    const pf = perfFromNav(ys.labels.map((d, i) => [d, ys.values[i]]));
+    out[k] = pf;
+    if (k === BENCH_KEY) out.benchmark = pf;      // 与产物 metrics_ytd 的键名对齐
+  }
+  return out;
+}
+
+// 单期持仓表（⑧ 历史查询）：止损标记读的是这一期 stocks 里的 stop_date
 function renderRebal(i) {
-  const r = REBAL_DATA[i];
+  const r = REBAL[i];
   if (!r) return;
   const head = `<tr><th>代码</th><th>名称</th><th class="num">股数</th><th class="num">买入价</th>
     <th class="num">成本/差额(元)</th><th class="num">权重</th><th class="num">持有天数</th><th class="num">区间收益</th><th>备注</th></tr>`;
@@ -192,8 +338,11 @@ function renderRebal(i) {
       <td class="num" colspan="2">换手率 ${fmtPct(r.turnover)}</td>
       <td colspan="3">候选池 ${r.pool_size ?? '--'} 只</td></tr>`;
   document.getElementById('rebalTable').innerHTML = head + rows + foot;
+  const nStop = (r.stocks || []).filter(x => x.stop_date).length;
   document.getElementById('rebal-meta').textContent =
-    `${fmtDate(r.date)} 调仓，持有至 ${fmtDate(r.end_date)}，共 ${ (r.stocks || []).length } 只`;
+    `${fmtDate(r.date)} 调仓，持有至 ${fmtDate(r.end_date)}，共 ${(r.stocks || []).length} 只`
+    + `；本期止损 ${nStop} 笔（只是这一期，不是全样本）`
+    + `；下面是当前区间里的第 ${i + 1} / ${REBAL.length} 期`;
 }
 
 async function render() {
@@ -203,148 +352,341 @@ async function render() {
   } catch (e) {
     document.getElementById('page-desc').textContent =
       '⚠️ 数据文件尚未就绪（' + e.message + '）。请确认 backtest_high_dividend_mom.py 已成功运行并推送到 GitHub。';
+    // 数据没来就别摆空壳：区间控件、统计卡、图表和明细表一并摘掉（留着只会点了没反应）
+    document.querySelectorAll('.stats-row, .chart-card').forEach(el => el.remove());
     return;
   }
   try { snaps = await fetchJson(`${DATA_DIR}/backtest_snapshots.json`); } catch (e) { console.warn(e); }
 
-  const p = data.params || {}, m = data.metrics || {}, nav = data.nav || [];
+  DATA = data;
+  const p = data.params || {};
+  // 日期归一只在入口做一次：nav 的 date 产物里已是 'YYYY-MM-DD'，但 rebalances/snapshots 的
+  // date/end_date/stop_date 是 8 位 'YYYYMMDD'（行情日历原样落盘）。区间要喂 <input type=date>、
+  // 要字符串比对、要按首末日期算年数 —— 两种格式混着比是静默错数（'20240104' >= '2024-01-04' 恒真），
+  // fmtDate 对已带横杠的日期是幂等的，归一后下游只有一种写法。
+  const nav = (data.nav || []).map(d => ({ ...d, date: fmtDate(d.date) }));
+  PARAMS = p;
+  if (!nav.length) {
+    document.getElementById('page-desc').textContent =
+      '⚠️ backtest_momentum.json 中没有净值序列，请确认回测脚本已跑到 _save_json。';
+    document.querySelectorAll('.stats-row, .chart-card').forEach(el => el.remove());
+    return;
+  }
+  FULL = nav;
+  // 基准曲线名从 nav 的键推（idx_navs 落盘时同名），拿不到就是只有池等权
   const benchKeys = Object.keys(nav[0] || {}).filter(k => !['date', 'strategy', 'pool'].includes(k));
-  const benchKey = benchKeys[0] || 'pool';
-  const benchName = benchKeys[0] || '红利池等权';
-  const cap = (p.init_capital || 1000000) / 1e4;   // 万元
+  BENCH_KEY = benchKeys[0] || 'pool';
+  BENCH_NAME = BENCH_KEY === 'pool' ? '红利池等权' : BENCH_KEY;
+  CAP = (p.init_capital || 1000000) / 1e4;   // 万元
+  REBAL_ALL = (data.rebalances || []).map(r => ({
+    ...r, date: fmtDate(r.date), end_date: fmtDate(r.end_date),
+    // stop_date 缺失就是「本期没止损」，不能拿 fmtDate 的 '--' 兜底 —— 那会把每一行都标成止损
+    stocks: (r.stocks || []).map(s => s.stop_date ? { ...s, stop_date: fmtDate(s.stop_date) } : s)
+  }));
+  SNAPS = (Array.isArray(snaps) ? snaps : []).map(s => ({ ...s, date: fmtDate(s.date) }));
+  MY = data.metrics_ytd || ytdFromNav(FULL);
+  YS = (MY && MY.strategy) || {};
+  YB = (MY && (MY.benchmark || MY[BENCH_KEY])) || {};
 
+  drawStatic();
+  bindRange();
+  draw();
+}
+
+/** 页面副标题：跟着区间走的是别处，这里只写全样本口径；区间太短时 draw() 会临时占位。 */
+function subTitle() {
+  const p = PARAMS;
   document.getElementById('page-desc').textContent =
-    `回测区间 ${p.start} ~ ${p.end}（数据每个交易日更新）`;
+    `回测区间 ${fmtDate(p.start)} ~ ${fmtDate(p.end)}（数据每个交易日更新）· 基准 ${BENCH_NAME}`;
+}
 
-  // 统计卡
-  const lastNav = nav.length ? nav[nav.length - 1] : null;
-  document.getElementById('stat-range').textContent = `${p.start} ~ ${p.end}`;
-  document.getElementById('stat-nav').textContent = lastNav ? fmtNum(lastNav.strategy, 3) : '--';
-  const tot = m.strategy ? m.strategy.total : null;
-  const elT = document.getElementById('stat-total');
-  elT.textContent = fmtPct(tot); elT.className = 'value ' + pctColor(tot);
-  const my = data.metrics_ytd;
-  if (my) {
-    document.getElementById('stat-ytd-label').textContent = `${my.year} 年收益`;
-    const yv = my.strategy ? my.strategy.total : null;
-    const elY = document.getElementById('stat-ytd');
-    elY.textContent = fmtPct(yv); elY.className = 'value ' + pctColor(yv);
-  }
+/** 调仓日历文案：与回测脚本 _sched_label 同式，读 params.rebal_mode / freq_tdays / rebal_day。 */
+function rebalText() {
+  const p = PARAMS, mode = p.rebal_mode, day = p.rebal_day, iv = p.freq_tdays;
+  if (mode === 'tdays') return `每 ${iv ?? '--'} 个交易日`;
+  if (mode === 'monthly') return `每月 ${day ?? '--'} 号`;
+  if (mode) return `每周${['一', '二', '三', '四', '五'][(day ?? 3) - 1] || '--'}`;
+  return '每周三';                      // 产物没带 params 时退回原来的写死口径
+}
 
-  // ① 累计净值对比
-  const labels = nav.map(d => d.date);
-  lineChart('navChart', labels, [
-    { label: `策略 TOP${p.top_n}`, data: nav.map(d => d.strategy), borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,.08)', pointRadius: 0, borderWidth: 1.8 },
-    { label: benchName, data: nav.map(d => d[benchKey]), borderColor: '#f59e0b', pointRadius: 0, borderWidth: 1.4 },
-    { label: '红利池等权', data: nav.map(d => d.pool), borderColor: '#94a3b8', borderDash: [4, 3], pointRadius: 0, borderWidth: 1.2 }
-  ], '净值');
+/** 不随区间变的部分：副标题、②④ 当年两张图、⑥ 的表头注、⑦ 每日快照持仓。 */
+function drawStatic() {
+  const p = PARAMS, nav = FULL;
+  subTitle();
+  document.getElementById('asset-title').textContent =
+    `⑤ 总资产曲线（初始资金 ${CAP.toLocaleString('zh-CN')} 万）`;
 
-  // ② 当年净值对比
-  if (nav.length) {
-    const ys = ytdSeries(nav, 'strategy'), yb = ytdSeries(nav, benchKey), yp = ytdSeries(nav, 'pool');
-    lineChart('ytdChart', ys.labels, [
-      { label: `策略 TOP${p.top_n}`, data: ys.values, borderColor: '#ef4444', pointRadius: 0, borderWidth: 1.8 },
-      { label: benchName, data: yb.values, borderColor: '#f59e0b', pointRadius: 0, borderWidth: 1.4 },
-      { label: '红利池等权', data: yp.values, borderColor: '#94a3b8', borderDash: [4, 3], pointRadius: 0, borderWidth: 1.2 }
-    ], '净值（年初=1）');
-  }
+  // ② 当年净值对比：永远是全样本最后一个自然年，筛区间不会把它换成「那年的」
+  const ys = ytdSeries(nav, 'strategy'), yb = ytdSeries(nav, BENCH_KEY), yp = ytdSeries(nav, 'pool');
+  lineChart('ytdChart', ys.labels, [
+    { label: `策略 TOP${p.top_n ?? '--'}`, data: ys.values, borderColor: '#ef4444', pointRadius: 0, borderWidth: 1.8 },
+    { label: BENCH_NAME, data: yb.values, borderColor: '#f59e0b', pointRadius: 0, borderWidth: 1.4 },
+    { label: '红利池等权', data: yp.values, borderColor: '#94a3b8', borderDash: [4, 3], pointRadius: 0, borderWidth: 1.2 }
+  ], '净值（年初=1）');
 
-  // ③ 累计几何超额：策略净值 / 基准净值（几何复利口径，>1 即跑赢）
-  lineChart('excessChart', labels, [
-    { label: `策略 / ${benchName}`, data: nav.map(d => d[benchKey] ? +(d.strategy / d[benchKey]).toFixed(4) : null), borderColor: '#6366f1', pointRadius: 0, borderWidth: 1.6 },
-    { label: '持平线(1)', data: nav.map(() => 1), borderColor: '#94a3b8', borderDash: [5, 4], pointRadius: 0, borderWidth: 1 }
+  // ④ 今年累计超额：同上，跟着 ② 走
+  const exE = ys.values.map((v, i) =>
+    (v != null && yb.values[i] != null && yb.values[i] !== 0) ? +(v / yb.values[i]).toFixed(4) : null);
+  lineChart('ytdExcessChart', ys.labels, [
+    { label: `当年 策略 / ${BENCH_NAME}`, data: exE, borderColor: '#6366f1', pointRadius: 0, borderWidth: 1.6 },
+    { label: '持平线(1)', data: ys.labels.map(() => 1), borderColor: '#94a3b8', borderDash: [5, 4], pointRadius: 0, borderWidth: 1 }
   ], '超额（净值比）');
 
-  // ④ 今年累计超额：年内策略净值 / 基准净值（各自以年初为基准，>1 即年内跑赢）
-  if (nav.length) {
-    const ysE = ytdSeries(nav, 'strategy'), ybE = ytdSeries(nav, benchKey);
-    const exE = ysE.values.map((v, i) =>
-      (v != null && ybE.values[i] != null && ybE.values[i] !== 0) ? +(v / ybE.values[i]).toFixed(4) : null);
-    lineChart('ytdExcessChart', ysE.labels, [
-      { label: `当年 策略 / ${benchName}`, data: exE, borderColor: '#6366f1', pointRadius: 0, borderWidth: 1.6 },
-      { label: '持平线(1)', data: ysE.labels.map(() => 1), borderColor: '#94a3b8', borderDash: [5, 4], pointRadius: 0, borderWidth: 1 }
-    ], '超额（净值比）');
-  }
+  // ①③⑤ 三张累计口径图与 ⑥ 业绩表、⑧ 换仓下拉跟着区间变，见 navChart() / excessChart() / assetChart() / perfTable() / rebalSelect()
 
-  // ③ 总资产曲线
-  lineChart('assetChart', labels, [
-    { label: '策略总资产(万元)', data: nav.map(d => d.strategy * cap), borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,.08)', fill: true, pointRadius: 0, borderWidth: 1.8 },
-    { label: '初始资金', data: nav.map(() => cap), borderColor: '#94a3b8', borderDash: [5, 4], pointRadius: 0, borderWidth: 1 }
-  ], '总资产（万元）');
-
-  // ④ 业绩表（累计 & 当年）
-  const s = m.strategy || {}, py = m.pool_benchmark || {};
-  const idxB = m.index_benchmarks || {};
-  const bKey = Object.keys(idxB)[0];
-  const b = bKey ? idxB[bKey] : py;
-  const bName = bKey || '红利池等权';
-  const ys = (my && my.strategy) || {}, yb = (my && my.benchmark) || {};
-  const nStops = (data.rebalances || []).flatMap(r => r.stocks || []).filter(x => x.stop_date).length;
-  const rows = [
-    ['累计收益', fmtPct(s.total), fmtPct(b.total), fmtPct(ys.total), fmtPct(yb.total)],
-    ['年化收益', fmtPct(s.ann), fmtPct(b.ann), '--', '--'],
-    ['最大回撤', fmtPct(s.mdd), fmtPct(b.mdd), fmtPct(ys.mdd), fmtPct(yb.mdd)],
-    ['年化波动', fmtPct(s.vol), fmtPct(b.vol), fmtPct(ys.vol), fmtPct(yb.vol)],
-    ['夏普比率', fmtNum(s.sharpe), fmtNum(b.sharpe), fmtNum(ys.sharpe), fmtNum(yb.sharpe)],
-    ['卡玛比率', fmtNum(s.calmar), fmtNum(b.calmar), fmtNum(ys.calmar), fmtNum(yb.calmar)],
-    ['Beta', fmtNum(m.beta), '--', '--', '--'],
-    ['Alpha(年化)', fmtPct(m.alpha_ann), '--', '--', '--'],
-    ['期数胜率', fmtPct(m.win_rate), '--', '--', '--'],
-    ['平均换手', fmtPct(m.avg_turnover), '--', '--', '--'],
-    ['止损次数', nStops, '--', '--', '--']
-  ];
-  // 交易成本（仅含费用的回测版本写入 params.trade_fee；旧版数据无此字段时自动不展示）
-  const tf = p.trade_fee;
-  if (tf && tf.total != null) {
-    rows.push(['交易成本', `${fmtWan(tf.total)} 元（占初始资金 ${fmtPct(tf.total / (cap * 1e4))}）`, '--', '--', '--']);
-  }
-  document.getElementById('perfTable').innerHTML =
-    `<tr><th>指标</th><th class="num">累计·策略</th><th class="num">累计·${bName}</th>
-     <th class="num">当年·策略</th><th class="num">当年·${bName}</th></tr>` +
-    rows.map(r => `<tr><td>${r[0]}</td>${r.slice(1).map(v => `<td class="num">${v}</td>`).join('')}</tr>`).join('');
-  if (tf && tf.total != null) {
-    document.getElementById('perf-note').textContent +=
-      `；交易成本口径：佣金双边 ${(tf.comm_rate * 100).toFixed(2)}%（最低 ${tf.min_comm} 元/笔）` +
-      `，卖出印花税 ${(tf.stamp_tax * 100).toFixed(2)}%，回测期内累计扣除 ${fmtWan(tf.total)} 元（已从净值中扣除）`;
-  }
-
-  // ⑤ 当前持仓（最新每日快照）
+  // ⑦ 当前持仓：读的是另一份产物 backtest_snapshots.json，只有回测末尾那几个交易日
   const nameMap = {};
-  (data.rebalances || []).forEach(r => (r.codes || []).forEach((c, i) => nameMap[c] = (r.names || [])[i]));
+  REBAL_ALL.forEach(r => (r.codes || []).forEach((c, i) => { nameMap[c] = (r.names || [])[i]; }));
   const ht = document.getElementById('holdTable');
-  if (snaps.length) {
-    const last = snaps[snaps.length - 1];
+  const sub = document.getElementById('hold-sub');
+  if (SNAPS.length) {
+    const last = SNAPS[SNAPS.length - 1];
     const head = `<tr><th>代码</th><th>名称</th><th class="num">股数</th><th class="num">收盘价</th>
       <th class="num">市值(元)</th><th class="num">权重</th><th class="num">已持有</th></tr>`;
     // 按权重从高到低展示；权重缺失（null）排最后，再按代码排序保证顺序稳定
-    const holdings = [...last.holdings].sort((a, b) =>
+    const holdings = [...(last.holdings || [])].sort((a, b) =>
       (b[3] ?? -1) - (a[3] ?? -1) || String(a[0]).localeCompare(String(b[0])));
     const body = holdings.map(h =>
       `<tr><td style="color:#888">${h[0]}</td>
         <td style="font-weight:600">${nameMap[h[0]] || '--'}</td>
-        <td class="num">${h[1].toLocaleString('zh-CN')}</td>
+        <td class="num">${h[1] != null ? h[1].toLocaleString('zh-CN') : '--'}</td>
         <td class="num">${fmtNum(h[2], 2)}</td>
         <td class="num">${fmtWan(h[1] * h[2])}</td>
         <td class="num">${fmtPct(h[3])}</td>
         <td class="num">${h[4] != null ? h[4] + ' 日' : '--'}</td></tr>`).join('');
-    const mv = last.holdings.reduce((a, h) => a + h[1] * h[2], 0);
+    const mv = (last.holdings || []).reduce((a, h) => a + h[1] * h[2], 0);
     const foot = `<tr class="foot-row"><td colspan="5">截至 ${fmtDate(last.date)} ｜ 现金 ${fmtWan(last.cash)} 元</td>
       <td class="num">持仓市值 ${fmtWan(mv)} 元</td><td class="num">总资产 ${fmtWan(last.total)} 元</td></tr>`;
     ht.innerHTML = head + body + foot;
+    sub.textContent = `持仓股数只在调仓日变化（当前为${rebalText()}），权重与市值每个交易日随收盘价更新。`
+      + `这份每日快照由回测脚本另写进 backtest_snapshots.json，产物只带末尾 ${SNAPS.length} 个交易日`
+      + `（最新到 ${fmtDate(last.date)}），是「当前持仓」而不是「区间末持仓」—— 不随上面选的区间变`;
   } else {
     ht.innerHTML = '<tr><td style="color:#999;padding:16px">暂无每日快照数据（需运行新版回测脚本生成 backtest_snapshots.json）</td></tr>';
+    sub.textContent = `持仓股数只在调仓日变化（当前为${rebalText()}），权重与市值每个交易日随收盘价更新。`
+      + '本节读的是 backtest_snapshots.json，与上面选的区间无关';
   }
+  // onchange 属性赋值（不是 addEventListener）：⑧ 的下拉会被 draw() 重画，监听器会越叠越多
+  document.getElementById('rebalSelect').onchange = (e) => renderRebal(Number(e.target.value));
+}
 
-  // ⑥ 历史换仓查询
-  REBAL_DATA = data.rebalances || [];
-  const sel = document.getElementById('rebalSelect');
-  sel.innerHTML = REBAL_DATA.map((r, i) =>
-    `<option value="${i}">${fmtDate(r.date)}（${(r.stocks || []).length} 只）</option>`).join('');
-  if (REBAL_DATA.length) {
-    sel.value = REBAL_DATA.length - 1;
-    renderRebal(REBAL_DATA.length - 1);
-    sel.addEventListener('change', () => renderRebal(Number(sel.value)));
+/* ---------------- 控件：区间档 + 自定义日期 + ⑥ 的数族切换（只装一次） ---------------- */
+function bindRange() {
+  const seg = document.getElementById('rangeSeg');
+  const inputs = document.getElementById('customRng');
+  const f = document.getElementById('fromIn');
+  const t = document.getElementById('toIn');
+  const [d0, d1] = bounds();
+  f.min = d0; f.max = d1; t.min = d0; t.max = d1;
+  seg.innerHTML = PRESETS.map(([k, label]) =>
+    `<button data-k="${k}" class="${k === ST.preset ? 'on' : ''}">${label}</button>`).join('');
+  seg.onclick = (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    ST.preset = b.dataset.k;
+    if (ST.preset === 'custom') { ST.from = f.value || null; ST.to = t.value || null; }
+    else { const r = presetRange(ST.preset); ST.from = r[0]; ST.to = r[1]; }
+    seg.querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b));
+    inputs.hidden = ST.preset !== 'custom';
+    draw();
+  };
+  const applyDates = () => {
+    ST.preset = 'custom'; inputs.hidden = false;
+    ST.from = f.value || null; ST.to = t.value || null;
+    seg.querySelectorAll('button').forEach((x) => x.classList.toggle('on', x.dataset.k === 'custom'));
+    draw();
+  };
+  f.onchange = applyDates; t.onchange = applyDates;
+
+  const ps = document.getElementById('perfSeg');
+  ps.innerHTML = [['range', '区间重算'], ['artifact', '产物原值']].map(([k, label]) =>
+    `<button data-k="${k}" class="${k === ST.src ? 'on' : ''}">${label}</button>`).join('');
+  ps.onclick = (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    ST.src = b.dataset.k;
+    ps.querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b));
+    perfTable(rangeNav());
+  };
+}
+
+/* ---------------- 跟着区间变的部分 ---------------- */
+function draw() {
+  const NV = rangeNav();
+  const filtered = !!(ST.from || ST.to);
+  document.getElementById('rngTxt').textContent =
+    filtered ? `区间 ${ST.from || '…'} ~ ${ST.to || '至今'} · ${NV.length} 个净值点`
+             : `区间 全样本 · ${NV.length} 个净值点`;
+  if (NV.length < 3) {
+    const warn = `所选区间只有 ${NV.length} 个净值点（净值是抽稀过的），画不出线也重算不了指标 —— 换一档或把日期放宽。`;
+    document.getElementById('page-desc').textContent = '⚠️ ' + warn;
+    document.getElementById('rngTxt').textContent = '⚠️ ' + warn;
+    return;
   }
+  subTitle();                       // 上一次「太短」的告警要能被正常档位冲掉
+  statCards(NV);
+  navChart(NV);
+  excessChart(NV);
+  assetChart(NV);
+  perfTable(NV);
+  rebalSelect();
+}
+
+function statCards(NV) {
+  const per = perfOf(NV, 'strategy');
+  const filtered = !!(ST.from || ST.to);
+  document.getElementById('stat-range').textContent = `${NV[0].date} ~ ${NV[NV.length - 1].date}`;
+  document.getElementById('stat-range-label').textContent = filtered ? '所选区间' : '回测区间';
+  document.getElementById('stat-nav').textContent = fmtNum(NV[NV.length - 1].strategy, 3);
+  // 净值末点是从产物 nav 里挑出来的，不是重算出来的 —— 角标别乱标 calc
+  document.getElementById('stat-nav-label').innerHTML =
+    (filtered ? '区间末净值' : '最新净值') + srcTag('art');
+  const elT = document.getElementById('stat-total');
+  elT.textContent = fmtPct(per.total); elT.className = 'value ' + pctColor(per.total);
+  document.getElementById('stat-total-label').innerHTML =
+    (filtered ? '区间累计收益' : '累计收益') + srcTag('calc');
+  if (MY && MY.year) document.getElementById('stat-ytd-label').innerHTML =
+    `${MY.year} 年收益` + srcTag(DATA.metrics_ytd ? 'art' : 'calc');
+  const elY = document.getElementById('stat-ytd');
+  elY.textContent = fmtPct(YS.total); elY.className = 'value ' + pctColor(YS.total);
+}
+
+/** 筛区间只是把镜头推近：净值不平移到 1，否则「涨得慢」会被误读成「没涨」。 */
+function navChart(NV) {
+  const p = PARAMS, labels = NV.map(d => d.date);
+  lineChart('navChart', labels, [
+    { label: `策略 TOP${p.top_n ?? '--'}`, data: NV.map(d => d.strategy), borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,.08)', pointRadius: 0, borderWidth: 1.8 },
+    { label: BENCH_NAME, data: NV.map(d => d[BENCH_KEY]), borderColor: '#f59e0b', pointRadius: 0, borderWidth: 1.4 },
+    { label: '红利池等权', data: NV.map(d => d.pool), borderColor: '#94a3b8', borderDash: [4, 3], pointRadius: 0, borderWidth: 1.2 }
+  ], '净值');
+}
+
+function excessChart(NV) {
+  const labels = NV.map(d => d.date);
+  lineChart('excessChart', labels, [
+    { label: `策略 / ${BENCH_NAME}`, data: NV.map(d => d[BENCH_KEY] ? +(d.strategy / d[BENCH_KEY]).toFixed(4) : null), borderColor: '#6366f1', pointRadius: 0, borderWidth: 1.6 },
+    { label: '持平线(1)', data: NV.map(() => 1), borderColor: '#94a3b8', borderDash: [5, 4], pointRadius: 0, borderWidth: 1 }
+  ], '超额（净值比）');
+}
+
+function assetChart(NV) {
+  const labels = NV.map(d => d.date);
+  lineChart('assetChart', labels, [
+    { label: '策略总资产(万元)', data: NV.map(d => d.strategy * CAP), borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,.08)', fill: true, pointRadius: 0, borderWidth: 1.8 },
+    { label: '初始资金', data: NV.map(() => CAP), borderColor: '#94a3b8', borderDash: [5, 4], pointRadius: 0, borderWidth: 1 }
+  ], '总资产（万元）');
+}
+
+function rebalSelect() {
+  const sel = document.getElementById('rebalSelect');
+  const rs = rebalInRange();
+  if (!rs.length) {
+    REBAL = [];
+    sel.innerHTML = '<option value="">区间内没有调仓记录</option>';
+    document.getElementById('rebalTable').innerHTML =
+      '<tr><td style="color:#999;padding:16px">这段区间里没有已完成的调仓期</td></tr>';
+    document.getElementById('rebal-meta').textContent = '';
+    return;
+  }
+  REBAL = rs;
+  sel.innerHTML = rs.map((r, i) =>
+    `<option value="${i}">${fmtDate(r.date)}（${(r.stocks || []).length} 只）</option>`).join('');
+  sel.value = String(rs.length - 1);
+  renderRebal(rs.length - 1);
+}
+
+/** 换仓明细里带 stop_date 的行数：期在区间内才数得进来。 */
+function countStops(list) {
+  return list.reduce((a, r) => a + (r.stocks || []).filter(x => x.stop_date).length, 0);
+}
+
+/** ⑥ 业绩表：一张表两档数，混着摆而不标注就是假数，所以表头每列都带角标。 */
+function perfTable(NV) {
+  const m = METRICS(), p = PARAMS;
+  const useRange = ST.src === 'range';
+  const idxB = m.index_benchmarks || {};
+  let s, b, exB, exP, winRate, turn, beta, alpha, fee, stops;
+  if (useRange) {
+    s = perfOf(NV, 'strategy'); b = perfOf(NV, BENCH_KEY);
+    exB = excessAnn(NV, BENCH_KEY); exP = excessAnn(NV, 'pool');
+    const rs = rebalInRange();
+    const t = rs.map(r => r.turnover).filter(x => isnum(x));
+    winRate = `${dash}（期胜率只有全期口径）`;
+    turn = t.length ? fmtPct(t.reduce((a, c) => a + c, 0) / t.length) : dash;
+    // Beta／Alpha 是全样本对基准做的回归，期胜率按整段回测的期数统计，
+    // 交易成本是全回测期累加的佣金+印花税（产物没有分期费用）—— 切区间既重算不出、
+    // 也不该跟着变小，所以这一档一律不给数
+    beta = alpha = fee = dash;
+    stops = `${countStops(rs)} 次`;
+  } else {
+    s = m.strategy || {};
+    b = idxB[BENCH_KEY] || m.pool_benchmark || {};
+    // 产物只有 metrics.excess_ann（策略年化 − 池等权年化）；对指数的超额没落盘，不臆造
+    exP = m.excess_ann != null ? m.excess_ann : null;
+    exB = (BENCH_KEY === 'pool') ? exP : null;
+    winRate = fmtPct(m.win_rate);
+    turn = fmtPct(m.avg_turnover);
+    beta = fmtNum(m.beta); alpha = fmtPct(m.alpha_ann);
+    const tf0 = p.trade_fee || {};
+    fee = tf0.total != null
+      ? `${fmtWan(tf0.total)} 元（占初始资金 ${fmtPct(tf0.total / (CAP * 1e4))}）` : dash;
+    stops = `${countStops(REBAL_ALL)} 次`;
+  }
+  const exRows = [[`超额年化(vs ${BENCH_NAME})`, exB == null ? dash : fmtPct(exB), dash, dash, dash]];
+  if (BENCH_KEY !== 'pool') {
+    exRows.push(['超额年化(vs 红利池等权)', exP == null ? dash : fmtPct(exP), dash, dash, dash]);
+  }
+  const rows = [
+    ['累计收益', fmtPct(s.total), fmtPct(b.total), fmtPct(YS.total), fmtPct(YB.total)],
+    ['年化收益', fmtPct(s.ann), fmtPct(b.ann), fmtPct(YS.ann), fmtPct(YB.ann)],
+    ['最大回撤', fmtPct(s.mdd), fmtPct(b.mdd), fmtPct(YS.mdd), fmtPct(YB.mdd)],
+    ['年化波动', fmtPct(s.vol), fmtPct(b.vol), fmtPct(YS.vol), fmtPct(YB.vol)],
+    ['夏普比率', fmtNum(s.sharpe), fmtNum(b.sharpe), fmtNum(YS.sharpe), fmtNum(YB.sharpe)],
+    ['卡玛比率', fmtNum(s.calmar), fmtNum(b.calmar), fmtNum(YS.calmar), fmtNum(YB.calmar)],
+    ...exRows,
+    ['Beta', beta, dash, dash, dash],
+    ['Alpha(年化)', alpha, dash, dash, dash],
+    ['期胜率', winRate, dash, dash, dash],
+    ['平均换手', turn, dash, dash, dash],
+    ['止损次数', stops, dash, dash, dash],
+    ['交易成本', fee, dash, dash, dash]
+  ];
+  const tag = srcTag(useRange ? 'calc' : 'art');
+  const ytag = srcTag(DATA.metrics_ytd ? 'art' : 'calc');
+  const yr = (MY && MY.year) || '--';
+  document.getElementById('perfTable').innerHTML =
+    `<tr><th>指标</th><th class="num">累计·策略${tag}</th><th class="num">累计·${BENCH_NAME}${tag}</th>
+     <th class="num">${yr} 年·策略${ytag}</th><th class="num">${yr} 年·${BENCH_NAME}${ytag}</th></tr>` +
+    rows.map(r => `<tr><td>${r[0]}</td>${r.slice(1).map(v => `<td class="num">${v}</td>`).join('')}</tr>`).join('');
+
+  let note = useRange
+    ? `当前是<b>区间重算</b>：净值按区间首点归一，年化分母取首末日期（这段 ${fmtNum(s.years, 2)} 年、`
+      + `${s.n || 0} 个采样点 ≈ ${fmtNum(s.ppy, 0)} 根/年），波动与夏普同率折算。`
+      + `<b>最大回撤只会偏浅</b> —— 净值是抽稀过的（最近两年逐日、更早每周只留一个点），周内新低看不见；要日频口径点「产物原值」。`
+      + `Beta／Alpha／期胜率／交易成本在这一档一律给 ${dash}：前两个是全样本对基准做的回归，`
+      + `期胜率按整段回测的期数统计，交易成本是全回测期累加的佣金+印花税（产物没分期记录），`
+      + `切区间既重算不出、也不该跟着变小。`
+    : `当前是<b>产物原值</b>：回测脚本落盘那一刻的全期数，<b>与上面选的区间无关</b>（这正是本地站要重算的原因）；`
+      + `上面选的区间只挪动 ①③⑤ 三张图的镜头、统计卡与 ⑧ 的下拉，这一档的这些数一动不动。`;
+  note += `「超额年化」行在两档下不是同一个式子：产物档只有 metrics.excess_ann（策略年化 − 红利池等权年化，脚本里直减），`
+    + `对指数那一档产物没落盘所以给 ${dash}（基准回退成红利池等权时两行并成一行）；区间档 = 逐点净值比取对数后按每年根数年化 —— 即使选「全部」两档也不会完全相等，差的是口径不是笔误；`
+    + `「止损次数」两档数的是换仓明细里 stop_date 有值的行（区间档只数落在区间内的期），`
+    + `明细从第二期起才落盘，所以首期触发的止损两档都看不见；`
+    + `「当年」两列永远看全样本最后一个自然年（${yr} 年），不随上面选的区间变，`
+    + `其角标只区分「产物落盘值」与「前端按 nav 现算值」；`
+    + `当年收益以上一年最后一个交易日净值为基准（年初=1）${DATA.metrics_ytd ? '（由回测脚本按同一口径算好）' : '，由前端按 nav 序列实时计算'}；`
+    + `基准 ${BENCH_NAME}（指数拉取失败时回退为红利股票池等权），`
+    + `「红利池等权」= 每期候选池全体等权（策略的可投资域），用来剥离「选得准不准」与「红利股本身涨不涨」。`;
+  const tf = p.trade_fee;
+  if (tf && tf.total != null && tf.comm_rate != null && tf.stamp_tax != null) {
+    note += ` 交易成本口径：佣金双边 ${(tf.comm_rate * 100).toFixed(2)}%（最低 ${tf.min_comm} 元/笔）`
+      + `，卖出印花税 ${(tf.stamp_tax * 100).toFixed(2)}%，回测期内（全样本）累计扣除 ${fmtWan(tf.total)} 元（已从净值中扣除）。`;
+  }
+  const sl = p.stop_loss || {};
+  if (sl.on === false) note += ' 本次回测未启用止损。';
+  else if (sl.tdays != null && sl.pct != null) {
+    note += ` 止损规则：新买入 ${sl.tdays} 个交易日内当日最低价跌破买入价 ${fmtPct(sl.pct)} `
+      + `即按最低价卖出（一字跌停卖不出则顺延，续持股超出这个窗口就不再检查）。`;
+  }
+  document.getElementById('perf-note').innerHTML = note;
 }
 render();
 </script>

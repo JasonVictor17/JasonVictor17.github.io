@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>数据看板 - Jingde's Blog</title>
+  <title>红利股全览 - Jingde's Blog</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -65,6 +65,17 @@
       width: 100%;
       height: 420px;
     }
+    /* 区间筛选条：与小微盘/ETF/动量三页同一套样式和位置（控件同类同形） */
+    .rng-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: -6px 0 14px; }
+    .rng-bar .lab { font-size: 13px; color: #666; }
+    .seg { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+    .seg button { padding: 5px 12px; border-radius: 16px; border: 1px solid #ddd; background: #fff;
+                  color: #444; font-size: 12.5px; cursor: pointer; transition: all .15s; }
+    .seg button:hover { background: #f3f4f6; }
+    .seg button.on { background: #222; color: #fff; border-color: #222; font-weight: 600; }
+    .rng-bar input[type=date] { padding: 5px 8px; border: 1px solid #ddd; border-radius: 8px; font-size: 12.5px; }
+    .rng-bar .rngtxt { font-size: 12.5px; color: #888; margin-left: auto; }
+    .note { font-size: 12px; color: #999; line-height: 1.7; margin-top: 10px; }
     .stats-row {
       display: flex;
       gap: 16px;
@@ -118,11 +129,12 @@
   <a href="/chart/momentum/" style="display:inline-block;margin:0 14px;font-size:14px;color:#999">功能2：红利动量策略选股（大市值）</a>
   <a href="/chart/backtest/" style="display:inline-block;margin:0 14px;font-size:14px;color:#999">功能3：红利动量策略回测</a>
   <a href="/chart/etf/" style="display:inline-block;margin:0 14px;font-size:14px;color:#999">功能4：ETF 轮动策略回测</a>
+  <a href="/chart/smallcap/" style="display:inline-block;margin:0 14px;font-size:14px;color:#999">功能5：小微盘策略回测</a>
 </div>
 
 <div class="container">
-  <h1 class="page-title">📊 数据看板</h1>
-  <p class="page-desc">这是一个数据可视化 Demo 页面，后续可接入真实数据。</p>
+  <h1 class="page-title">📈 红利股全览</h1>
+  <p class="page-desc">数据更新时间：--（每周自动更新）</p>
   <p style="font-size:12px;color:#bbb;margin:-24px 0 28px">
     口径说明：「3年平均分红」= 近2~3个自然年年度分红均值 ÷ 当前股价（要求连续分红）；
     「TTM股息率」= 近365天实际派发分红合计 ÷ 当前股价
@@ -149,12 +161,19 @@
 
   <div class="chart-card">
     <h2>TOP10高分红行业平均股息率走势（3年平均分红口径）</h2>
-    <p style="font-size:12px;color:#bbb;margin:-10px 0 14px">
+    <div class="rng-bar">
+      <span class="lab">区间</span>
+      <span class="seg" id="rangeSeg"></span>
+      <span id="customRng" hidden><input type="date" id="fromIn"> ~ <input type="date" id="toIn"></span>
+      <span class="rngtxt" id="rngTxt"></span>
+    </div>
+    <p style="font-size:12px;color:#bbb;margin:-6px 0 14px">
       默认显示：银行 / 煤炭开采 / 路桥 / 白酒；图例按当前股息率降序，点击图例可显示或隐藏其他行业
     </p>
     <div class="chart-wrapper">
       <canvas id="visitChart"></canvas>
     </div>
+    <p class="note" id="visit-note"></p>
     <p id="chart-tip" style="color:#999;font-size:13px;margin-top:12px;display:none"></p>
   </div>
 
@@ -204,6 +223,143 @@ const PALETTE = ['#3b82f6', '#f59e0b', '#22c55e', '#ef4444', '#8b5cf6',
                  '#14b8a6', '#ec4899', '#84cc16', '#6366f1', '#f97316'];
 const PRIORITY_INDUSTRIES = ['银行', '煤炭开采', '路桥', '白酒'];
 
+/* ---------------- 走势图的时间区间 ----------------
+   这份产物里只有「行业平均股息率走势」是时间序列（周频 56 周），其余三块是本周截面，
+   所以区间条只摆在这张图的卡片里 —— 放到页头会让人以为它管全页。 */
+let HIST = [], VIS = null;
+const SERIES = [];                    // 顺序与配色按全样本末周定死，换区间不变色
+const ST = { preset: 'all', from: null, to: null };
+const HIDDEN = new Set();             // 图例开关是「看图状态」，换区间要留着
+const PRESETS = [['all', '全部'], ['h6', '近半年'], ['q1', '近三月'], ['m1', '近一月'],
+                 ['custom', '自定义']];
+const DAYS = { h6: 183, q1: 92, m1: 31 };
+
+const shiftDate = (s, n) => {
+  // 全走 UTC 算法：本机是 UTC+8，用本地时间构造再 toISOString() 会整体倒退一天
+  const [y, m, d] = s.split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1, d - n)).toISOString().slice(0, 10);
+};
+
+function buildSeries() {
+  const inds = [...new Set(HIST.flatMap(d => Object.keys(d.industry_ratios || {})))];
+  const last = HIST.length ? (HIST[HIST.length - 1].industry_ratios || {}) : {};
+  const sorted = [...inds].sort((a, b) => (last[b] ?? -Infinity) - (last[a] ?? -Infinity));
+  SERIES.length = 0;
+  sorted.forEach((ind, i) => SERIES.push({
+    label: ind, color: PALETTE[i % PALETTE.length],
+    data: HIST.map(d => (d.industry_ratios || {})[ind] ?? null),
+  }));
+  // 26 个行业全画上去就是糊成一团：默认只开优先的四条，其余靠图例开关
+  HIDDEN.clear();
+  SERIES.forEach(s => { if (!PRIORITY_INDUSTRIES.includes(s.label)) HIDDEN.add(s.label); });
+}
+
+function winRange() {
+  if (!HIST.length) return [0, 0];
+  const from = ST.from || HIST[0].date, to = ST.to || HIST[HIST.length - 1].date;
+  let i = 0;
+  while (i < HIST.length && HIST[i].date < from) i++;
+  let j = HIST.length;
+  while (j > i && HIST[j - 1].date > to) j--;
+  return [i, j];
+}
+
+function presetRange(k) {
+  const end = HIST[HIST.length - 1].date;
+  return DAYS[k] ? [shiftDate(end, DAYS[k]), end] : [null, null];
+}
+
+function bindRange() {
+  const seg = document.getElementById('rangeSeg');
+  const inputs = document.getElementById('customRng');
+  const f = document.getElementById('fromIn'), t = document.getElementById('toIn');
+  if (!HIST.length) { seg.innerHTML = ''; inputs.hidden = true; return; }
+  f.min = t.min = HIST[0].date;
+  f.max = t.max = HIST[HIST.length - 1].date;
+  seg.innerHTML = PRESETS.map(([k, label]) =>
+    `<button data-k="${k}" class="${k === ST.preset ? 'on' : ''}">${label}</button>`).join('');
+  const pick = (b) => {
+    ST.preset = b.dataset.k;
+    if (ST.preset === 'custom') { ST.from = f.value || null; ST.to = t.value || null; }
+    else { const r = presetRange(ST.preset); ST.from = r[0]; ST.to = r[1]; }
+    seg.querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b));
+    inputs.hidden = ST.preset !== 'custom';
+    drawVisit();
+  };
+  seg.onclick = (e) => { const b = e.target.closest('button'); if (b) pick(b); };
+  f.onchange = t.onchange = () => {
+    ST.preset = 'custom'; inputs.hidden = false;
+    ST.from = f.value || null; ST.to = t.value || null;
+    seg.querySelectorAll('button').forEach((x) =>
+      x.classList.toggle('on', x.dataset.k === 'custom'));
+    drawVisit();
+  };
+}
+
+function drawVisit() {
+  if (!HIST.length) return;      // 产物还没落盘：卡片上那句「暂无历史数据」已经说了，别再叠一条
+  const [i, j] = winRange();
+  const weeks = HIST.slice(i, j);
+  const filtered = !!(ST.from || ST.to);
+  document.getElementById('rngTxt').textContent = filtered
+    ? `区间 ${ST.from || '…'} ~ ${ST.to || '至今'} · ${weeks.length} 周`
+    : `区间 全样本 · ${weeks.length} 周`;
+  const note = document.getElementById('visit-note');
+  if (weeks.length < 2) {
+    if (VIS) { VIS.destroy(); VIS = null; }
+    note.textContent = `⚠️ 所选区间只有 ${weeks.length} 周，画不出走势 —— 换一档或把日期放宽。`
+      + '（这份数据是周频，区间窄于两三周就只剩几个点）';
+    return;
+  }
+  if (VIS) VIS.destroy();
+  VIS = new Chart(document.getElementById('visitChart').getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: weeks.map(d => d.date),
+      datasets: SERIES.map(s => ({
+        label: s.label, data: s.data.slice(i, j), borderColor: s.color,
+        borderWidth: 2, pointRadius: 2.5, tension: 0.35, spanGaps: true,
+        hidden: HIDDEN.has(s.label),
+      })),
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            usePointStyle: true,
+            boxWidth: window.innerWidth < 600 ? 5 : 8,
+            padding: window.innerWidth < 600 ? 6 : 14,
+            font: { size: window.innerWidth < 600 ? 10 : 12 }
+          },
+          onClick(e, item, legend) {
+            const ci = legend.chart;
+            const vis = !ci.isDatasetVisible(item.datasetIndex);
+            ci.setDatasetVisibility(item.datasetIndex, vis);
+            const lab = ci.data.datasets[item.datasetIndex].label;
+            vis ? HIDDEN.delete(lab) : HIDDEN.add(lab);
+            ci.update();
+          }
+        },
+        tooltip: { mode: 'index', intersect: false }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: '#999',
+             maxTicksLimit: window.innerWidth < 600 ? 6 : 12 } },
+        y: { grid: { color: '#f0f0f0' }, ticks: { color: '#999' },
+             title: { display: true, text: '股息率(%)', color: '#999' } }
+      }
+    }
+  });
+  note.textContent = `区间只把这张图的镜头推近：线、图例顺序与配色都按全样本末周定死，`
+    + `换区间不会变色也不会重排；图例开关是看图状态，换区间会留着。`
+    + `下面三块（十大高股息行业 / TOP15 高夏普 / 散点）读的是 dividend_latest.json 那份本周截面，`
+    + `与这里的区间无关；表上的「最新」一律指 ${HIST.length ? HIST[HIST.length - 1].date : '--'} 那一周。`;
+}
+
+
 async function fetchJson(path) {
   const res = await fetch(path + '?t=' + Date.now());
   if (!res.ok) throw new Error(path + ' 加载失败: ' + res.status);
@@ -222,58 +378,11 @@ async function render() {
     tip.textContent = '⚠️ 数据文件尚未就绪（' + e.message + '）。请确认 dividend_data_push.py 已成功运行并推送到 GitHub。';
   }
 
-  const labels = history.map(d => d.date);
-  const industries = [...new Set(
-    history.flatMap(d => Object.keys(d.industry_ratios || {})))];
-
-  // 按最新一期股息率降序排序行业
-  const latestRatio = history.length ? (history[history.length - 1].industry_ratios || {}) : {};
-  const sortedIndustries = [...industries].sort((a, b) =>
-    (latestRatio[b] ?? -Infinity) - (latestRatio[a] ?? -Infinity));
-
-  // 优先行业固定配色，其余按排序顺位分配；默认只显示优先行业
-  const datasets = sortedIndustries.map((ind, i) => ({
-    label: ind,
-    data: history.map(d => (d.industry_ratios || {})[ind] ?? null),
-    borderColor: PALETTE[i % PALETTE.length],
-    borderWidth: 2, pointRadius: 2.5, tension: 0.35, spanGaps: true,
-    hidden: !PRIORITY_INDUSTRIES.includes(ind)
-  }));
-
-  new Chart(document.getElementById('visitChart').getContext('2d'), {
-    type: 'line',
-    data: { labels, datasets },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: 'bottom',
-          labels: {
-            usePointStyle: true,
-            boxWidth: window.innerWidth < 600 ? 5 : 8,
-            padding: window.innerWidth < 600 ? 6 : 14,
-            font: { size: window.innerWidth < 600 ? 10 : 12 }
-          },
-          onClick(e, item, legend) {
-            const idx = item.datasetIndex;
-            const ci = legend.chart;
-            ci.setDatasetVisibility(idx, !ci.isDatasetVisible(idx));
-            ci.update();
-          }
-        },
-        tooltip: { mode: 'index', intersect: false }
-      },
-      scales: {
-        x: { grid: { display: false }, ticks: { color: '#999',
-             maxTicksLimit: window.innerWidth < 600 ? 6 : 12 } },
-        y: { grid: { color: '#f0f0f0' }, ticks: { color: '#999' },
-             title: { display: true, text: '股息率(%)', color: '#999' } }
-      }
-    }
-  });
-
-  if (history.length === 0) {
+  HIST = history;
+  buildSeries();
+  bindRange();
+  drawVisit();
+  if (HIST.length === 0) {
     const tip = document.getElementById('chart-tip');
     tip.style.display = 'block';
     tip.textContent = '⚠️ 暂无历史数据。数据每周累积，运行几周后折线图会越来越丰富。';
