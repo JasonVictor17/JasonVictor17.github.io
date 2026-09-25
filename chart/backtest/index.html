@@ -49,7 +49,7 @@
     .seg button.on { background: #222; color: #fff; border-color: #222; font-weight: 600; }
     .rng-bar input[type=date] { padding: 5px 8px; border: 1px solid #ddd; border-radius: 8px; font-size: 12.5px; }
     .rngtxt { font-size: 12px; color: #999; margin-left: auto; }
-    /* 两个数族必须分开标：一张卡上混着「筛完区间重算的」和「回测产物原值」而不标注，就是假数 */
+    /* 两个数族必须分开标：一张卡上混着「筛完区间重算的」和「回测全量」而不标注，就是假数 */
     .src { font-size: 10px; font-weight: 400; border-radius: 4px; padding: 1px 5px; margin-left: 6px; white-space: nowrap; }
     .src.calc { background: #eef2ff; color: #4f46e5; }
     .src.art { background: #f3f4f6; color: #6b7280; }
@@ -195,7 +195,15 @@ function ytdSeries(nav, key) {
   const prev = nav.filter(d => d.date < year + '-01-01');
   const cur = nav.filter(d => d.date >= year + '-01-01');
   const base = prev.length ? prev[prev.length - 1][key] : cur[0][key];
-  return { year, labels: cur.map(d => d.date), values: cur.map(d => base ? d[key] / base : null) };
+  const labels = cur.map(d => d.date);
+  const values = cur.map(d => base ? d[key] / base : null);
+  // 基准日（年初前最后一个采样点）落在上一年、不在 cur 里，于是首点已含那段涨幅，
+  // 与标题「年初 = 1」对不上。把它补成最前面一个点、值定为 1（样本从年初开始时没有它，首点本来就是 1）。
+  if (prev.length) {
+    labels.unshift(prev[prev.length - 1].date);
+    values.unshift(base ? 1 : null);
+  }
+  return { year, labels, values };
 }
 
 function calYears(a, b) {
@@ -295,7 +303,9 @@ let PARAMS = {};
 let CAP = 100, MY = null, YS = {}, YB = {};
 let BENCH_KEY = 'pool', BENCH_NAME = '红利池等权';
 const METRICS = () => (DATA && DATA.metrics) || {};
-const srcTag = (k) => `<span class="src ${k}">${k === 'calc' ? '区间重算' : '产物原值'}</span>`;
+const srcTag = (k) => k === 'calc'
+  ? `<span class="src calc" title="按上方所选区间、用抽稀后的净值现算">区间重算</span>`
+  : `<span class="src art" title="回测脚本跑完时按日频全样本算的那一份，与上方区间选择无关">回测全量</span>`;
 
 function ytdFromNav(nav) {
   if (!nav.length) return null;
@@ -498,7 +508,7 @@ function bindRange() {
   f.onchange = applyDates; t.onchange = applyDates;
 
   const ps = document.getElementById('perfSeg');
-  ps.innerHTML = [['range', '区间重算'], ['artifact', '产物原值']].map(([k, label]) =>
+  ps.innerHTML = [['range', '区间重算'], ['artifact', '回测全量']].map(([k, label]) =>
     `<button data-k="${k}" class="${k === ST.src ? 'on' : ''}">${label}</button>`).join('');
   ps.onclick = (e) => {
     const b = e.target.closest('button'); if (!b) return;
@@ -660,18 +670,18 @@ function perfTable(NV) {
   let note = useRange
     ? `当前是<b>区间重算</b>：净值按区间首点归一，年化分母取首末日期（这段 ${fmtNum(s.years, 2)} 年、`
       + `${s.n || 0} 个采样点 ≈ ${fmtNum(s.ppy, 0)} 根/年），波动与夏普同率折算。`
-      + `<b>最大回撤只会偏浅</b> —— 净值是抽稀过的（最近两年逐日、更早每周只留一个点），周内新低看不见；要日频口径点「产物原值」。`
+      + `<b>最大回撤只会偏浅</b> —— 净值是抽稀过的（最近两年逐日、更早每周只留一个点），周内新低看不见；要日频口径点「回测全量」。`
       + `Beta／Alpha／期胜率／交易成本在这一档一律给 ${dash}：前两个是全样本对基准做的回归，`
       + `期胜率按整段回测的期数统计，交易成本是全回测期累加的佣金+印花税（产物没分期记录），`
       + `切区间既重算不出、也不该跟着变小。`
-    : `当前是<b>产物原值</b>：回测脚本落盘那一刻的全期数，<b>与上面选的区间无关</b>（这正是本地站要重算的原因）；`
+    : `当前是<b>回测全量</b>：回测脚本落盘那一刻的全期数，<b>与上面选的区间无关</b>（这正是本地站要重算的原因）；`
       + `上面选的区间只挪动 ①③⑤ 三张图的镜头、统计卡与 ⑧ 的下拉，这一档的这些数一动不动。`;
-  note += `「超额年化」行在两档下不是同一个式子：产物档只有 metrics.excess_ann（策略年化 − 红利池等权年化，脚本里直减），`
+  note += `「超额年化」行在两档下不是同一个式子：回测全量档只有 metrics.excess_ann（策略年化 − 红利池等权年化，脚本里直减），`
     + `对指数那一档产物没落盘所以给 ${dash}（基准回退成红利池等权时两行并成一行）；区间档 = 逐点净值比取对数后按每年根数年化 —— 即使选「全部」两档也不会完全相等，差的是口径不是笔误；`
     + `「止损次数」两档数的是换仓明细里 stop_date 有值的行（区间档只数落在区间内的期），`
     + `明细从第二期起才落盘，所以首期触发的止损两档都看不见；`
     + `「当年」两列永远看全样本最后一个自然年（${yr} 年），不随上面选的区间变，`
-    + `其角标只区分「产物落盘值」与「前端按 nav 现算值」；`
+    + `其角标只区分「回测全量（脚本落盘）」与「区间重算（前端按 nav 现算）」；`
     + `当年收益以上一年最后一个交易日净值为基准（年初=1）${DATA.metrics_ytd ? '（由回测脚本按同一口径算好）' : '，由前端按 nav 序列实时计算'}；`
     + `基准 ${BENCH_NAME}（指数拉取失败时回退为红利股票池等权），`
     + `「红利池等权」= 每期候选池全体等权（策略的可投资域），用来剥离「选得准不准」与「红利股本身涨不涨」。`;
