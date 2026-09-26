@@ -146,6 +146,7 @@
     <h2>⑥ 业绩表现（累计 &amp; 当年）
       <span class="seg" id="perfSeg" style="float:right"></span></h2>
     <div style="overflow-x:auto"><table class="tbl" id="perfTable"></table></div>
+    <div class="kv" id="action-kv"></div>
     <p class="note" id="perf-note"></p>
   </div>
 
@@ -255,9 +256,12 @@ function perfFromNav(pts) {
   const years = Math.max(calYears(v[0][0], v[v.length - 1][0]) || (n / 252), 1e-9);
   const ppy = n / years;                                  // 每年多少根（日频≈252，抽稀周频≈52）
   const ann = last > 0 ? Math.pow(last, 1 / years) - 1 : null;
+  // 252 日法＝把「点数/252」当成年数 —— 与产物 metrics 的 ann 同式，抽稀序列上它会把 8.7 年
+  // 当成 2.1 年。这里只作为「与产物那一档对得上」的数另给，不当主口径（主口径＝上面按日期的 ann）。
+  const ann252 = last > 0 ? Math.pow(last, 252 / seq.length) - 1 : null;
   let peak = seq[0], mdd = 0;
   for (const x of seq) { if (x > peak) peak = x; const dd = x / peak - 1; if (dd < mdd) mdd = dd; }
-  return { total: last - 1, ann, vol: sd * Math.sqrt(ppy),
+  return { total: last - 1, ann, ann252, vol: sd * Math.sqrt(ppy),
            sharpe: sd > 0 ? mean / sd * Math.sqrt(ppy) : null,
            mdd, calmar: (mdd < 0 && ann != null) ? ann / Math.abs(mdd) : null,
            n: seq.length, years, ppy };
@@ -330,9 +334,60 @@ function ytdFromNav(nav) {
   for (const k of ['strategy', 'pool', BENCH]) {
     const ys = ytdSeries(nav, k);
     out.year = ys.year;
-    out[k] = perfFromNav(ys.labels.map((d, i) => [d, ys.values[i]]));
+    const pf = perfFromNav(ys.labels.map((d, i) => [d, ys.values[i]]));
+    // 产物那两档的键名是 ann(252 日法) / ann_cal(自然日法)。图上这条是抽稀序列，252 日法在这里
+    // 是量纲错（一年只剩 ≈52 点 → 会把年化放大近 5 倍），所以只认自然日法那一档，252 留空。
+    pf.ann_cal = pf.ann; pf.ann = null;
+    out[k] = pf;
   }
   return out;
+}
+
+/* ---------------- 事件口径：rebalances 一条数组里混着三种事件 ---------------- */
+// 计划调仓 rebal（网格日、闸门开着）／闸门回补 timing_in（闸门转多那天开盘建仓）／
+// 闸门清仓 timing_out（闸门转空那天清整仓，跌停停牌顺延）。混成一个「期数」算出来的
+// 胜率/平均换手是假数 —— 清仓那天换手≈100%、一期手续费顶十几期计划调仓。
+// 下面这套与引擎 backtest_smallcap.scope_stats 同式，键名也一致（n/n_pct/win_rate/
+// avg_turnover/turnover_max/avg_hold/fee_period/fee_pct），产物自带 by_action 时直接用产物那份。
+const ACT_LABEL = { rebal: '计划调仓', timing_in: '闸门回补', timing_out: '闸门清仓' };
+const ACT_ORDER = ['all', 'rebal', 'timing_in', 'timing_out'];
+function actStat(rs, totN, totFee) {
+  const tv = rs.map(r => r.total_value).filter(isnum);
+  const tns = rs.map(r => r.turnover).filter(isnum);
+  const hold = rs.map(r => r.n_hold).filter(isnum);
+  const wins = [];
+  for (let i = 1; i < tv.length; i++) wins.push(tv[i] > tv[i - 1] ? 1 : 0);
+  const avg = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
+  const fee = rs.reduce((a, r) => a + (r.fee_period || 0), 0);
+  return { n: rs.length, n_pct: totN ? rs.length / totN : null,
+           win_rate: wins.length ? avg(wins) : null, avg_turnover: avg(tns),
+           turnover_max: tns.length ? Math.max.apply(null, tns) : null, avg_hold: avg(hold),
+           fee_period: fee, fee_pct: totFee ? fee / totFee : null };
+}
+function byAction(rows) {
+  const totFee = rows.reduce((a, r) => a + (r.fee_period || 0), 0);
+  // 老产物（闸门分类上线前落盘的）把「计划调仓」与「闸门回补」都写成 rotate。这里只能并回
+  // 计划调仓档，闸门回补那档取不到 —— 但必须显式带上 _legacyRotate，否则 470 = 99 + 谁?
+  // 中间 371 行会凭空消失，看着像统计漏了。由 perfNote 说明，别静默吞掉。
+  const norm = rows.map(r => (r.action === 'rotate' ? { ...r, action: 'rebal' } : r));
+  const out = { all: actStat(norm, norm.length, totFee), _legacyRotate: rows.some(r => r.action === 'rotate') };
+  Object.keys(ACT_LABEL).forEach(k => { out[k] = actStat(norm.filter(r => r.action === k), norm.length, totFee); });
+  return out;
+}
+/** 分类型统计的 pill 串。来源（产物/区间重算）必须标出来 —— 两个数族不标就是假数。 */
+function actionPills(b, tag) {
+  const f = x => (x == null ? dash : fmtPct(x));
+  return `<span>事件口径 ${tag}</span>` + ACT_ORDER.map(k => {
+    const v = b && b[k];
+    if (!v || !v.n) return '';
+    return `<span>${k === 'all' ? '全部事件' : ACT_LABEL[k]} <b>${fmtInt(v.n)} 行</b>`
+      + `${v.n_pct == null ? '' : `（${fmtPct(v.n_pct)}）`}`
+      + ` · 胜率 <b>${f(v.win_rate)}</b> · 换手 <b>${f(v.avg_turnover)}</b>`
+      + `${v.turnover_max == null ? '' : `（最高 ${f(v.turnover_max)}）`}`
+      + ` · 平均持 <b>${fmtNum(v.avg_hold, 1)}</b> 只`
+      + ` · 手续费 <b>${fmtWan((v.fee_period || 0) / 1e4)}</b> 万元`
+      + `${v.fee_pct == null ? '' : `（占 ${fmtPct(v.fee_pct)}）`}</span>`;
+  }).join('');
 }
 
 // 单期持仓表（⑦ 最新一期 与 ⑧ 历史查询 共用）：按市值排名升序（微盘票排名小 = 市值小 = 先买）
@@ -644,43 +699,55 @@ function rebalSelect() {
 function perfTable(NV) {
   const m = METRICS(), p = PARAMS;
   const useRange = ST.src === 'range';
-  let s, pm, b, exB, exP, nRebal, turn, last2;
+  let s, pm, b, exB, exP, nRebal, turn, last2, aT, aC, scopeRows, kvTag;
   if (useRange) {
     s = perfOf(NV, 'strategy'); pm = perfOf(NV, 'pool'); b = perfOf(NV, BENCH);
     exB = excessAnn(NV, BENCH); exP = excessAnn(NV, 'pool');
-    const rs = rebalInRange();
-    const t = rs.map(r => r.turnover).filter(x => isnum(x));
-    nRebal = `${rs.length} 期 / ${dash}（期胜率只有全期口径）`;
-    turn = t.length ? fmtPct(t.reduce((a, c) => a + c, 0) / t.length) : dash;
+    scopeRows = rebalInRange();
+    const ba = byAction(scopeRows);
+    nRebal = `${fmtInt(ba.all.n)} 行 / ${fmtPct(ba.all.win_rate)}`;
+    turn = fmtPct(ba.all.avg_turnover);
+    // 区间重算里 252 日法**不给数**：图上净值是抽稀过的（8.7 年只剩 531 点 ≈ 52 点/年），
+    // 拿点数÷252 会把 8.7 年当 2.1 年、年化直接算成 395%（实测，见 sr_store.perf 的注释）。
+    // 这不是「另一个口径」，是量纲错，所以留空并在脚注里说明去哪看那一档。
+    aT = [null, null, null];
+    aC = [s.ann, pm.ann, b.ann];                   // 自然日法（perfFromNav 本式，年数按首末日期）
     last2 = [
       [`Beta / Alpha(vs ${BENCH})`, `${dash} / ${dash}`, dash, dash, dash, dash],
       ['期末总资产 / 累计手续费', dash, dash, dash, dash, dash],
     ];
+    kvTag = srcTag('calc');
   } else {
     s = m.strategy || {}; pm = m.pool_benchmark || {}; b = m.benchmark || {};
     exB = (s.ann != null && b.ann != null) ? m.excess_ann : null;
     exP = (s.ann != null && pm.ann != null) ? m.excess_vs_pool_ann : null;
-    nRebal = `${m.n_rebal ?? dash} / ${fmtPct(m.win_rate)}`;
+    nRebal = `${fmtInt(m.n_rebal)} 行 / ${fmtPct(m.win_rate)}`;
     turn = fmtPct(m.avg_turnover);
+    aT = [s.ann, pm.ann, b.ann];                   // 产物：ann = 252 日法（vol/sharpe 也跟着它）
+    aC = [s.ann_cal, pm.ann_cal, b.ann_cal];       //       ann_cal = 自然日法
     last2 = [
       [`Beta / Alpha(vs ${BENCH})`, `${fmtNum(m.beta)} / ${fmtPct(m.alpha_ann)}`, dash, dash, dash, dash],
       ['期末总资产 / 累计手续费', `${fmtWan(m.final_value)} 元 / ${fmtWan(m.fee_total)} 元`, dash, dash, dash, dash],
     ];
+    scopeRows = REBAL_ALL;
+    kvTag = srcTag('art');
   }
   const tag = srcTag(useRange ? 'calc' : 'art');
   const ytag = srcTag(DATA.metrics_ytd ? 'art' : 'calc');
   const yr = (MY && MY.year) || '--';
+  const tMark = useRange ? '†' : '';
   const rows = [
     ['累计收益', fmtPct(s.total), fmtPct(pm.total), fmtPct(b.total), fmtPct(YS.total), fmtPct(YB.total)],
-    ['年化收益', fmtPct(s.ann), fmtPct(pm.ann), fmtPct(b.ann), fmtPct(YS.ann), fmtPct(YB.ann)],
+    [`年化收益（252 日法${tMark}）`, fmtPct(aT[0]), fmtPct(aT[1]), fmtPct(aT[2]), fmtPct(YS.ann), fmtPct(YB.ann)],
+    ['年化收益（自然日法）', fmtPct(aC[0]), fmtPct(aC[1]), fmtPct(aC[2]), fmtPct(YS.ann_cal), fmtPct(YB.ann_cal)],
     ['最大回撤', fmtPct(s.mdd), fmtPct(pm.mdd), fmtPct(b.mdd), fmtPct(YS.mdd), fmtPct(YB.mdd)],
     ['年化波动', fmtPct(s.vol), fmtPct(pm.vol), fmtPct(b.vol), fmtPct(YS.vol), fmtPct(YB.vol)],
     ['夏普比率', fmtNum(s.sharpe), fmtNum(pm.sharpe), fmtNum(b.sharpe), fmtNum(YS.sharpe), fmtNum(YB.sharpe)],
     ['卡玛比率', fmtNum(s.calmar), fmtNum(pm.calmar), fmtNum(b.calmar), fmtNum(YS.calmar), fmtNum(YB.calmar)],
     [`超额年化(vs ${BENCH})`, exB == null ? dash : fmtPct(exB), dash, dash, dash, dash],
     [`超额年化(vs ${POOL})`, exP == null ? dash : fmtPct(exP), dash, dash, dash, dash],
-    ['期数 / 期胜率', nRebal, dash, dash, dash, dash],
-    ['平均换手(单边)', turn, dash, dash, dash, dash],
+    ['事件行数 / 期胜率（全部事件）', nRebal, dash, dash, dash, dash],
+    ['平均换手(单边·全部事件)', turn, dash, dash, dash, dash],
     ...last2
   ];
   document.getElementById('perfTable').innerHTML =
@@ -689,12 +756,44 @@ function perfTable(NV) {
      <th class="num">${yr} 年·${BENCH}${ytag}</th></tr>` +
     rows.map(r => `<tr><td>${r[0]}</td>${r.slice(1).map(v => `<td class="num">${v}</td>`).join('')}</tr>`).join('');
 
+  // 分类型：产物自带 by_action（引擎 scope_stats 算的、全样本、不受行数上限影响）就用它，否则现算
+  const buckets = (!useRange && m.by_action) ? m.by_action : byAction(scopeRows);
+  document.getElementById('action-kv').innerHTML = actionPills(buckets, kvTag);
+
   const tf = p.trade_fee || {};
   const wp = x => (x == null || isNaN(x)) ? '--' : (x * 1e4).toFixed(1);
+  const pl = p.price_limit || {}, ak = p.action_kinds || {};
+  let extra = '';
+  if (pl.gem_20pct_from) {
+    extra += `涨跌停按<b>当日</b>规则：主板 10%，创业板（30x/301）${fmtDate(pl.gem_20pct_from)} 起 20%、之前 10%，`
+      + `科创板 20%，北交所 30%；`;
+  }
+  if (tf.stamp_tax_old != null) {
+    extra += `卖出印花税同样分历史段：${fmtDate(tf.stamp_tax_from)} 起 ${wp(tf.stamp_tax)} 万分之一、之前 `
+      + `${wp(tf.stamp_tax_old)} 万分之一；`;
+  }
+  if (ak.rebal) {
+    extra += `逐期记录里「期」分三类事件：${ak.rebal}／${ak.timing_in}／${ak.timing_out}，`
+      + `上面的行数/胜率/换手都是三类混算的全部事件口径，按类拆开看下面的事件口径一栏。`;
+  }
+  if (buckets && buckets._legacyRotate) {
+    extra += `<br><b>这份产物还是闸门分类上线前的口径</b>：计划调仓与闸门回补在逐期记录里都写作 `
+      + `rotate，所以上面「计划调仓」那档实际混着闸门回补日、「闸门回补」那档取不到（不是 0 行，`
+      + `是分不出来）。闸门清仓（timing_out）本来就有独立标记，不受影响。下次回测产物更新后自动分档。`;
+  }
   document.getElementById('perf-note').innerHTML =
     `交易成本：成交价 ${p.exec || '--'}，佣金双边 ${wp(tf.comm_rate)} 万分之一（最低 ${tf.min_comm ?? '--'} 元/笔），`
     + `卖出印花税 ${wp(tf.stamp_tax)} 万分之一；滑点未建模，`
-    + `开盘涨停买不进／跌停卖不出／停牌按不成交处理（流动性门槛 ${p.min_avg_amount_wan ?? '--'} 万）。`;
+    + `开盘涨停买不进／跌停卖不出／停牌按不成交处理（流动性门槛 ${p.min_avg_amount_wan ?? '--'} 万）。`
+    + (extra ? `<br>${extra}` : '')
+    + `<br>年化两行不是重复：<b>252 日法</b>＝把「净值点数 ÷ 252」当成年数（历史口径，年化波动/夏普/卡玛都跟着它算，`
+    + `三条策略一致）；<b>自然日法</b>＝按首末日期实际过了多少年。净值是抽稀过的（约每周一根），`
+    + `点数法会把 8.7 年当成 2.1 年，所以两者差 2pp 量级，别拿一档的年化去对另一档的回撤。`
+    + (useRange
+      ? `<br>† <b>区间重算</b>那三列的 252 日法留空：图上净值是抽稀过的（约 52 点/年），`
+        + `按点数÷252 会算成 395%（量纲错，不是另一个口径）。252 日法只有<b>回测全量</b>那档才有`
+        + `（回测脚本按日频存的净值算的）；当年两列本来就是产物，不受这里影响。`
+      : '');
 }
 
 /** ⑨ 只给「当前读数 ＋ 图」：曲线按分位画 —— 原值有一两个极端日就会把整年压成贴地。 */
