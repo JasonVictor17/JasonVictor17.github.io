@@ -23,10 +23,13 @@ __pycache__/
 !/chart/backtest/index.html
 !/chart/logo.svg
 !/chart/data/etf/backtest_etf.json
+!/chart/data/etf/backtest_etf_positions.json
 !/chart/data/etf/backtest_etf_records.csv
 !/chart/data/smallcap/backtest_smallcap.json
+!/chart/data/smallcap/backtest_smallcap_positions.json
 !/chart/data/momentum/momentum_latest.json
 !/chart/data/momentum/backtest_momentum.json
+!/chart/data/momentum/backtest_momentum_positions.json
 !/chart/data/momentum/backtest_snapshots.json
 !/chart/data/dividend_history.json
 !/chart/data/dividend_latest.json

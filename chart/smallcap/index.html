@@ -158,6 +158,8 @@
 
   <div class="chart-card">
     <h2>⑧ 历史换仓查询</h2>
+    <p class="sub">逐期持仓是独立的一份文件（约 3.5 MB），选到某个调仓日时才下载 ——
+      首屏不加载它，所以这段的持仓会先显示「载入中」，拉完即出。</p>
     <select id="rebalSelect"></select>
     <p id="rebal-meta" style="font-size:12px;color:#999;margin-bottom:12px;line-height:1.8"></p>
     <div style="overflow-x:auto"><table class="tbl" id="rebalTable"></table></div>
@@ -178,6 +180,8 @@
 <script>
 // 小微盘策略的数据目录（各策略输出分文件夹）
 const DATA_DIR = '/chart/data/smallcap';
+// 逐期持仓明细（主产物每期只剩计数 n_pos，为的是首屏别拖那份 3.8 MB）—— ⑧ 选到某一期时才拉
+const POS_FILE = `${DATA_DIR}/backtest_smallcap_positions.json`;
 async function fetchJson(path) {
   const res = await fetch(path + '?t=' + Date.now());
   if (!res.ok) throw new Error(path + ' 加载失败: ' + res.status);
@@ -228,9 +232,9 @@ function ytdSeries(nav, key) {
   const base = prev.length ? prev[prev.length - 1][key] : cur[0][key];
   const labels = cur.map(d => d.date);
   const values = cur.map(d => base ? d[key] / base : null);
-  // 净值是抽稀的：「年初前最后一个采样点」（如 12-26）落在上一年，没进当年这段，
-  // 于是首点已经含了那一周的涨幅（实测 2026 年首根 = 1.0072），跟标题的「年初 = 1」对不上。
-  // 把那个基准日补成最前面一个点、值定为 1。整段样本从年初开始时没有它，首点本来就是 1。
+  // 年初基准取「上一年最后一根」：「年初前最后一个点」（如上一年的 12-31）不落在当年这段里，
+  // 于是首点已经含了那段涨幅，跟标题的「年初 = 1」对不上。把那个基准日补成最前面一个点、值定为 1。
+  // 整段样本从年初开始时没有它，首点本来就是 1。
   // 只按日期决定补不补（prev/cur 与列无关）：按值判断会让各列长度错开，④ 是按下标对齐的。
   if (prev.length) {
     labels.unshift(prev[prev.length - 1].date);
@@ -240,8 +244,8 @@ function ytdSeries(nav, key) {
 }
 
 // 与本地站 sr_store.py::perf 同式：years 按首末日期算、净值按**区间首点**归一、
-// vol/sharpe 按实际采样频率 ppy 折算。产物里的 nav 是抽稀过的（8.7 年 ≈ 531 根周线），
-// 老写法「点数/252」会把 8.7 年当成 2.1 年 —— 那是假数，所以这里一律喂 [日期, 值] 成对。
+// vol/sharpe 按实际采样频率 ppy 折算。净值是全量日频，但筛区间后首末不落在整年上，
+// 「点数/252」会偏，所以一律喂 [日期, 值] 成对、年数按日期差算。
 function perfFromNav(pts) {
   const v = (pts || []).filter(p => p && isnum(p[1]) && Number(p[1]) > 0);
   if (v.length < 3) return {};
@@ -254,10 +258,10 @@ function perfFromNav(pts) {
   const base = seq[0];
   const last = seq[seq.length - 1] / base;
   const years = Math.max(calYears(v[0][0], v[v.length - 1][0]) || (n / 252), 1e-9);
-  const ppy = n / years;                                  // 每年多少根（日频≈252，抽稀周频≈52）
+  const ppy = n / years;                                  // 每年多少根（全量日频≈244）
   const ann = last > 0 ? Math.pow(last, 1 / years) - 1 : null;
-  // 252 日法＝把「点数/252」当成年数 —— 与产物 metrics 的 ann 同式，抽稀序列上它会把 8.7 年
-  // 当成 2.1 年。这里只作为「与产物那一档对得上」的数另给，不当主口径（主口径＝上面按日期的 ann）。
+  // 252 日法＝把「点数/252」当成年数 —— 与产物 metrics 的 ann 同式。全量日频下两者基本一致，
+  // 这里另给是为了「与产物那一档对得上」；主口径仍是上面按日期的 ann。
   const ann252 = last > 0 ? Math.pow(last, 252 / seq.length) - 1 : null;
   let peak = seq[0], mdd = 0;
   for (const x of seq) { if (x > peak) peak = x; const dd = x / peak - 1; if (dd < mdd) mdd = dd; }
@@ -304,7 +308,7 @@ function rangeNav() {
   if (!ST.from && !ST.to) return FULL;
   return FULL.filter(d => (!ST.from || d.date >= ST.from) && (!ST.to || d.date <= ST.to));
 }
-/** nv 里的某条曲线（日期+值成对，抽稀或缺值都按日期对齐，不会串位）。 */
+/** nv 里的某条曲线（日期+值成对，缺值按日期对齐，不会串位）。 */
 function seriesOf(nv, key) {
   return nv.filter(d => isnum(d[key])).map(d => [d.date, Number(d[key])]);
 }
@@ -335,9 +339,9 @@ function ytdFromNav(nav) {
     const ys = ytdSeries(nav, k);
     out.year = ys.year;
     const pf = perfFromNav(ys.labels.map((d, i) => [d, ys.values[i]]));
-    // 产物那两档的键名是 ann(252 日法) / ann_cal(自然日法)。图上这条是抽稀序列，252 日法在这里
-    // 是量纲错（一年只剩 ≈52 点 → 会把年化放大近 5 倍），所以只认自然日法那一档，252 留空。
-    pf.ann_cal = pf.ann; pf.ann = null;
+    // 产物那两档的键名是 ann(252 日法) / ann_cal(自然日法)。全量日频下两式基本一致，
+    // perfFromNav 算出的 ann 就是自然日法那档 → 归到 ann_cal，ann252 归到 ann。
+    pf.ann_cal = pf.ann; pf.ann = pf.ann252;
     out[k] = pf;
   }
   return out;
@@ -390,6 +394,54 @@ function actionPills(b, tag) {
   }).join('');
 }
 
+/* ---------------- 逐期持仓：选到某一期才按需加载 ----------------
+   主产物里每期只剩计数（n_pos），明细在同目录的 backtest_smallcap_positions.json。
+   ⑦ 最新一期用产物自带的 latest_positions（零额外请求）；⑧ 选到某一期时才 fetch 整份，
+   之后切期都走内存。载入中和失败都要有可见交代，别留一张空表让人以为没持仓。 */
+let POS = { state: 'idle', periods: null };   // idle | loading | ok | fail
+
+function posLoad() {
+  if (POS.state === 'ok') return Promise.resolve(POS.periods);
+  if (POS.state === 'loading') return POS.pending;
+  POS.state = 'loading';
+  POS.pending = fetchJson(POS_FILE).then(d => {
+    POS.periods = d.periods || {};
+    REBAL_ALL.forEach(r => { if (r.stocks == null) r.stocks = POS.periods[r.date] || []; });
+    POS.state = 'ok';
+    return POS.periods;
+  }).catch(e => {
+    POS.state = 'idle';        // 失败不留半截状态：下次调用重新拉，重试才有意义
+    throw e;
+  });
+  return POS.pending;
+}
+
+/** 持仓表的占位行（10 列，与 posTable 表头一致）。 */
+function posNote(kind, err) {
+  if (kind === 'loading') {
+    return '<tr><td colspan="10" style="color:#999;padding:16px">逐期持仓明细载入中…'
+      + '（这块按需加载，主页面不预取）</td></tr>';
+  }
+  return `<tr><td colspan="10" style="color:#b91c1c;padding:16px">持仓明细载入失败：`
+    + `${String((err && err.message) || err || '未知错误')}　`
+    + `<a href="#" onclick="posRetry();return false" style="color:#2563eb">重试</a></td></tr>`;
+}
+
+/** 把一个表格容器填成某一期的持仓；rec 已经带 stocks 就直接画，否则先占位、拉回来再画。 */
+function fillPos(elId, rec) {
+  const el = document.getElementById(elId);
+  if (rec.stocks != null) { el.innerHTML = posTable(rec); return; }
+  el.innerHTML = posNote('loading');
+  posLoad().then(() => { el.innerHTML = posTable(rec); })
+           .catch(e => { el.innerHTML = posNote('fail', e); });
+}
+
+/** 重试按钮：清掉失败态，按当前选中的那期重画。 */
+function posRetry() {
+  POS.state = 'idle';
+  if (REBAL.length) renderRebal(document.getElementById('rebalSelect').value | 0);
+}
+
 // 单期持仓表（⑦ 最新一期 与 ⑧ 历史查询 共用）：按市值排名升序（微盘票排名小 = 市值小 = 先买）
 function posTable(rec) {
   const head = `<tr><th>代码</th><th>名称</th>
@@ -436,7 +488,6 @@ function gateMark(rec) {
 function renderRebal(i) {
   const r = REBAL[i];
   if (!r) return;
-  document.getElementById('rebalTable').innerHTML = posTable(r);
   const f = r.pool_n ?? '--';
   const why = r.action === 'timing_out'
     ? '，本期状态 ⚪ 空仓 ＝ 情绪闸门当天判离场，表中是没来得及清掉的残留（跌停/停牌），之后每个交易日继续尝试'
@@ -447,6 +498,12 @@ function renderRebal(i) {
     + `保留名单 = 前 ${PARAMS.hold_threshold ?? '--'} 只（跌出保留名单才清仓）；`
     + `建仓 ${r.n_buy ?? '--'} 只／清仓 ${r.n_sell ?? '--'} 只，期末实际持有 ${r.n_hold ?? '--'} 只；`
     + `名称＝调仓日当天的简称`;
+  const el = document.getElementById('rebalTable');
+  if (r.stocks != null) { el.innerHTML = posTable(r); return; }
+  el.innerHTML = posNote('loading');
+  // 拉回来时若下拉已经切到别的期（REBAL[i] 换了对象），这张表就不该再被这一期覆盖
+  posLoad().then(() => { if (REBAL[i] === r) el.innerHTML = posTable(r); })
+           .catch(e => { if (REBAL[i] === r) el.innerHTML = posNote('fail', e); });
 }
 
 let REBAL_ALL = [];
@@ -456,7 +513,7 @@ const PALETTE = ['#3b82f6', '#8b5cf6', '#0ea5e9', '#a855f7'];
 const dash = '--';
 const METRICS = () => (DATA && DATA.metrics) || {};
 const srcTag = (k) => k === 'calc'
-  ? `<span class="src calc" title="按上方所选区间、用抽稀后的净值现算">区间重算</span>`
+  ? `<span class="src calc" title="按上方所选区间、用图上那条净值现算">区间重算</span>`
   : `<span class="src art" title="回测脚本跑完时按日频全样本算的那一份，与上方区间选择无关">回测全量</span>`;
 
 async function render() {
@@ -485,6 +542,10 @@ async function render() {
   }
   FULL = nav;
   REBAL_ALL = (data.rebalances || []).map(r => ({ ...r, date: fmtDate(r.date), end_date: fmtDate(r.end_date) }));
+  // 明细已拆出主产物：最新一期由产物自带（⑦ 零请求），其余各期等 ⑧ 选到时再拉 sidecar
+  if (REBAL_ALL.length && Array.isArray(data.latest_positions)) {
+    REBAL_ALL[REBAL_ALL.length - 1].stocks = data.latest_positions;
+  }
   SENTI = (data.sentiment && (data.sentiment.points || []).length) ? data.sentiment : null;
   POOL = `微盘池 TOP${p.candidate_num ?? 60} 等权`;
   SHORT = ['周一', '周二', '周三', '周四', '周五'][(p.rebal_weekday ?? 4) - 1];
@@ -540,10 +601,10 @@ function drawStatic() {
 
   // ⑤ 总资产曲线、⑥ 业绩表跟着区间变，见 assetChart() / perfTable()
 
-  // ⑦ 最新一期持仓：永远是最后一期，与区间无关
+  // ⑦ 最新一期持仓：永远是最后一期，与区间无关；明细用产物自带的 latest_positions（零请求）
   if (REBAL_ALL.length) {
     const last = REBAL_ALL[REBAL_ALL.length - 1];
-    document.getElementById('holdTable').innerHTML = posTable(last);
+    fillPos('holdTable', last);
     document.getElementById('hold-sub').textContent =
       `最新调仓日 ${fmtDate(last.date)}，持有至 ${fmtDate(last.end_date)}；`
       + `份额与市值按 ${p.exec || '当日开盘价'}成交结果计，非每日重估；`
@@ -604,7 +665,7 @@ function draw() {
     filtered ? `区间 ${ST.from || '…'} ~ ${ST.to || '至今'} · ${NV.length} 个净值点`
              : `区间 全样本 · ${NV.length} 个净值点`;
   if (NV.length < 3) {
-    const warn = `所选区间只有 ${NV.length} 个净值点（净值是抽稀过的），画不出线也重算不了指标 —— 换一档或把日期放宽。`;
+    const warn = `所选区间只有 ${NV.length} 个净值点，画不出线也重算不了指标 —— 换一档或把日期放宽。`;
     document.getElementById('page-desc').textContent = '⚠️ ' + warn;
     document.getElementById('rngTxt').textContent = '⚠️ ' + warn;
     return;
@@ -707,10 +768,9 @@ function perfTable(NV) {
     const ba = byAction(scopeRows);
     nRebal = `${fmtInt(ba.all.n)} 行 / ${fmtPct(ba.all.win_rate)}`;
     turn = fmtPct(ba.all.avg_turnover);
-    // 区间重算里 252 日法**不给数**：图上净值是抽稀过的（8.7 年只剩 531 点 ≈ 52 点/年），
-    // 拿点数÷252 会把 8.7 年当 2.1 年、年化直接算成 395%（实测，见 sr_store.perf 的注释）。
-    // 这不是「另一个口径」，是量纲错，所以留空并在脚注里说明去哪看那一档。
-    aT = [null, null, null];
+    // 净值自 2026-09-26 起是全量日频（8.7 年 ≈ 2100 点 ≈ 244 点/年），252 日法与产物的 ann 同式
+    // 且分母不再是量纲错（旧产物只落 531 点，点数÷252 会把 8.7 年当 2.1 年、年化算成 395%）。
+    aT = [s.ann252, pm.ann252, b.ann252];
     aC = [s.ann, pm.ann, b.ann];                   // 自然日法（perfFromNav 本式，年数按首末日期）
     last2 = [
       [`Beta / Alpha(vs ${BENCH})`, `${dash} / ${dash}`, dash, dash, dash, dash],
@@ -787,13 +847,8 @@ function perfTable(NV) {
     + `开盘涨停买不进／跌停卖不出／停牌按不成交处理（流动性门槛 ${p.min_avg_amount_wan ?? '--'} 万）。`
     + (extra ? `<br>${extra}` : '')
     + `<br>年化两行不是重复：<b>252 日法</b>＝把「净值点数 ÷ 252」当成年数（历史口径，年化波动/夏普/卡玛都跟着它算，`
-    + `三条策略一致）；<b>自然日法</b>＝按首末日期实际过了多少年。净值是抽稀过的（约每周一根），`
-    + `点数法会把 8.7 年当成 2.1 年，所以两者差 2pp 量级，别拿一档的年化去对另一档的回撤。`
-    + (useRange
-      ? `<br>† <b>区间重算</b>那三列的 252 日法留空：图上净值是抽稀过的（约 52 点/年），`
-        + `按点数÷252 会算成 395%（量纲错，不是另一个口径）。252 日法只有<b>回测全量</b>那档才有`
-        + `（回测脚本按日频存的净值算的）；当年两列本来就是产物，不受这里影响。`
-      : '');
+    + `三条策略一致）；<b>自然日法</b>＝按首末日期实际过了多少年。净值是全量日频，`
+    + `点数法按 252 个交易日一年数，遇到休市多的年份会与自然日法差 1~2pp，别拿一档的年化去对另一档的回撤。`;
 }
 
 /** ⑨ 只给「当前读数 ＋ 图」：曲线按分位画 —— 原值有一两个极端日就会把整年压成贴地。 */

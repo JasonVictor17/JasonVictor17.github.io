@@ -93,7 +93,7 @@
       <span class="rngtxt" id="rngTxt"></span>
     </div>
     <p class="note">统计卡与 ①③⑤⑥⑧ 跟着区间变（指标按区间首点重算），②④ 固定看当年、⑦ 固定看产物自带的最新快照。
-      净值是抽稀过的（最近两年逐日、更早每周只留一个点），所以「区间重算」的最大回撤一定比回测当时的日频口径浅 —— 数字旁边标了出处。</p>
+      净值是全量日频，所以「区间重算」与「回测全量」的回撤同口径；差别只在区间首点被重新归一 —— 数字旁边标了出处。</p>
   </div>
 
   <div class="stats-row">
@@ -143,6 +143,8 @@
 
   <div class="chart-card">
     <h2>⑧ 历史换仓查询</h2>
+    <p class="sub">逐期持仓是独立的一份文件（约 620 KB），选到某个调仓日时才下载 ——
+      首屏不加载它，所以这段的持仓会先显示「载入中」，拉完即出。</p>
     <select id="rebalSelect"></select>
     <p id="rebal-meta" style="font-size:12px;color:#999;margin-bottom:12px;line-height:1.8"></p>
     <div style="overflow-x:auto"><table class="tbl" id="rebalTable"></table></div>
@@ -153,6 +155,8 @@
 <script>
 // 红利动量策略的数据目录（各策略输出分文件夹：ETF 轮动在 /chart/data/etf/）
 const DATA_DIR = '/chart/data/momentum';
+// 逐期持仓明细（主产物每期只剩计数 n_pos/n_stop，为的是首屏别拖那份 700 KB）—— ⑧ 选到某一期时才拉
+const POS_FILE = `${DATA_DIR}/backtest_momentum_positions.json`;
 async function fetchJson(path) {
   const res = await fetch(path + '?t=' + Date.now());
   if (!res.ok) throw new Error(path + ' 加载失败: ' + res.status);
@@ -212,8 +216,8 @@ function calYears(a, b) {
 }
 
 // 与回测脚本 _perf() 同式（std 用 ddof=1），但改两处口径：净值按**区间首点**归一、years 按首末**日期**算。
-// 产物里的 nav 是抽稀过的（最近两年逐日、更早每周一个点），老写法「点数/252」会把 8 年当成 3 年 ——
-// 那是假数，所以这里一律喂 [日期, 值] 成对，ppy = 点数/年数 用来折算波动与夏普。
+// 产物里的 nav 现已是全量日频，但这里仍一律喂 [日期, 值] 成对：筛了区间之后首末就不是全样本首末，
+// ppy = 点数/年数 得按这对日期自己算（用来折算波动与夏普）。
 function perfFromNav(pts) {
   const v = (pts || []).filter(p => p && isnum(p[1]) && Number(p[1]) > 0);
   if (v.length < 3) return {};
@@ -226,7 +230,7 @@ function perfFromNav(pts) {
   const base = seq[0];
   const last = seq[seq.length - 1] / base;
   const years = Math.max(calYears(v[0][0], v[v.length - 1][0]) || (n / 252), 1e-9);
-  const ppy = n / years;                                  // 每年多少根（日频≈252，抽稀周频≈52）
+  const ppy = n / years;                                  // 每年多少根；全量日频时≈252
   const ann = last > 0 ? Math.pow(last, 1 / years) - 1 : null;
   let peak = seq[0], mdd = 0;
   for (const x of seq) { if (x > peak) peak = x; const dd = x / peak - 1; if (dd < mdd) mdd = dd; }
@@ -235,7 +239,7 @@ function perfFromNav(pts) {
            mdd, calmar: (mdd < 0 && ann != null) ? ann / Math.abs(mdd) : null,
            n: seq.length, years, ppy };
 }
-/** nv 里的某条曲线（日期+值成对，抽稀或缺值都按日期对齐，不会串位）。 */
+/** nv 里的某条曲线（日期+值成对；某条缺值时按日期对齐，不会串位）。 */
 function seriesOf(nv, key) {
   return nv.filter(d => isnum(d[key])).map(d => [d.date, Number(d[key])]);
 }
@@ -304,7 +308,7 @@ let CAP = 100, MY = null, YS = {}, YB = {};
 let BENCH_KEY = 'pool', BENCH_NAME = '红利池等权';
 const METRICS = () => (DATA && DATA.metrics) || {};
 const srcTag = (k) => k === 'calc'
-  ? `<span class="src calc" title="按上方所选区间、用抽稀后的净值现算">区间重算</span>`
+  ? `<span class="src calc" title="按上方所选区间、用图上那条净值现算">区间重算</span>`
   : `<span class="src art" title="回测脚本跑完时按日频全样本算的那一份，与上方区间选择无关">回测全量</span>`;
 
 function ytdFromNav(nav) {
@@ -320,10 +324,50 @@ function ytdFromNav(nav) {
   return out;
 }
 
+/* ---------------- 逐期持仓：选到某一期才按需加载 ----------------
+   主产物里每期只剩计数（n_pos / n_stop），明细在同目录的 backtest_momentum_positions.json。
+   ⑦「当前持仓」读的是另一份产物（backtest_snapshots.json），不依赖这里；⑧ 选到某一期时才
+   fetch 整份，之后切期都走内存。载入中和失败都要有可见交代，别留一张空表让人以为没持仓。 */
+let POS = { state: 'idle', periods: null };   // idle | loading | ok | fail
+
+// stop_date 在产物里是 8 位 'YYYYMMDD'，与别处的日期字符串要比大小，入口处统一归一
+const normStop = s => (s.stop_date ? { ...s, stop_date: fmtDate(s.stop_date) } : s);
+
+function posLoad() {
+  if (POS.state === 'ok') return Promise.resolve(POS.periods);
+  if (POS.state === 'loading') return POS.pending;
+  POS.state = 'loading';
+  POS.pending = fetchJson(POS_FILE).then(d => {
+    POS.periods = d.periods || {};
+    REBAL_ALL.forEach(r => { if (r.stocks == null) r.stocks = (POS.periods[r.date] || []).map(normStop); });
+    POS.state = 'ok';
+    return POS.periods;
+  }).catch(e => {
+    POS.state = 'idle';        // 失败不留半截状态：下次调用重新拉，重试才有意义
+    throw e;
+  });
+  return POS.pending;
+}
+
+/** 持仓表的占位行（9 列，与 ⑧ 的表头一致）。 */
+function posNote(kind, err) {
+  if (kind === 'loading') {
+    return '<tr><td colspan="9" style="color:#999;padding:16px">逐期持仓明细载入中…'
+      + '（这块按需加载，主页面不预取）</td></tr>';
+  }
+  return `<tr><td colspan="9" style="color:#b91c1c;padding:16px">持仓明细载入失败：`
+    + `${String((err && err.message) || err || '未知错误')}　`
+    + `<a href="#" onclick="posRetry();return false" style="color:#2563eb">重试</a></td></tr>`;
+}
+
+/** 重试按钮：清掉失败态，按当前选中的那期重画。 */
+function posRetry() {
+  POS.state = 'idle';
+  if (REBAL.length) renderRebal(document.getElementById('rebalSelect').value | 0);
+}
+
 // 单期持仓表（⑧ 历史查询）：止损标记读的是这一期 stocks 里的 stop_date
-function renderRebal(i) {
-  const r = REBAL[i];
-  if (!r) return;
+function rebalTable(r) {
   const head = `<tr><th>代码</th><th>名称</th><th class="num">股数</th><th class="num">买入价</th>
     <th class="num">成本/差额(元)</th><th class="num">权重</th><th class="num">持有天数</th><th class="num">区间收益</th><th>备注</th></tr>`;
   // 按权重从高到低展示；权重缺失（未买入/停牌）排最后，再按代码排序保证顺序稳定
@@ -347,12 +391,23 @@ function renderRebal(i) {
       <td colspan="4">现金 ${fmtWan(r.cash)} 元 ｜ 调仓后总值 ${fmtWan(r.total)} 元</td>
       <td class="num" colspan="2">换手率 ${fmtPct(r.turnover)}</td>
       <td colspan="3">候选池 ${r.pool_size ?? '--'} 只</td></tr>`;
-  document.getElementById('rebalTable').innerHTML = head + rows + foot;
-  const nStop = (r.stocks || []).filter(x => x.stop_date).length;
+  return head + rows + foot;
+}
+
+function renderRebal(i) {
+  const r = REBAL[i];
+  if (!r) return;
+  // 期数、止损笔数这些只用产物里的计数（n_pos/n_stop），不必等明细下载完
   document.getElementById('rebal-meta').textContent =
-    `${fmtDate(r.date)} 调仓，持有至 ${fmtDate(r.end_date)}，共 ${(r.stocks || []).length} 只`
-    + `；本期止损 ${nStop} 笔（只是这一期，不是全样本）`
+    `${fmtDate(r.date)} 调仓，持有至 ${fmtDate(r.end_date)}，共 ${r.n_pos ?? '--'} 只`
+    + `；本期止损 ${r.n_stop ?? '--'} 笔（只是这一期，不是全样本）`
     + `；下面是当前区间里的第 ${i + 1} / ${REBAL.length} 期`;
+  const el = document.getElementById('rebalTable');
+  if (r.stocks != null) { el.innerHTML = rebalTable(r); return; }
+  el.innerHTML = posNote('loading');
+  // 拉回来时若下拉已经切到别的期（REBAL[i] 换了对象），这张表就不该再被这一期覆盖
+  posLoad().then(() => { if (REBAL[i] === r) el.innerHTML = rebalTable(r); })
+           .catch(e => { if (REBAL[i] === r) el.innerHTML = posNote('fail', e); });
 }
 
 async function render() {
@@ -388,11 +443,14 @@ async function render() {
   BENCH_KEY = benchKeys[0] || 'pool';
   BENCH_NAME = BENCH_KEY === 'pool' ? '红利池等权' : BENCH_KEY;
   CAP = (p.init_capital || 1000000) / 1e4;   // 万元
+  // 明细已拆出主产物：每期只剩计数（n_pos/n_stop），逐期明细等 ⑧ 选到时再拉 sidecar。
+  // 这里不能写 stocks: [] —— 那等于宣称「这一期持仓为空」，⑧ 会画一张空表而不去下载。
   REBAL_ALL = (data.rebalances || []).map(r => ({
-    ...r, date: fmtDate(r.date), end_date: fmtDate(r.end_date),
-    // stop_date 缺失就是「本期没止损」，不能拿 fmtDate 的 '--' 兜底 —— 那会把每一行都标成止损
-    stocks: (r.stocks || []).map(s => s.stop_date ? { ...s, stop_date: fmtDate(s.stop_date) } : s)
+    ...r, date: fmtDate(r.date), end_date: fmtDate(r.end_date)
   }));
+  if (REBAL_ALL.length && Array.isArray(data.latest_positions)) {
+    REBAL_ALL[REBAL_ALL.length - 1].stocks = data.latest_positions.map(normStop);
+  }
   SNAPS = (Array.isArray(snaps) ? snaps : []).map(s => ({ ...s, date: fmtDate(s.date) }));
   MY = data.metrics_ytd || ytdFromNav(FULL);
   YS = (MY && MY.strategy) || {};
@@ -526,7 +584,7 @@ function draw() {
     filtered ? `区间 ${ST.from || '…'} ~ ${ST.to || '至今'} · ${NV.length} 个净值点`
              : `区间 全样本 · ${NV.length} 个净值点`;
   if (NV.length < 3) {
-    const warn = `所选区间只有 ${NV.length} 个净值点（净值是抽稀过的），画不出线也重算不了指标 —— 换一档或把日期放宽。`;
+    const warn = `所选区间只有 ${NV.length} 个净值点，画不出线也重算不了指标 —— 换一档或把日期放宽。`;
     document.getElementById('page-desc').textContent = '⚠️ ' + warn;
     document.getElementById('rngTxt').textContent = '⚠️ ' + warn;
     return;
@@ -598,14 +656,15 @@ function rebalSelect() {
   }
   REBAL = rs;
   sel.innerHTML = rs.map((r, i) =>
-    `<option value="${i}">${fmtDate(r.date)}（${(r.stocks || []).length} 只）</option>`).join('');
+    `<option value="${i}">${fmtDate(r.date)}（${r.n_pos ?? '--'} 只）</option>`).join('');
   sel.value = String(rs.length - 1);
   renderRebal(rs.length - 1);
 }
 
-/** 换仓明细里带 stop_date 的行数：期在区间内才数得进来。 */
+/** 各期止损笔数汇总：用产物里的 n_stop 计数 —— 持仓明细已拆到 sidecar，
+    这里再扫 r.stocks 会恒得 0（而且 perfTable 在首屏跑，那时明细还没下载）。 */
 function countStops(list) {
-  return list.reduce((a, r) => a + (r.stocks || []).filter(x => x.stop_date).length, 0);
+  return list.reduce((a, r) => a + (r.n_stop || 0), 0);
 }
 
 /** ⑥ 业绩表：一张表两档数，混着摆而不标注就是假数，所以表头每列都带角标。 */
@@ -670,7 +729,7 @@ function perfTable(NV) {
   let note = useRange
     ? `当前是<b>区间重算</b>：净值按区间首点归一，年化分母取首末日期（这段 ${fmtNum(s.years, 2)} 年、`
       + `${s.n || 0} 个采样点 ≈ ${fmtNum(s.ppy, 0)} 根/年），波动与夏普同率折算。`
-      + `<b>最大回撤只会偏浅</b> —— 净值是抽稀过的（最近两年逐日、更早每周只留一个点），周内新低看不见；要日频口径点「回测全量」。`
+      + `净值是全量日频，所以回撤与「回测全量」同口径；两档的差别只在区间首点被重新归一（区间内新高新低不受影响，区间前的那段峰值不算）。`
       + `Beta／Alpha／期胜率／交易成本在这一档一律给 ${dash}：前两个是全样本对基准做的回归，`
       + `期胜率按整段回测的期数统计，交易成本是全回测期累加的佣金+印花税（产物没分期记录），`
       + `切区间既重算不出、也不该跟着变小。`
