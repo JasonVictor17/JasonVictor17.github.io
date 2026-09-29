@@ -548,7 +548,7 @@ async function render() {
   }
   SENTI = (data.sentiment && (data.sentiment.points || []).length) ? data.sentiment : null;
   POOL = `微盘池 TOP${p.candidate_num ?? 60} 等权`;
-  SHORT = ['周一', '周二', '周三', '周四', '周五'][(p.rebal_weekday ?? 4) - 1];
+  SHORT = ['周一', '周二', '周三', '周四', '周五'][(p.rebal_weekday ?? 1) - 1];
   CAP = (p.init_capital || 3000000) / 1e4;   // 万元
   MY = data.metrics_ytd || ytdFromNav(nav);
   YS = (MY && MY.strategy) || {}; YB = (MY && MY[BENCH]) || {};
