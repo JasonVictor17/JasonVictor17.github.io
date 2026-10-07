@@ -378,7 +378,7 @@ function posRetry() {
 
 // 单期持仓表（⑦ 最新一期 与 ⑧ 历史查询 共用）
 function etfTable(rec) {
-  const head = `<tr><th>代码</th><th>名称</th><th class="num">综合得分</th><th class="num">7日涨幅</th>
+  const head = `<tr><th>代码</th><th>名称</th><th class="num">综合得分</th><th class="num">8日涨幅</th>
     <th class="num">溢价率</th><th class="num">信号价</th><th class="num">成交价</th><th class="num">日均成交量</th>
     <th class="num">份额</th><th class="num">市值(元)</th><th class="num">权重</th>
     <th class="num" title="本段持仓区间收益：调仓日成交价 → 下一调仓日成交价（最后一期到回测末日收盘）。后复权口径，含分红、跨份额折算连续，与净值同口径">区间收益<br><span style="font-weight:400;font-size:10px;color:#999">成交日→期末·后复权</span></th><th>操作</th></tr>`;
